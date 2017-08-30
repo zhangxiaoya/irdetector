@@ -43,15 +43,28 @@ int main(int argc, char* argv[])
 	auto cudaInitStatus = cudaDeviceInit(argc, const_cast<const char **>(argv));
 	if(cudaInitStatus)
 	{
+		unsigned char* frameOnDeivce;
+		cudaMalloc(&frameOnDeivce, WIDTH * HEIGHT);
+
 		std::string fileName = "C:\\D\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1.bin";
 
 		auto fileReader = new BinaryFileReader(fileName);
 
 		fileReader->ReadBinaryFileToHostMemory();
-		auto frame_count = fileReader->GetFrameCount();
-		auto data_point = fileReader->GetDataPoint();
+		auto frameCount = fileReader->GetFrameCount();
+		auto dataPoint = fileReader->GetDataPoint();
 
+		auto iterationText = new char[200];
+		for(auto i =0;i<frameCount;++i)
+		{
+			sprintf_s(iterationText, 200, "Copy the %04d frame to device", i);
+			logPrinter.PrintLogs(iterationText, LogLevel::Info);
 
+			auto perFrame = dataPoint[i];
+			cudaMemcpy(frameOnDeivce, perFrame, WIDTH*HEIGHT, cudaMemcpyHostToDevice);
+		}
+
+		cudaFree(frameOnDeivce);
 		delete fileReader;
 		cudaDeviceRelease();
 	}
