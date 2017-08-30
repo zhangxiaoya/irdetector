@@ -3,6 +3,7 @@
 #include "Headers/GlobalMainHeaders.h"
 #include "DataReaderFromeFiles/BinaryFileReader.hpp"
 #include "Dilations/DilatetionOnCPU.hpp"
+#include "Dilations/DilatetionKernel.h"
 
 inline bool cudaDeviceInit(int argc, const char** argv)
 {
@@ -45,8 +46,15 @@ int main(int argc, char* argv[])
 	if(cudaInitStatus)
 	{
 		unsigned char* frameOnDeivce;
+		unsigned char* resultOnDevice;
+		unsigned char* tempResultOnDevice;
+
 		cudaMalloc(&frameOnDeivce, WIDTH * HEIGHT);
+		cudaMalloc(&resultOnDevice, WIDTH * HEIGHT);
+		cudaMalloc(&tempResultOnDevice, WIDTH * HEIGHT);
+
 		auto dilationResultOnCPU = new unsigned char[WIDTH * HEIGHT];
+		auto dilationResultOnGPU = new unsigned char[WIDTH * HEIGHT];
 
 		std::string fileName = "C:\\D\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1.bin";
 
@@ -62,16 +70,23 @@ int main(int argc, char* argv[])
 			auto perFrame = dataPoint[i];
 
 			logPrinter.PrintLogs("Dilation on CPU!", LogLevel::Info);
-			DilationOnCPU::dilationCPU(perFrame, dilationResultOnCPU, WIDTH, HEIGHT, 3);
+			DilationOnCPU::dilationCPU(perFrame, dilationResultOnCPU, WIDTH, HEIGHT, 1);
 
 			sprintf_s(iterationText, 200, "Copy the %04d frame to device", i);
 			logPrinter.PrintLogs(iterationText, LogLevel::Info);
-
 			cudaMemcpy(frameOnDeivce, perFrame, WIDTH*HEIGHT, cudaMemcpyHostToDevice);
+
+			logPrinter.PrintLogs("Dialtion On GPU", LogLevel::Info);
+			FilterDilation(frameOnDeivce, resultOnDevice, tempResultOnDevice, WIDTH, HEIGHT, 1);
+
+			cudaMemcpy(resultOnDevice, dilationResultOnGPU, WIDTH* HEIGHT, cudaMemcpyDeviceToHost);
 		}
 
 		cudaFree(frameOnDeivce);
+		cudaFree(resultOnDevice);
+		cudaFree(tempResultOnDevice);
 		delete[] dilationResultOnCPU;
+		delete[] dilationResultOnGPU;
 
 		delete fileReader;
 		cudaDeviceRelease();
