@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{1db2b41f-7316-4329-85a3-ab57a26a7cb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LogPrinter">
+      <UniqueIdentifier>{aeb7541f-8c81-4434-915e-d8e1eabc135d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models">
+      <UniqueIdentifier>{3eb26f98-ae04-46df-9207-deb1d5cdbebd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DataReaderFromFiles">
+      <UniqueIdentifier>{7b393d23-1c74-40c0-849f-cf38d372b1d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dilations">
+      <UniqueIdentifier>{05aacdfe-8ee2-44e1-87de-50bdd8dcb46a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{ad8518a0-43bd-4be9-888d-315da9d22529}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Headers\GlobalMainHeaders.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="LogPrinter\LogPrinter.hpp">
+      <Filter>LogPrinter</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\LogLevel.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="DataReaderFromeFiles\BinaryFileReader.hpp">
+      <Filter>DataReaderFromFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="Dilations\DilatetionOnCPU.hpp">
+      <Filter>Dilations</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Dilations\DilatetionKernel.h">
+      <Filter>Dilations</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="Dilations\DilatetionKernel.cu">
+      <Filter>Dilations</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>
