@@ -2,6 +2,7 @@
 
 #include "Headers/GlobalMainHeaders.h"
 #include "DataReaderFromeFiles/BinaryFileReader.hpp"
+#include "Dilations/DilatetionOnCPU.hpp"
 
 inline bool cudaDeviceInit(int argc, const char** argv)
 {
@@ -45,6 +46,7 @@ int main(int argc, char* argv[])
 	{
 		unsigned char* frameOnDeivce;
 		cudaMalloc(&frameOnDeivce, WIDTH * HEIGHT);
+		auto dilationResultOnCPU = new unsigned char[WIDTH * HEIGHT];
 
 		std::string fileName = "C:\\D\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1.bin";
 
@@ -57,14 +59,20 @@ int main(int argc, char* argv[])
 		auto iterationText = new char[200];
 		for(auto i =0;i<frameCount;++i)
 		{
+			auto perFrame = dataPoint[i];
+
+			logPrinter.PrintLogs("Dilation on CPU!", LogLevel::Info);
+			DilationOnCPU::dilationCPU(perFrame, dilationResultOnCPU, WIDTH, HEIGHT, 3);
+
 			sprintf_s(iterationText, 200, "Copy the %04d frame to device", i);
 			logPrinter.PrintLogs(iterationText, LogLevel::Info);
 
-			auto perFrame = dataPoint[i];
 			cudaMemcpy(frameOnDeivce, perFrame, WIDTH*HEIGHT, cudaMemcpyHostToDevice);
 		}
 
 		cudaFree(frameOnDeivce);
+		delete[] dilationResultOnCPU;
+
 		delete fileReader;
 		cudaDeviceRelease();
 	}
