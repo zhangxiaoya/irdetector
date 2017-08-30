@@ -16,6 +16,12 @@
     <Filter Include="DataReaderFromFiles">
       <UniqueIdentifier>{7b393d23-1c74-40c0-849f-cf38d372b1d9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Dilations">
+      <UniqueIdentifier>{05aacdfe-8ee2-44e1-87de-50bdd8dcb46a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{ad8518a0-43bd-4be9-888d-315da9d22529}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\GlobalMainHeaders.h">
@@ -29,6 +35,12 @@
     </ClInclude>
     <ClInclude Include="DataReaderFromeFiles\BinaryFileReader.hpp">
       <Filter>DataReaderFromFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="Dilations\DilatetionOnCPU.hpp">
+      <Filter>Dilations</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

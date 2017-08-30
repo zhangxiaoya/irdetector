@@ -157,7 +157,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Common\Util.h" />
     <ClInclude Include="DataReaderFromeFiles\BinaryFileReader.hpp" />
+    <ClInclude Include="Dilations\DilatetionOnCPU.hpp" />
     <ClInclude Include="Headers\GlobalMainHeaders.h" />
     <ClInclude Include="LogPrinter\LogPrinter.hpp" />
     <ClInclude Include="Models\LogLevel.hpp" />
