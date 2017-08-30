@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Headers/GlobalMainHeaders.h"
+#include "DataReaderFromeFiles/BinaryFileReader.hpp"
 
 inline bool cudaDeviceInit(int argc, const char** argv)
 {
@@ -42,6 +43,16 @@ int main(int argc, char* argv[])
 	auto cudaInitStatus = cudaDeviceInit(argc, const_cast<const char **>(argv));
 	if(cudaInitStatus)
 	{
+		std::string fileName = "C:\\D\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1.bin";
+
+		auto fileReader = new BinaryFileReader(fileName);
+
+		fileReader->ReadBinaryFileToHostMemory();
+		auto frame_count = fileReader->GetFrameCount();
+		auto data_point = fileReader->GetDataPoint();
+
+
+		delete fileReader;
 		cudaDeviceRelease();
 	}
 

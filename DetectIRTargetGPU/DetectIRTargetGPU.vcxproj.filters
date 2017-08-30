@@ -13,6 +13,9 @@
     <Filter Include="Models">
       <UniqueIdentifier>{3eb26f98-ae04-46df-9207-deb1d5cdbebd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DataReaderFromFiles">
+      <UniqueIdentifier>{7b393d23-1c74-40c0-849f-cf38d372b1d9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\GlobalMainHeaders.h">
@@ -23,6 +26,9 @@
     </ClInclude>
     <ClInclude Include="Models\LogLevel.hpp">
       <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="DataReaderFromeFiles\BinaryFileReader.hpp">
+      <Filter>DataReaderFromFiles</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
