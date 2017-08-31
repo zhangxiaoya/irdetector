@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 			logPrinter.PrintLogs("Dialtion On GPU", LogLevel::Info);
 			FilterDilation(frameOnDeivce, resultOnDevice, tempResultOnDevice, WIDTH, HEIGHT, 1);
 
-			cudaMemcpy(resultOnDevice, dilationResultOnGPU, WIDTH* HEIGHT, cudaMemcpyDeviceToHost);
+			cudaMemcpy(dilationResultOnGPU,resultOnDevice, WIDTH* HEIGHT, cudaMemcpyDeviceToHost);
 
 			if (!CheckDilation::CheckDiff(dilationResultOnCPU, dilationResultOnGPU, WIDTH, HEIGHT))
 			{
