@@ -154,6 +154,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Checkers\CheckDilation.hpp" />
     <ClInclude Include="Common\Util.h" />
     <ClInclude Include="DataReaderFromeFiles\BinaryFileReader.hpp" />
     <ClInclude Include="Dilations\DilatetionKernel.h" />

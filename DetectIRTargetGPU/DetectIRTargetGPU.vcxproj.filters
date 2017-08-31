@@ -19,6 +19,9 @@
     <Filter Include="Common">
       <UniqueIdentifier>{ad8518a0-43bd-4be9-888d-315da9d22529}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Checkers">
+      <UniqueIdentifier>{675a52cc-82a2-4695-9afa-272d4b24e901}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\GlobalMainHeaders.h">
@@ -41,6 +44,9 @@
     </ClInclude>
     <ClInclude Include="Dilations\DilatetionKernel.h">
       <Filter>Dilations</Filter>
+    </ClInclude>
+    <ClInclude Include="Checkers\CheckDilation.hpp">
+      <Filter>Checkers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

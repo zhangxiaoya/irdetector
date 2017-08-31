@@ -4,6 +4,7 @@
 #include "DataReaderFromeFiles/BinaryFileReader.hpp"
 #include "Dilations/DilatetionOnCPU.hpp"
 #include "Dilations/DilatetionKernel.h"
+#include "Checkers/CheckDilation.hpp"
 
 inline bool cudaDeviceInit(int argc, const char** argv)
 {
@@ -80,6 +81,11 @@ int main(int argc, char* argv[])
 			FilterDilation(frameOnDeivce, resultOnDevice, tempResultOnDevice, WIDTH, HEIGHT, 1);
 
 			cudaMemcpy(resultOnDevice, dilationResultOnGPU, WIDTH* HEIGHT, cudaMemcpyDeviceToHost);
+
+			if (!CheckDilation::CheckDiff(dilationResultOnCPU, dilationResultOnGPU, WIDTH, HEIGHT))
+			{
+				break;
+			}
 		}
 
 		cudaFree(frameOnDeivce);
