@@ -48,11 +48,9 @@ int main(int argc, char* argv[])
 	{
 		unsigned char* frameOnDeivce;
 		unsigned char* resultOnDevice;
-		unsigned char* tempResultOnDevice;
 
 		cudaMalloc(&frameOnDeivce, WIDTH * HEIGHT);
 		cudaMalloc(&resultOnDevice, WIDTH * HEIGHT);
-		cudaMalloc(&tempResultOnDevice, WIDTH * HEIGHT);
 
 		auto dilationResultOnCPU = new unsigned char[WIDTH * HEIGHT];
 		auto dilationResultOnGPU = new unsigned char[WIDTH * HEIGHT];
@@ -78,7 +76,7 @@ int main(int argc, char* argv[])
 			cudaMemcpy(frameOnDeivce, perFrame, WIDTH*HEIGHT, cudaMemcpyHostToDevice);
 
 			logPrinter.PrintLogs("Dialtion On GPU", LogLevel::Info);
-			FilterDilation(frameOnDeivce, resultOnDevice, tempResultOnDevice, WIDTH, HEIGHT, 1);
+			FilterDilation(frameOnDeivce, resultOnDevice, WIDTH, HEIGHT, 1);
 
 			cudaMemcpy(dilationResultOnGPU,resultOnDevice, WIDTH* HEIGHT, cudaMemcpyDeviceToHost);
 
@@ -90,7 +88,6 @@ int main(int argc, char* argv[])
 
 		cudaFree(frameOnDeivce);
 		cudaFree(resultOnDevice);
-		cudaFree(tempResultOnDevice);
 		delete[] dilationResultOnCPU;
 		delete[] dilationResultOnGPU;
 

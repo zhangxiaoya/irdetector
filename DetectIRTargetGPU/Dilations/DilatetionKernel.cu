@@ -87,8 +87,11 @@ __global__ void FilterDStep2(unsigned char* src, unsigned char* dst, int width, 
 	FilterStep2K(src, dst, width, height, tile_w, tile_h, radio, pComputeMax);
 }
 
-void FilterDilation(unsigned char* src, unsigned char* dst, unsigned char* temp, int width, int height, int radio)
+void FilterDilation(unsigned char* src, unsigned char* dst, int width, int height, int radio)
 {
+	unsigned char* tempResultOnDevice;
+	cudaMalloc(&tempResultOnDevice, width * height);
+
 	int tile_w1 = 256;
 	int tile_h1 = 1;
 
@@ -101,8 +104,9 @@ void FilterDilation(unsigned char* src, unsigned char* dst, unsigned char* temp,
 	dim3 block3(tile_w2, tile_h2 + (2 * radio));
 	dim3 grid3(ceil((float)width / tile_w2), ceil((float)height / tile_h2));
 
-	FilterDStep1 <<<grid2, block2, block2.y * block2.x >>>(src, temp, width, height, tile_w1, tile_h1, radio);
+	FilterDStep1 <<<grid2, block2, block2.y * block2.x >>>(src, tempResultOnDevice, width, height, tile_w1, tile_h1, radio);
 	(cudaDeviceSynchronize());
-	FilterDStep2 <<<grid3, block3, block3.y * block3.x >>>(temp, dst, width, height, tile_w2, tile_h2, radio);
+	FilterDStep2 <<<grid3, block3, block3.y * block3.x >>>(tempResultOnDevice, dst, width, height, tile_w2, tile_h2, radio);
 	cudaError_t cudaerr = cudaDeviceSynchronize();
+	cudaFree(tempResultOnDevice);
 }
