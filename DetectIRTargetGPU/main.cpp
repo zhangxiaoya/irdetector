@@ -5,6 +5,7 @@
 #include "Dilations/DilatetionOnCPU.hpp"
 #include "Dilations/DilatetionKernel.h"
 #include "Checkers/CheckDilation.hpp"
+#include "LevelDiscretization/LevelDiscretizationOnCPU.hpp"
 
 inline bool cudaDeviceInit(int argc, const char** argv)
 {
@@ -84,6 +85,9 @@ int main(int argc, char* argv[])
 			{
 				break;
 			}
+
+			logPrinter.PrintLogs("Level Discretization On CPU", LogLevel::Info);
+			LevelDiscretizationOnCPU::LevelDiscretization(dilationResultOnCPU, WIDTH, HEIGHT, 15);
 		}
 
 		cudaFree(frameOnDeivce);

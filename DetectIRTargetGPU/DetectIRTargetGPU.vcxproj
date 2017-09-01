@@ -160,12 +160,14 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Dilations\DilatetionKernel.h" />
     <ClInclude Include="Dilations\DilatetionOnCPU.hpp" />
     <ClInclude Include="Headers\GlobalMainHeaders.h" />
+    <ClInclude Include="LevelDiscretization\LevelDiscretizationKernel.cuh" />
     <ClInclude Include="LevelDiscretization\LevelDiscretizationOnCPU.hpp" />
     <ClInclude Include="LogPrinter\LogPrinter.hpp" />
     <ClInclude Include="Models\LogLevel.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Dilations\DilatetionKernel.cu" />
+    <CudaCompile Include="LevelDiscretization\LevelDiscretizationKernel.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

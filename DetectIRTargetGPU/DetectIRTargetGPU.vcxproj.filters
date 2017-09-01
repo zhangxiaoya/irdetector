@@ -54,6 +54,9 @@
     <ClInclude Include="LevelDiscretization\LevelDiscretizationOnCPU.hpp">
       <Filter>LevelDiscretization</Filter>
     </ClInclude>
+    <ClInclude Include="LevelDiscretization\LevelDiscretizationKernel.cuh">
+      <Filter>LevelDiscretization</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -61,6 +64,9 @@
   <ItemGroup>
     <CudaCompile Include="Dilations\DilatetionKernel.cu">
       <Filter>Dilations</Filter>
+    </CudaCompile>
+    <CudaCompile Include="LevelDiscretization\LevelDiscretizationKernel.cu">
+      <Filter>LevelDiscretization</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>
