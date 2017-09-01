@@ -4,7 +4,7 @@
 #include "DataReaderFromeFiles/BinaryFileReader.hpp"
 #include "Dilations/DilatetionOnCPU.hpp"
 #include "Dilations/DilatetionKernel.h"
-#include "Checkers/CheckDilation.hpp"
+#include "Checkers/CheckDiff.hpp"
 #include "LevelDiscretization/LevelDiscretizationOnCPU.hpp"
 #include "LevelDiscretization/LevelDiscretizationKernel.cuh"
 
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 
 			cudaMemcpy(dilationResultOnGPU,resultOnDevice, WIDTH* HEIGHT, cudaMemcpyDeviceToHost);
 
-			if (!CheckDilation::CheckDiff(dilationResultOnCPU, dilationResultOnGPU, WIDTH, HEIGHT))
+			if (!CheckDiff::Check(dilationResultOnCPU, dilationResultOnGPU, WIDTH, HEIGHT))
 			{
 				break;
 			}
@@ -96,6 +96,11 @@ int main(int argc, char* argv[])
 			logPrinter.PrintLogs("Level Discretization On GPU", LogLevel::Info);
 			LevelDiscretizationOnGPU(frameOnDeivce, WIDTH, HEIGHT, 15);
 			cudaMemcpy(dilationResultOnGPU, frameOnDeivce, WIDTH* HEIGHT, cudaMemcpyDeviceToHost);
+
+			if(!CheckDiff::Check(dilationResultOnCPU,dilationResultOnGPU,WIDTH,HEIGHT))
+			{
+				break;
+			}
 		}
 
 		cudaFree(frameOnDeivce);

@@ -48,14 +48,14 @@
     <ClInclude Include="Dilations\DilatetionKernel.h">
       <Filter>Dilations</Filter>
     </ClInclude>
-    <ClInclude Include="Checkers\CheckDilation.hpp">
-      <Filter>Checkers</Filter>
-    </ClInclude>
     <ClInclude Include="LevelDiscretization\LevelDiscretizationOnCPU.hpp">
       <Filter>LevelDiscretization</Filter>
     </ClInclude>
     <ClInclude Include="LevelDiscretization\LevelDiscretizationKernel.cuh">
       <Filter>LevelDiscretization</Filter>
+    </ClInclude>
+    <ClInclude Include="Checkers\CheckDiff.hpp">
+      <Filter>Checkers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -5,13 +5,13 @@
 #include "../Headers/GlobalMainHeaders.h"
 #include "../Models/LogLevel.hpp"
 
-class CheckDilation
+class CheckDiff
 {
 public:
-	static bool CheckDiff(unsigned char* resultOnCPU, unsigned char* resultOnGPU, int width, int height);
+	static bool Check(unsigned char* resultOnCPU, unsigned char* resultOnGPU, int width, int height);
 };
 
-inline bool CheckDilation::CheckDiff(unsigned char* resultOnCPU, unsigned char* resultOnGPU, int width, int height)
+inline bool CheckDiff::Check(unsigned char* resultOnCPU, unsigned char* resultOnGPU, int width, int height)
 {
 	for (auto r = 0; r < height; r++)
 	{
