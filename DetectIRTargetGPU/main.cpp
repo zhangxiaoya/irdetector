@@ -90,11 +90,12 @@ int main(int argc, char* argv[])
 				break;
 			}
 
-//			logPrinter.PrintLogs("Level Discretization On CPU", LogLevel::Info);
-//			LevelDiscretizationOnCPU::LevelDiscretization(dilationResultOnCPU, WIDTH, HEIGHT, 15);
+			logPrinter.PrintLogs("Level Discretization On CPU", LogLevel::Info);
+			LevelDiscretizationOnCPU::LevelDiscretization(dilationResultOnCPU, WIDTH, HEIGHT, 15);
 
-//			logPrinter.PrintLogs("Level Discretization On GPU", LogLevel::Info);
-//			LevelDiscretizationOnGPU(dilationResultOnGPU, WIDTH, HEIGHT, 15);
+			logPrinter.PrintLogs("Level Discretization On GPU", LogLevel::Info);
+			LevelDiscretizationOnGPU(frameOnDeivce, WIDTH, HEIGHT, 15);
+			cudaMemcpy(dilationResultOnGPU, frameOnDeivce, WIDTH* HEIGHT, cudaMemcpyDeviceToHost);
 		}
 
 		cudaFree(frameOnDeivce);
