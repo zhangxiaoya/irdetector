@@ -68,7 +68,7 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 	std::ifstream fin;
 	OpenBinaryFile(fin);
 
-	SplitBinaryFileOperator splitOperator(WIDTH, HEIGHT);
+//	SplitBinaryFileOperator splitOperator(WIDTH, HEIGHT);
 
 	if (fin.is_open())
 	{
@@ -110,8 +110,8 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 					originalPerFramePixelArray[pixelIndex] = perPixel;
 					dataMatrix[frameIndex][pixelIndex] = lowPart;
 
-					if (splitOperator.IsReady() && !splitOperator.IsFinished())
-						splitOperator.Split(highPart, lowPart);
+//					if (splitOperator.IsReady() && !splitOperator.IsFinished())
+//						splitOperator.Split(highPart, lowPart);
 
 					// update these variables
 					ChangeRows(row, col);
@@ -228,4 +228,3 @@ inline void BinaryFileReader::ChangeRows(unsigned& row, unsigned& col)
 	}
 }
 #endif
-

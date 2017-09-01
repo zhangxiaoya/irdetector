@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 		auto dilationResultOnCPU = new unsigned char[WIDTH * HEIGHT];
 		auto dilationResultOnGPU = new unsigned char[WIDTH * HEIGHT];
 
-		std::string fileName = "C:\\D\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1.bin";
+		std::string fileName = "C:\\D\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin";
 
 		auto fileReader = new BinaryFileReader(fileName);
 
