@@ -2,6 +2,7 @@
 #define __BINARY_FILE_READER__
 
 #include "Headers/GlobalMainHeaders.h"
+#include "Common/SplitBinaryFile.hpp"
 #include <fstream>
 
 class BinaryFileReader
@@ -67,6 +68,8 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 	std::ifstream fin;
 	OpenBinaryFile(fin);
 
+	SplitBinaryFileOperator splitOperator(WIDTH, HEIGHT);
+
 	if (fin.is_open())
 	{
 		// counting frame and init space on host and device respectly
@@ -106,6 +109,9 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 					// but we only need only low part of one pixel (temparory)
 					originalPerFramePixelArray[pixelIndex] = perPixel;
 					dataMatrix[frameIndex][pixelIndex] = lowPart;
+
+					if (splitOperator.IsReady() && !splitOperator.IsFinished())
+						splitOperator.Split(highPart, lowPart);
 
 					// update these variables
 					ChangeRows(row, col);

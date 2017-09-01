@@ -6,6 +6,7 @@
 #include "Dilations/DilatetionKernel.h"
 #include "Checkers/CheckDilation.hpp"
 #include "LevelDiscretization/LevelDiscretizationOnCPU.hpp"
+#include "LevelDiscretization/LevelDiscretizationKernel.cuh"
 
 inline bool cudaDeviceInit(int argc, const char** argv)
 {
@@ -67,6 +68,9 @@ int main(int argc, char* argv[])
 		auto iterationText = new char[200];
 		for(auto i =0;i<frameCount;++i)
 		{
+			memset(dilationResultOnGPU, 0, WIDTH * HEIGHT);
+			memset(dilationResultOnCPU, 0, WIDTH * HEIGHT);
+
 			auto perFrame = dataPoint[i];
 
 			logPrinter.PrintLogs("Dilation on CPU!", LogLevel::Info);
@@ -86,8 +90,11 @@ int main(int argc, char* argv[])
 				break;
 			}
 
-			logPrinter.PrintLogs("Level Discretization On CPU", LogLevel::Info);
-			LevelDiscretizationOnCPU::LevelDiscretization(dilationResultOnCPU, WIDTH, HEIGHT, 15);
+//			logPrinter.PrintLogs("Level Discretization On CPU", LogLevel::Info);
+//			LevelDiscretizationOnCPU::LevelDiscretization(dilationResultOnCPU, WIDTH, HEIGHT, 15);
+
+//			logPrinter.PrintLogs("Level Discretization On GPU", LogLevel::Info);
+//			LevelDiscretizationOnGPU(dilationResultOnGPU, WIDTH, HEIGHT, 15);
 		}
 
 		cudaFree(frameOnDeivce);
