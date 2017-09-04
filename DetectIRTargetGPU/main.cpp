@@ -15,7 +15,7 @@ inline bool cudaDeviceInit(int argc, const char** argv)
 
 	if (deviceCount == 0)
 	{
-		logPrinter.PrintLogs("CUDA error: no devices supporting CUDA.", LogLevel::Error);
+		logPrinter.PrintLogs("CUDA error: no devices supporting CUDA.", Error);
 		exit(EXIT_FAILURE);
 	}
 
@@ -23,30 +23,30 @@ inline bool cudaDeviceInit(int argc, const char** argv)
 	auto cudaStatus = cudaSetDevice(0);
 	if (cudaStatus != cudaSuccess)
 	{
-		logPrinter.PrintLogs("cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?", LogLevel::Error);
+		logPrinter.PrintLogs("cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?", Error);
 		return false;
 	}
-	logPrinter.PrintLogs("cudaSetDevice success!", LogLevel::Info);
+	logPrinter.PrintLogs("cudaSetDevice success!", Info);
 	return true;
 }
 
 void cudaDeviceRelease()
 {
 	auto cudaResetStatus = cudaDeviceReset();
-	if(cudaResetStatus == cudaSuccess)
+	if (cudaResetStatus == cudaSuccess)
 	{
-		logPrinter.PrintLogs("cudaDeviceReset success!", LogLevel::Info);
+		logPrinter.PrintLogs("cudaDeviceReset success!", Info);
 	}
 	else
 	{
-		logPrinter.PrintLogs("cudaDeviceReset failed!", LogLevel::Waring);
+		logPrinter.PrintLogs("cudaDeviceReset failed!", Waring);
 	}
 }
 
 int main(int argc, char* argv[])
 {
 	auto cudaInitStatus = cudaDeviceInit(argc, const_cast<const char **>(argv));
-	if(cudaInitStatus)
+	if (cudaInitStatus)
 	{
 		unsigned char* frameOnDeivce;
 		unsigned char* resultOnDevice;
@@ -66,38 +66,40 @@ int main(int argc, char* argv[])
 		auto dataPoint = fileReader->GetDataPoint();
 
 		auto iterationText = new char[200];
-		for(auto i =0;i<frameCount;++i)
+		for (auto i = 0; i < frameCount; ++i)
 		{
 			memset(dilationResultOnGPU, 0, WIDTH * HEIGHT);
 			memset(dilationResultOnCPU, 0, WIDTH * HEIGHT);
 
 			auto perFrame = dataPoint[i];
 
-			logPrinter.PrintLogs("Dilation on CPU!", LogLevel::Info);
+			logPrinter.PrintLogs("Dilation on CPU!", Info);
 			DilationOnCPU::dilationCPU(perFrame, dilationResultOnCPU, WIDTH, HEIGHT, 1);
 
 			sprintf_s(iterationText, 200, "Copy the %04d frame to device", i);
-			logPrinter.PrintLogs(iterationText, LogLevel::Info);
-			cudaMemcpy(frameOnDeivce, perFrame, WIDTH*HEIGHT, cudaMemcpyHostToDevice);
+			logPrinter.PrintLogs(iterationText, Info);
+			cudaMemcpy(frameOnDeivce, perFrame, WIDTH * HEIGHT, cudaMemcpyHostToDevice);
 
-			logPrinter.PrintLogs("Dialtion On GPU", LogLevel::Info);
+			logPrinter.PrintLogs("Dialtion On GPU", Info);
 			FilterDilation(frameOnDeivce, resultOnDevice, WIDTH, HEIGHT, 1);
 
-			cudaMemcpy(dilationResultOnGPU,resultOnDevice, WIDTH* HEIGHT, cudaMemcpyDeviceToHost);
+			cudaMemcpy(dilationResultOnGPU, resultOnDevice, WIDTH * HEIGHT, cudaMemcpyDeviceToHost);
 
 			if (!CheckDiff::Check(dilationResultOnCPU, dilationResultOnGPU, WIDTH, HEIGHT))
 			{
 				break;
 			}
 
-			logPrinter.PrintLogs("Level Discretization On CPU", LogLevel::Info);
+
+			logPrinter.PrintLogs("Level Discretization On CPU", Info);
 			LevelDiscretizationOnCPU::LevelDiscretization(dilationResultOnCPU, WIDTH, HEIGHT, 15);
 
-			logPrinter.PrintLogs("Level Discretization On GPU", LogLevel::Info);
+			cudaMemcpy(frameOnDeivce, dilationResultOnGPU, WIDTH * HEIGHT, cudaMemcpyHostToDevice);
+			logPrinter.PrintLogs("Level Discretization On GPU", Info);
 			LevelDiscretizationOnGPU(frameOnDeivce, WIDTH, HEIGHT, 15);
-			cudaMemcpy(dilationResultOnGPU, frameOnDeivce, WIDTH* HEIGHT, cudaMemcpyDeviceToHost);
+			cudaMemcpy(dilationResultOnGPU, frameOnDeivce, WIDTH * HEIGHT, cudaMemcpyDeviceToHost);
 
-			if(!CheckDiff::Check(dilationResultOnCPU,dilationResultOnGPU,WIDTH,HEIGHT))
+			if (!CheckDiff::Check(dilationResultOnCPU, dilationResultOnGPU, WIDTH, HEIGHT))
 			{
 				break;
 			}
