@@ -1,30 +1,33 @@
 #pragma once
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+#include <cmath>
 
-typedef int(*pointFunction_t)(int, int);
+typedef unsigned char(*pointFunction_t)(unsigned char, unsigned char);
 
-__device__ inline int pComputeMin(int a, int b)
+__device__ unsigned char pComputeMin(unsigned char a, unsigned char b)
 {
 	return (a < b) ? a : b;
 }
 
-__device__ inline int pComputeMax(int a, int b)
+__device__ unsigned char pComputeMax(unsigned char a, unsigned char b)
 {
 	return (a > b) ? a : b;
 }
 
 __device__ void FilterStep2K(unsigned char* src, unsigned char* dst, int width, int height, int tile_w, int tile_h, const int radio, const pointFunction_t pPointOperation)
 {
-	extern __shared__ int smem[];
+	extern __shared__ unsigned char smem[];
 
 	int tx = threadIdx.x;
 	int ty = threadIdx.y;
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
 
-	int x = bx * tile_w + tx;
-	int y = by * tile_h + ty - radio;
+	auto x = bx * tile_w + tx;
+	auto y = by * tile_h + ty - radio;
 
-	smem[ty * blockDim.x + tx] = 255;
+	smem[ty * blockDim.x + tx] = 0;
 	__syncthreads();
 	if (x >= width || y < 0 || y >= height)
 	{
@@ -36,10 +39,10 @@ __device__ void FilterStep2K(unsigned char* src, unsigned char* dst, int width, 
 	{
 		return;
 	}
-	int * smem_thread = &smem[(ty - radio) * blockDim.x + tx];
-	int val = smem_thread[0];
+	auto smem_thread = &smem[(ty - radio) * blockDim.x + tx];
+	auto val = smem_thread[0];
 #pragma unroll
-	for (int yy = 1; yy <= 2 * radio; yy++)
+	for (auto yy = 1; yy <= 2 * radio; yy++)
 	{
 		val = pPointOperation(val, smem_thread[yy * blockDim.x]);
 	}
@@ -48,14 +51,14 @@ __device__ void FilterStep2K(unsigned char* src, unsigned char* dst, int width, 
 
 __device__ void FilterStep1K(unsigned char* src, unsigned char* dst, int width, int height, int tile_w, int tile_h, const int radio, const pointFunction_t pPointOperation)
 {
-	extern __shared__ int smem[];
+	extern __shared__ unsigned char smem[];
 	int tx = threadIdx.x;
 	int ty = threadIdx.y;
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
-	int x = bx * tile_w + tx - radio;
-	int y = by * tile_h + ty;
-	smem[ty * blockDim.x + tx] = 255;
+	auto x = bx * tile_w + tx - radio;
+	auto y = by * tile_h + ty;
+	smem[ty * blockDim.x + tx] = 0;
 	__syncthreads();
 	if (x < 0 || x >= width || y >= height)
 	{
@@ -67,10 +70,10 @@ __device__ void FilterStep1K(unsigned char* src, unsigned char* dst, int width, 
 	{
 		return;
 	}
-	int * smem_thread = &smem[ty * blockDim.x + tx - radio];
-	int val = smem_thread[0];
+	auto smem_thread = &smem[ty * blockDim.x + tx - radio];
+	auto val = smem_thread[0];
 #pragma unroll
-	for (int xx = 1; xx <= 2 * radio; xx++)
+	for (auto xx = 1; xx <= 2 * radio; xx++)
 	{
 		val = pPointOperation(val, smem_thread[xx]);
 	}
@@ -87,22 +90,26 @@ __global__ void FilterDStep2(unsigned char* src, unsigned char* dst, int width, 
 	FilterStep2K(src, dst, width, height, tile_w, tile_h, radio, pComputeMax);
 }
 
-void FilterDilation(unsigned char* src, unsigned char* dst, unsigned char* temp, int width, int height, int radio)
+void FilterDilation(unsigned char* src, unsigned char* dst, int width, int height, int radio)
 {
-	int tile_w1 = 256;
-	int tile_h1 = 1;
+	unsigned char* tempResultOnDevice;
+	cudaMalloc(&tempResultOnDevice, width * height);
+
+	auto tile_w1 = 256;
+	auto tile_h1 = 1;
 
 	dim3 block2(tile_w1 + (2 * radio), tile_h1);
-	dim3 grid2(ceil((float)width / tile_w1), ceil((float)height / tile_h1));
+	dim3 grid2(ceil(static_cast<float>(width) / tile_w1), ceil(static_cast<float>(height) / tile_h1));
 
-	int tile_w2 = 4;
-	int tile_h2 = 64;
+	auto tile_w2 = 4;
+	auto tile_h2 = 64;
 
 	dim3 block3(tile_w2, tile_h2 + (2 * radio));
-	dim3 grid3(ceil((float)width / tile_w2), ceil((float)height / tile_h2));
+	dim3 grid3(ceil(static_cast<float>(width) / tile_w2), ceil(static_cast<float>(height) / tile_h2));
 
-	FilterDStep1 <<<grid2, block2, block2.y * block2.x * sizeof(int) >>>(src, temp, width, height, tile_w1, tile_h1, radio);
+	FilterDStep1 <<<grid2, block2, block2.y * block2.x >>>(src, tempResultOnDevice, width, height, tile_w1, tile_h1, radio);
 	(cudaDeviceSynchronize());
-	FilterDStep2 <<<grid3, block3, block3.y * block3.x * sizeof(int) >>>(temp, dst, width, height, tile_w2, tile_h2, radio);
-	cudaError_t cudaerr = cudaDeviceSynchronize();
+	FilterDStep2 <<<grid3, block3, block3.y * block3.x >>>(tempResultOnDevice, dst, width, height, tile_w2, tile_h2, radio);
+	auto cudaerr = cudaDeviceSynchronize();
+	cudaFree(tempResultOnDevice);
 }
