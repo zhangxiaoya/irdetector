@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __LOG_PRINTER__
+#define __LOG_PRINTER__
+
 #include <string>
 #include "../Models/LogLevel.hpp"
 #include <iostream>
@@ -72,3 +74,4 @@ inline void LogPrinter::printCurrentTime()
 	std::cout << timeStr << " ";
 }
 
+#endif

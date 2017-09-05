@@ -3,8 +3,8 @@
 
 #include "cuda_runtime.h"
 #include "driver_types.h"
-#include "LogPrinter/LogPrinter.hpp"
-#include "Models/LogLevel.hpp"
+#include "../LogPrinter/LogPrinter.hpp"
+#include "../Models/LogLevel.hpp"
 
 LogPrinter logPrinter;
 const unsigned int WIDTH = 320;

@@ -3,6 +3,16 @@
 #include <limits>
 #include "../Common/Util.h"
 
+inline unsigned char ucMax(unsigned char a, unsigned char b)
+{
+	return (a > b) ? a : b;
+}
+
+inline unsigned char ucMin(unsigned char a, unsigned char b)
+{
+	return (a > b) ? b : a;
+}
+
 class DilationOnCPU
 {
 public:
@@ -64,7 +74,7 @@ inline void DilationOnCPU::dilationCPU(unsigned char* src, unsigned char* dst, i
 
 			for (auto windowCol = startCol; windowCol <= endCol; windowCol++)
 			{
-				value = IMAX(src[r * width + windowCol], value);
+				value = ucMax(src[r * width + windowCol], value);
 			}
 			tmp[r * width + c] = value;
 		}
@@ -81,7 +91,7 @@ inline void DilationOnCPU::dilationCPU(unsigned char* src, unsigned char* dst, i
 
 			for (auto windowRow = startRow; windowRow <= endRow; windowRow++)
 			{
-				value = IMAX(tmp[windowRow * width + c], value);
+				value = ucMax(tmp[windowRow * width + c], value);
 			}
 			dst[r * width + c] = value;
 		}
