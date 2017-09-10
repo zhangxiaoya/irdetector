@@ -25,6 +25,9 @@
     <Filter Include="LevelDiscretization">
       <UniqueIdentifier>{297c6bd7-46b3-4b9a-b961-51fc35587939}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CCL">
+      <UniqueIdentifier>{0ff2eb78-60b2-463a-a004-b2019380364c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\GlobalMainHeaders.h">
@@ -57,6 +60,9 @@
     <ClInclude Include="Checkers\CheckDiff.hpp">
       <Filter>Checkers</Filter>
     </ClInclude>
+    <ClInclude Include="CCL\MeshKernelD.cuh">
+      <Filter>CCL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -70,6 +76,9 @@
     </CudaCompile>
     <CudaCompile Include="LevelDiscretization\LevelDiscretizationKernel.cu">
       <Filter>LevelDiscretization</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CCL\MeshKernelD.cu">
+      <Filter>CCL</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>
