@@ -5,42 +5,48 @@
 
 void MeshCCL(unsigned char* frame, int* label, int width, int height)
 {
-	int* labelList;
 	int* reference;
-
-	cudaMalloc(reinterpret_cast<void**>(&labelList), sizeof(int) * width * height);
 	cudaMalloc(reinterpret_cast<void**>(&reference), sizeof(int) * width * height);
 
 	dim3 block(BlockX, BlockY);
 	dim3 grid((width + BlockX - 1) / BlockX, (height + BlockY - 1) / BlockY);
 
-	auto N = width * height;
+	InitCCL<<<grid, block>>>(label, reference, width, height);
 
-	InitCCL<<<grid, block>>>(labelList, reference, N);
-
+	cudaError_t cudaStatus;
 	auto iterationFlag = false;
 	do
 	{
-		MeshKernelDScanning<<<grid, block>>>(frame, labelList, reference, width, height, iterationFlag);
+		MeshKernelDScanning<<<grid, block>>>(frame, label, reference, width, height, iterationFlag);
+		cudaStatus = cudaDeviceSynchronize();
 
-		MeshKernelDAnalysis<<<grid, block >>>(labelList, reference, width, height);
+		MeshKernelDAnalysis<<<grid, block >>>(label, reference, width, height);
+		cudaStatus = cudaDeviceSynchronize();
 
-		MeshKernelDLabelling<<<grid, block >>>(labelList, reference, width, height);
+		MeshKernelDLabelling<<<grid, block >>>(label, reference, width, height);
+		cudaStatus = cudaDeviceSynchronize();
+
 	}
 	while (iterationFlag);
 
-	if(label == nullptr)
-		return;
-	cudaMemcpy(label, labelList, sizeof(int) * width * height, cudaMemcpyDeviceToHost);
+	cudaStatus = cudaFree(reference);
+
+	auto delay = 0;
 }
 
-__global__ void InitCCL(int* label, int* reference, int N)
+__device__ int IntMin(int a, int b)
+{
+	return a < b ? a : b;
+}
+
+__global__ void InitCCL(int* label, int* reference, int width, int height)
 {
 	int x = threadIdx.x + blockIdx.x * blockDim.x;
 	int y = threadIdx.y + blockIdx.y * blockDim.y;
-	int id = x + y * gridDim.x * blockDim.x;
-	if(id >= N)
+	if(x >= width || y >= height)
 		return;
+
+	auto id = x + y * width;
 
 	label[id] = reference[id] = id;
 }
@@ -54,7 +60,7 @@ __global__ void MeshKernelDScanning(unsigned char* frame, int* label, int* refer
 	if(x >= width || y >= height)
 		return;
 
-	int id = x + y * gridDim.x * blockDim.x;
+	int id = x + y * width;
 
 //	int blockX = threadIdx.x;
 //	int blockY = threadIdx.y;
@@ -66,13 +72,13 @@ __global__ void MeshKernelDScanning(unsigned char* frame, int* label, int* refer
 	unsigned char val = frame[id];
 
 	if (y > 0 && val == frame[id - gridDim.x * blockDim.x])
-		newLabel = Min(newLabel, label[id - gridDim.x * blockDim.x]);
+		newLabel = IntMin(newLabel, label[id - gridDim.x * blockDim.x]);
 	if (y < height - 1 && val == frame[id + gridDim.x * blockDim.x])
-		newLabel = Min(newLabel, label[id + gridDim.x * blockDim.x]);
+		newLabel = IntMin(newLabel, label[id + gridDim.x * blockDim.x]);
 	if (x > 0 && val == frame[id - 1])
-		newLabel = Min(newLabel, label[id - 1]);
+		newLabel = IntMin(newLabel, label[id - 1]);
 	if (x < width - 1 && val == frame[id + 1])
-		newLabel = Min(newLabel, label[id + 1]);
+		newLabel = IntMin(newLabel, label[id + 1]);
 
 	if(newLabel < currentLabel)
 	{
