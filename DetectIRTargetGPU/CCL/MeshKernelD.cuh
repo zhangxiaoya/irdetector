@@ -16,8 +16,8 @@ __global__ void InitCCL(int* label, int* reference, int N);
 
 __global__ void MeshKernelDScanning(unsigned char* frame, int* label, int* reference, const int width, const int height, bool& iterationFlag);
 
-__global__ void MeshKernelDAnalysis(unsigned char* frame, int* label, int* reference, const int width, const int height);
+__global__ void MeshKernelDAnalysis(int* label, int* reference, const int width, const int height);
 
-__global__ void MeshKernelDLabelling(unsigned char* frame, int* label, int* reference, const int width, const int height);
+__global__ void MeshKernelDLabelling(int* label, int* reference, const int width, const int height);
 
 #endif

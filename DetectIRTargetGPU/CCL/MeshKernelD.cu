@@ -23,9 +23,9 @@ void MeshCCL(unsigned char* frame, int* label, int width, int height)
 	{
 		MeshKernelDScanning<<<grid, block>>>(frame, labelList, reference, width, height, iterationFlag);
 
-		MeshKernelDAnalysis<<<grid, block >>>(frame, labelList, reference, width, height);
+		MeshKernelDAnalysis<<<grid, block >>>(labelList, reference, width, height);
 
-		MeshKernelDLabelling<<<grid, block >>>(frame, labelList, reference, width, height);
+		MeshKernelDLabelling<<<grid, block >>>(labelList, reference, width, height);
 	}
 	while (iterationFlag);
 
@@ -47,7 +47,7 @@ __global__ void InitCCL(int* label, int* reference, int N)
 
 __global__ void MeshKernelDScanning(unsigned char* frame, int* label, int* reference, const int width, const int height, bool& iterationFlag)
 {
-	__shared__ unsigned char smem[BlockY][BlockX];
+//	__shared__ unsigned char smem[BlockY][BlockX];
 
 	int x = threadIdx.x + blockIdx.x * blockDim.x;
 	int y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -56,19 +56,19 @@ __global__ void MeshKernelDScanning(unsigned char* frame, int* label, int* refer
 
 	int id = x + y * gridDim.x * blockDim.x;
 
-	int blockX = threadIdx.x;
-	int blockY = threadIdx.y;
-	smem[blockY][blockX] = frame[id];
-	__syncthreads();
+//	int blockX = threadIdx.x;
+//	int blockY = threadIdx.y;
+//	smem[blockY][blockX] = frame[id];
+//	__syncthreads();
 
 	int currentLabel = label[id];
 	int newLabel = width * height;
 	unsigned char val = frame[id];
 
-	if (y > 0 && val == frame[id - width])
-		newLabel = Min(newLabel, label[id - width]);
-	if (y < height - 1 && val == frame[id + width])
-		newLabel = Min(newLabel, label[id + width]);
+	if (y > 0 && val == frame[id - gridDim.x * blockDim.x])
+		newLabel = Min(newLabel, label[id - gridDim.x * blockDim.x]);
+	if (y < height - 1 && val == frame[id + gridDim.x * blockDim.x])
+		newLabel = Min(newLabel, label[id + gridDim.x * blockDim.x]);
 	if (x > 0 && val == frame[id - 1])
 		newLabel = Min(newLabel, label[id - 1]);
 	if (x < width - 1 && val == frame[id + 1])
@@ -81,12 +81,39 @@ __global__ void MeshKernelDScanning(unsigned char* frame, int* label, int* refer
 	}
 }
 
-__global__ void MeshKernelDAnalysis(unsigned char* frame, int* label, int* reference, const int width, const int height)
+__global__ void MeshKernelDAnalysis(int* label, int* reference, const int width, const int height)
 {
+	int x = threadIdx.x + blockIdx.x * blockDim.x;
+	int y = threadIdx.y + blockIdx.y * blockDim.y;
+	if (x >= width || y >= height)
+		return;
 
+	int id = x + y * gridDim.x * blockDim.x;
+
+	auto newLabel = label[id];
+	int ref;
+	if (newLabel == id)
+	{
+		do
+		{
+			ref = newLabel;
+			newLabel = reference[ref];
+		}
+		while (ref ^ newLabel);
+
+		reference[id] = newLabel;
+	}
 }
 
-__global__ void MeshKernelDLabelling(unsigned char* frame, int* label, int* reference, const int width, const int height)
+__global__ void MeshKernelDLabelling(int* label, int* reference, const int width, const int height)
 {
+	int x = threadIdx.x + blockIdx.x * blockDim.x;
+	int y = threadIdx.y + blockIdx.y * blockDim.y;
+	if (x >= width || y >= height)
+		return;
 
+	int id = x + y * gridDim.x * blockDim.x;
+
+	auto oldlabel = label[id];
+	label[id] = reference[reference[oldlabel]];
 }

@@ -19,7 +19,6 @@ inline bool cudaDeviceInit(int argc, const char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	// Choose which GPU to run on, change this on a multi-GPU system.
 	auto cudaStatus = cudaSetDevice(0);
 	if (cudaStatus != cudaSuccess)
 	{
