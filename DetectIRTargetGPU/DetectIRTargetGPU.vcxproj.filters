@@ -31,6 +31,9 @@
     <Filter Include="Segmentation">
       <UniqueIdentifier>{f8d473a3-4890-415d-82b9-7193b1c82130}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assistants">
+      <UniqueIdentifier>{c621fb91-a243-4a2b-9e60-322eb6d7368b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\GlobalMainHeaders.h">
@@ -68,6 +71,9 @@
     </ClInclude>
     <ClInclude Include="Segmentation\segementationHelper.cuh">
       <Filter>Segmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="Assistants\ShowFrame.hpp">
+      <Filter>Assistants</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

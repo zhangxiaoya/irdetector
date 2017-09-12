@@ -8,6 +8,7 @@
 #include "LevelDiscretization/LevelDiscretizationOnCPU.hpp"
 #include "LevelDiscretization/LevelDiscretizationKernel.cuh"
 #include "Segmentation/segementationHelper.cuh"
+#include "Assistants/ShowFrame.hpp"
 
 inline bool cudaDeviceInit(int argc, const char** argv)
 {
@@ -90,7 +91,6 @@ int main(int argc, char* argv[])
 				break;
 			}
 
-
 			logPrinter.PrintLogs("Level Discretization On CPU", Info);
 			LevelDiscretizationOnCPU::LevelDiscretization(dilationResultOfCPU, WIDTH, HEIGHT, 15);
 
@@ -103,6 +103,8 @@ int main(int argc, char* argv[])
 			{
 				break;
 			}
+
+			ShowFrame::Show("After dilation and level discretization on GPU", dilationResultOfGPU, WIDTH, HEIGHT);
 
 			logPrinter.PrintLogs("segementation On GPU", Info);
 			Segmentation(dilationResultOfGPU, WIDTH, HEIGHT);
