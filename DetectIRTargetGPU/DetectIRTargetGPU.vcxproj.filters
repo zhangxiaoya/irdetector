@@ -25,6 +25,15 @@
     <Filter Include="LevelDiscretization">
       <UniqueIdentifier>{297c6bd7-46b3-4b9a-b961-51fc35587939}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CCL">
+      <UniqueIdentifier>{0ff2eb78-60b2-463a-a004-b2019380364c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Segmentation">
+      <UniqueIdentifier>{f8d473a3-4890-415d-82b9-7193b1c82130}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assistants">
+      <UniqueIdentifier>{c621fb91-a243-4a2b-9e60-322eb6d7368b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\GlobalMainHeaders.h">
@@ -57,6 +66,15 @@
     <ClInclude Include="Checkers\CheckDiff.hpp">
       <Filter>Checkers</Filter>
     </ClInclude>
+    <ClInclude Include="CCL\MeshKernelD.cuh">
+      <Filter>CCL</Filter>
+    </ClInclude>
+    <ClInclude Include="Segmentation\segementationHelper.cuh">
+      <Filter>Segmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="Assistants\ShowFrame.hpp">
+      <Filter>Assistants</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -70,6 +88,12 @@
     </CudaCompile>
     <CudaCompile Include="LevelDiscretization\LevelDiscretizationKernel.cu">
       <Filter>LevelDiscretization</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CCL\MeshKernelD.cu">
+      <Filter>CCL</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Segmentation\segementationHelper.cu">
+      <Filter>Segmentation</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>
