@@ -11,7 +11,7 @@ __device__ int IntMin(int a, int b);
 
 __global__ void InitCCL(int* label, int* reference, int width, int height);
 
-__global__ void MeshKernelDScanning(unsigned char* frame, int* label, int* reference, const int width, const int height, bool& iterationFlag);
+__global__ void MeshKernelDScanning(unsigned char* frame, int* label, int* reference, const int width, const int height, bool* iterationFlag);
 
 __global__ void MeshKernelDAnalysis(int* label, int* reference, const int width, const int height);
 

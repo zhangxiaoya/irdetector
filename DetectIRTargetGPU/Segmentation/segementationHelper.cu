@@ -1,8 +1,8 @@
 #include "segementationHelper.cuh"
 #include <device_launch_parameters.h>
 #include <cuda_runtime_api.h>
-#include <math.h>
 #include "../CCL/MeshKernelD.cuh"
+#include <iostream>
 
 void Segmentation(unsigned char* frame, int width, int height)
 {
@@ -30,7 +30,7 @@ void Segmentation(unsigned char* frame, int width, int height)
 
 	for (auto i = 0; i<levelCount; ++i)
 	{
-		MeshCCL(originalFrameOnDevice, labelsOnDevice + i * width* height, width, height);
+		MeshCCL(leveledFrameOnDevice + i * width * height, labelsOnDevice + i * width* height, width, height);
 	}
 	cudaStatus = cudaDeviceSynchronize();
 }

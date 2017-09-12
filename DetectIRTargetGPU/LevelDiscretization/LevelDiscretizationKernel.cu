@@ -7,6 +7,8 @@ __global__ void LevelDiscretizationKernel(unsigned char* frame, int width, int h
 {
 	int x = blockDim.x * blockIdx.x + threadIdx.x;
 	int y = blockDim.y * blockIdx.y + threadIdx.y;
+	if(x >= width || y >= height)
+		return;
 
 	auto currentIdx = y * width + x;
 	frame[currentIdx] = (frame[currentIdx] / scale) * scale;
@@ -15,7 +17,7 @@ __global__ void LevelDiscretizationKernel(unsigned char* frame, int width, int h
 void LevelDiscretizationOnGPU(unsigned char* image, int width, int height, int discretizationScale)
 {
 	dim3 block(32, 32);
-	dim3 grid((width + 31 / 32), (height + 31) / 32);
+	dim3 grid((width + 31) / 32, (height + 31) / 32);
 
 	LevelDiscretizationKernel<<<grid, block>>>(image, width, height, static_cast<unsigned char>(discretizationScale));
 

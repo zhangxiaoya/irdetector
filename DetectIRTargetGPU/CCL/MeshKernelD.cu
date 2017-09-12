@@ -14,10 +14,18 @@ void MeshCCL(unsigned char* frame, int* label, int width, int height)
 	InitCCL<<<grid, block>>>(label, reference, width, height);
 
 	cudaError_t cudaStatus;
-	auto iterationFlag = false;
+
+	bool* iterationFlagOnHost;
+	bool* iterationFlagOnDevice;
+	cudaHostAlloc((void**)&iterationFlagOnHost, sizeof(bool), cudaHostAllocMapped);
+	*iterationFlagOnHost = false;
+	cudaHostGetDevicePointer((void**)&iterationFlagOnDevice, (void*)iterationFlagOnHost, 0);
+
 	do
 	{
-		MeshKernelDScanning<<<grid, block>>>(frame, label, reference, width, height, iterationFlag);
+		*iterationFlagOnHost = false;
+
+		MeshKernelDScanning<<<grid, block>>>(frame, label, reference, width, height, iterationFlagOnDevice);
 		cudaStatus = cudaDeviceSynchronize();
 
 		MeshKernelDAnalysis<<<grid, block >>>(label, reference, width, height);
@@ -27,7 +35,7 @@ void MeshCCL(unsigned char* frame, int* label, int width, int height)
 		cudaStatus = cudaDeviceSynchronize();
 
 	}
-	while (iterationFlag);
+	while (*iterationFlagOnHost);
 
 	cudaStatus = cudaFree(reference);
 
@@ -51,7 +59,7 @@ __global__ void InitCCL(int* label, int* reference, int width, int height)
 	label[id] = reference[id] = id;
 }
 
-__global__ void MeshKernelDScanning(unsigned char* frame, int* label, int* reference, const int width, const int height, bool& iterationFlag)
+__global__ void MeshKernelDScanning(unsigned char* frame, int* label, int* reference, const int width, const int height, bool* iterationFlag)
 {
 //	__shared__ unsigned char smem[BlockY][BlockX];
 
@@ -83,7 +91,7 @@ __global__ void MeshKernelDScanning(unsigned char* frame, int* label, int* refer
 	if(newLabel < currentLabel)
 	{
 		reference[currentLabel] = newLabel;
-		iterationFlag = true;
+		*iterationFlag = true;
 	}
 }
 
