@@ -24,5 +24,4 @@ inline void ShowFrame::Show(std::string titleName, unsigned char* frame, const i
 	imshow(titleName, img);
 	cv::waitKey(0);
 }
-
 #endif
