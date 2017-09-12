@@ -10,12 +10,15 @@ void Segmentation(unsigned char* frame, int width, int height)
 	unsigned char* originalFrameOnDevice;
 	unsigned char* leveledFrameOnDevice;
 	int* labelsOnDevice;
+	int* labelsOnHost;
 
 	auto levelCount = floor(256 / 15);
 
 	cudaMalloc(reinterpret_cast<void**>(&originalFrameOnDevice), width* height);
 	cudaMalloc(reinterpret_cast<void**>(&leveledFrameOnDevice), width * height * levelCount);
+
 	cudaMalloc(reinterpret_cast<void**>(&labelsOnDevice), width * height * sizeof(int) * levelCount);
+	cudaMallocHost(reinterpret_cast<void**>(& labelsOnHost), width * height * sizeof(int) * levelCount);
 
 	cudaMemcpy(originalFrameOnDevice, frame, width * height, cudaMemcpyHostToDevice);
 
@@ -33,6 +36,13 @@ void Segmentation(unsigned char* frame, int width, int height)
 		MeshCCL(leveledFrameOnDevice + i * width * height, labelsOnDevice + i * width* height, width, height);
 	}
 	cudaStatus = cudaDeviceSynchronize();
+
+	cudaMemcpy(labelsOnHost, labelsOnDevice, width * height * sizeof(int), cudaMemcpyDeviceToHost);
+
+	cudaFreeHost(labelsOnHost);
+	cudaFree(originalFrameOnDevice);
+	cudaFree(leveledFrameOnDevice);
+	cudaFree(labelsOnDevice);
 }
 
 __global__ void SplitByLevel(unsigned char* frame, unsigned char* dstFrame, int width, int height, unsigned char levelVal)
