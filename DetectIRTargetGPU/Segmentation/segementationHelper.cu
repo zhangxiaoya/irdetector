@@ -4,6 +4,8 @@
 #include "../CCL/MeshKernelD.cuh"
 #include <iostream>
 #include "../Assistants/ShowFrame.hpp"
+#include <iomanip>
+#include <Windows.h>
 
 #define CHECK(call)                                                        \
 {                                                                          \
@@ -14,72 +16,30 @@
 		printf("code:%d, reason: %s\n", error, cudaGetErrorString(error)); \
 	}                                                                      \
 }
+
+#define CheckPerf(call, message)                                                                             \
+{                                                                                                            \
+	LARGE_INTEGER t1, t2, tc;                                                                                \
+	QueryPerformanceFrequency(&tc);                                                                          \
+	QueryPerformanceCounter(&t1);                                                                            \
+	call;                                                                                                    \
+	QueryPerformanceCounter(&t2);                                                                            \
+	printf("Operation of %20s Use Time:%f\n", message, (t2.QuadPart - t1.QuadPart)*1.0 / tc.QuadPart);       \
+};
+
 void Segmentation(unsigned char* frame, int width, int height)
 {
-	const auto bin = 15;
-	unsigned char* originalFrameOnDevice;
-	unsigned char* leveledFrameOnDevice;
-	unsigned char* leveledFrameOnHost;
-	int* labelsOnDevice;
 	int* labelsOnHost;
+	cudaMallocHost(reinterpret_cast<void**>(&labelsOnHost), width * height * sizeof(int));
 
-	auto levelCount = floor(256 / 15);
+	cv::Mat img;
+	ShowFrame::ToMat<unsigned char>(frame, width, height, img, CV_8UC1);
 
-	cudaMalloc(reinterpret_cast<void**>(&originalFrameOnDevice), width* height);
-	cudaMalloc(reinterpret_cast<void**>(&leveledFrameOnDevice), width * height * levelCount);
-	cudaMallocHost(reinterpret_cast<void**>(&leveledFrameOnHost), width * height * levelCount);
+	ShowFrame::ToTxt(frame, width, height);
 
-	cudaMalloc(reinterpret_cast<void**>(&labelsOnDevice), width * height * sizeof(int) * levelCount);
-	cudaMallocHost(reinterpret_cast<void**>(& labelsOnHost), width * height * sizeof(int) * levelCount);
-
-	cudaMemcpy(originalFrameOnDevice, frame, width * height, cudaMemcpyHostToDevice);
-
-	dim3 blcok(32, 8);
-	dim3 grid((width + 31) / 32, (height + 7) / 8);
-
-	for (auto i = 0; i < levelCount; ++i)
-	{
-//		SplitByLevel<<<grid, blcok>>>(originalFrameOnDevice, leveledFrameOnDevice + i * width * height, width, height, bin * i);
-//		auto cudaStatus = cudaDeviceSynchronize();
-//		CHECK(cudaStatus);
-		for(auto j = 0; j<width * height;++j)
-		{
-			if (frame[j] == static_cast<unsigned char>(bin*i))
-				leveledFrameOnHost[i * width * height + j] = 255;
-			else
-				leveledFrameOnHost[i * width * height + j] = 0;
-		}
-	}
-	for(auto i = 0; i< levelCount;++i)
-	{
-		std::cout << "Level " << i<<std::endl;
-		ShowFrame::Show("Level", leveledFrameOnHost + i * width * height, width, height);
-	}
-
-	for (auto i = 0; i<levelCount; ++i)
-	{
-		MeshCCL(leveledFrameOnDevice + i * width * height, labelsOnDevice + i * width* height, width, height);
-	}
-	auto cudaStatus = cudaDeviceSynchronize();
-
-	cudaMemcpy(labelsOnHost, labelsOnDevice, width * height * sizeof(int), cudaMemcpyDeviceToHost);
-
-	for(auto i =0;i< levelCount;++i)
-	{
-		auto maxLabel = 0;
-		for(auto j = 0;j< width * height; ++j)
-		{
-			if (labelsOnHost[i * width + height + j] > maxLabel)
-				maxLabel = labelsOnHost[i * width + height + j];
-		}
-		std::cout << "Max label = " << maxLabel << std::endl;
-	}
+	CheckPerf(MeshCCL(frame, labelsOnHost, width, height),"Mesh CCL");
 
 	cudaFreeHost(labelsOnHost);
-	cudaFreeHost(leveledFrameOnHost);
-	cudaFree(originalFrameOnDevice);
-	cudaFree(leveledFrameOnDevice);
-	cudaFree(labelsOnDevice);
 }
 
 struct FourLimits
