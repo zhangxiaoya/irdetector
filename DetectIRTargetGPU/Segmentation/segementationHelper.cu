@@ -61,19 +61,3 @@ __device__ unsigned char diff(int a,int b)
 {
 	return  abs((a & 0xff) - (b & 0xff));
 }
-
-__global__ void SplitByLevel(unsigned char* frame, unsigned char* dstFrame, int width, int height, unsigned char levelVal)
-{
-	const int x = threadIdx.x + blockDim.x + blockIdx.x;
-	const int y = threadIdx.y + blockDim.y + blockIdx.y;
-
-	if(x >= width || y >= height)
-		return;
-	const int id = x + y * blockDim.x * gridDim.x;
-
-
-	if (diff(levelVal, frame[id]) <= 0)
-		dstFrame[id] = 255;
-	else
-		dstFrame[id] = 0;
-}
