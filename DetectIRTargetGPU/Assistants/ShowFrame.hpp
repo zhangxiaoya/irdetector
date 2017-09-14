@@ -4,6 +4,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <fstream>
 #include "../Headers/GlobalMainHeaders.h"
+#include <iomanip>
 
 class ShowFrame
 {
@@ -13,7 +14,8 @@ public:
 
 	static void Show(std::string titleName, unsigned char* frame, const int width, const int height);
 
-	static void ToTxt(unsigned char* frame, std::string fileName, const int width,  const int height);
+	template<typename T>
+	static void ToTxt(T* frame, std::string fileName, const int width,  const int height);
 };
 
 template<typename T>
@@ -30,20 +32,23 @@ void ShowFrame::ToMat(T* frame, const int width, const int height, cv::Mat& img,
 	}
 }
 
-inline void ShowFrame::ToTxt(unsigned char* frame, std::string fileName, const int width, const int height)
+template<typename T>
+void ShowFrame::ToTxt(T* frame, std::string fileName, const int width, const int height)
 {
 	std::ofstream fout(fileName);
 
 	if (fout.is_open())
 	{
+		logPrinter.PrintLogs("Write frame data to text file...", LogLevel::Info);
 		for (auto i = 0; i < height; ++i)
 		{
 			for (auto j = 0; j < width; ++j)
 			{
-				fout << static_cast<int>(frame[i * width + j]) << " ";
+				fout << std::setw(6) << static_cast<int>(frame[i * width + j]) << " ";
 			}
 			fout << std::endl;
 		}
+		logPrinter.PrintLogs("Write frame data to text file is done!", Info);
 	}
 	else
 	{

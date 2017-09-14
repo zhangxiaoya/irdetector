@@ -35,9 +35,11 @@ void Segmentation(unsigned char* frame, int width, int height)
 	cv::Mat img;
 	ShowFrame::ToMat<unsigned char>(frame, width, height, img, CV_8UC1);
 
-	ShowFrame::ToTxt(frame, "data.txt", width, height);
+	ShowFrame::ToTxt<unsigned char>(frame, "data.txt", width, height);
 
 	CheckPerf(MeshCCL(frame, labelsOnHost, width, height),"Mesh CCL");
+
+	ShowFrame::ToTxt<int>(labelsOnHost,"lables.txt", width, height);
 
 	cudaFreeHost(labelsOnHost);
 }
