@@ -78,6 +78,12 @@
     <ClInclude Include="Models\FourLimits.h">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Models\Point.h">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\ObjectRect.h">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

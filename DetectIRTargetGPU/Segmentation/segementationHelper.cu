@@ -1,5 +1,4 @@
 #include "segementationHelper.cuh"
-#include <device_launch_parameters.h>
 #include <cuda_runtime_api.h>
 #include "../CCL/MeshKernelD.cuh"
 #include <iostream>
@@ -8,6 +7,8 @@
 #include <Windows.h>
 
 #include "../Models/FourLimits.h"
+#include "../Models/Point.h"
+#include "../Models/ObjectRect.h"
 
 #define CHECK(call)                                                        \
 {                                                                          \
@@ -29,27 +30,6 @@
 	printf("Operation of %20s Use Time:%f\n", message, (t2.QuadPart - t1.QuadPart)*1.0 / tc.QuadPart);       \
 };
 
-struct Point
-{
-	explicit Point(int _x = -1, int _y = -1): x(_x), y(_y)
-	{
-	}
-
-	int x;
-	int y;
-};
-
-struct ObjectRect
-{
-	ObjectRect(): width(0), height(0)
-	{
-	}
-
-	Point lt;
-	Point rb;
-	int width;
-	int height;
-};
 
 void GetAllObjects(int width, int height, int* labelsOnHost, FourLimits* allObjects)
 {
