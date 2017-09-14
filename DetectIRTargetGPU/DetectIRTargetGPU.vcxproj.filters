@@ -75,6 +75,21 @@
     <ClInclude Include="Assistants\ShowFrame.hpp">
       <Filter>Assistants</Filter>
     </ClInclude>
+    <ClInclude Include="Models\FourLimits.h">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\Point.h">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\ObjectRect.h">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Checkers\CheckCUDAReturnStatus.h">
+      <Filter>Checkers</Filter>
+    </ClInclude>
+    <ClInclude Include="Checkers\CheckPerf.h">
+      <Filter>Checkers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

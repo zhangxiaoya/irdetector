@@ -4,6 +4,4 @@
 
 extern inline void Segmentation(unsigned char* frame, int width, int height);
 
-extern __global__ void SplitByLevel(unsigned char* frame, unsigned char* dstFrame, int width, int height, unsigned char levelVal);
-
 #endif

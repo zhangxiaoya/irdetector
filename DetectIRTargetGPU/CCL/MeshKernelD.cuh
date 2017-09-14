@@ -3,7 +3,7 @@
 #define __MESH_KERNEL_D_H__
 
 const auto BlockX = 32;
-const auto BlockY = 8;
+const auto BlockY = 32;
 
 void MeshCCL(unsigned char* frame, int* label, int width, int height);
 

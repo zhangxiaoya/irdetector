@@ -9,6 +9,7 @@
 #include "LevelDiscretization/LevelDiscretizationKernel.cuh"
 #include "Segmentation/segementationHelper.cuh"
 #include "Assistants/ShowFrame.hpp"
+#include <cuda_runtime_api.h>
 
 inline bool cudaDeviceInit(int argc, const char** argv)
 {
@@ -52,13 +53,13 @@ int main(int argc, char* argv[])
 		unsigned char* originalFrameOnDeivce;
 		unsigned char* resultOnDevice;
 
-		cudaMalloc(&originalFrameOnDeivce, WIDTH * HEIGHT);
-		cudaMalloc(&resultOnDevice, WIDTH * HEIGHT);
+		cudaMalloc(reinterpret_cast<void**>(&originalFrameOnDeivce), WIDTH * HEIGHT);
+		cudaMalloc(reinterpret_cast<void**>(&resultOnDevice), WIDTH * HEIGHT);
 
 		auto dilationResultOfCPU = new unsigned char[WIDTH * HEIGHT];
 		auto dilationResultOfGPU = new unsigned char[WIDTH * HEIGHT];
 
-		std::string fileName = "C:\\D\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin";
+		std::string fileName = "D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin";
 
 		auto fileReader = new BinaryFileReader(fileName);
 

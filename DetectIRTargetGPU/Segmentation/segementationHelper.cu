@@ -1,51 +1,99 @@
 #include "segementationHelper.cuh"
-#include <device_launch_parameters.h>
 #include <cuda_runtime_api.h>
 #include "../CCL/MeshKernelD.cuh"
 #include <iostream>
+#include "../Assistants/ShowFrame.hpp"
+#include <iomanip>
+#include <Windows.h>
+
+#include "../Models/FourLimits.h"
+#include "../Models/Point.h"
+#include "../Models/ObjectRect.h"
+#include "../Checkers/CheckPerf.h"
+
+void GetAllObjects(int width, int height, int* labelsOnHost, FourLimits* allObjects)
+{
+	// top
+	for(auto r = 0; r < height;++r)
+	{
+		for(auto c = 0;c < width;++c)
+		{
+			auto label = labelsOnHost[r * width + c];
+			if (allObjects[label].top == -1)
+				allObjects[label].top = r;
+		}
+	}
+	// bottom
+	for (auto r = height -1; r >= 0; --r)
+	{
+		for (auto c = 0; c < width; ++c)
+		{
+			auto label = labelsOnHost[r * width + c];
+			if (allObjects[label].bottom == -1)
+				allObjects[label].bottom = r;
+		}
+	}
+
+	// left
+	for (auto c = 0; c < width; ++c)
+	{
+		for (auto r = 0; r < height; ++r)
+		{
+			auto label = labelsOnHost[r * width + c];
+			if (allObjects[label].left == -1)
+				allObjects[label].left = c;
+		}
+	}
+	// right
+	for (auto c = width -1; c >= 0; --c)
+	{
+		for (auto r = 0; r < height; ++r)
+		{
+			auto label = labelsOnHost[r * width + c];
+			if (allObjects[label].right == -1)
+				allObjects[label].right = c;
+		}
+	}
+}
+
+void do_work(int width, int height, FourLimits* allObjects, ObjectRect* allObjectRects)
+{
+	for(auto i = 0;i < width * height;++i)
+	{
+		if (allObjects[i].top == -1)
+			continue;
+		allObjectRects[i].width = allObjects[i].right - allObjects[i].left + 1;
+		allObjectRects[i].height = allObjects[i].bottom - allObjects[i].top + 1;
+		allObjectRects[i].lt = Point(allObjects[i].left, allObjects[i].top);
+		allObjectRects[i].rb = Point(allObjects[i].right, allObjects[i].bottom);
+	}
+}
 
 void Segmentation(unsigned char* frame, int width, int height)
 {
-	const auto bin = 15;
-	unsigned char* originalFrameOnDevice;
-	unsigned char* leveledFrameOnDevice;
-	int* labelsOnDevice;
+	int* labelsOnHost;
+	cudaMallocHost(reinterpret_cast<void**>(&labelsOnHost), width * height * sizeof(int));
 
-	auto levelCount = floor(256 / 15);
+	cv::Mat img;
+	ShowFrame::ToMat<unsigned char>(frame, width, height, img, CV_8UC1);
 
-	cudaMalloc(reinterpret_cast<void**>(&originalFrameOnDevice), width* height);
-	cudaMalloc(reinterpret_cast<void**>(&leveledFrameOnDevice), width * height * levelCount);
-	cudaMalloc(reinterpret_cast<void**>(&labelsOnDevice), width * height * sizeof(int) * levelCount);
+	ShowFrame::ToTxt<unsigned char>(frame, "data.txt", width, height);
 
-	cudaMemcpy(originalFrameOnDevice, frame, width * height, cudaMemcpyHostToDevice);
+	CheckPerf(MeshCCL(frame, labelsOnHost, width, height),"Mesh CCL");
 
-	dim3 blcok(32, 8);
-	dim3 grid((width + 31) / 32, (height + 7) / 8);
+	ShowFrame::ToTxt<int>(labelsOnHost,"lables.txt", width, height);
 
-	for (auto i = 0; i < levelCount; ++i)
-	{
-		SplitByLevel<<<grid, blcok>>>(originalFrameOnDevice, leveledFrameOnDevice + i * width * height, width, height, bin * i);
-	}
-	auto cudaStatus = cudaDeviceSynchronize();
+	auto allObjects = new FourLimits[WIDTH * HEIGHT];
 
-	for (auto i = 0; i<levelCount; ++i)
-	{
-		MeshCCL(leveledFrameOnDevice + i * width * height, labelsOnDevice + i * width* height, width, height);
-	}
-	cudaStatus = cudaDeviceSynchronize();
-}
+	CheckPerf(GetAllObjects(width, height, labelsOnHost, allObjects),"All Objects");
 
-__global__ void SplitByLevel(unsigned char* frame, unsigned char* dstFrame, int width, int height, unsigned char levelVal)
-{
-	const int x = threadIdx.x + blockDim.x + blockIdx.x;
-	const int y = threadIdx.y + blockDim.y + blockIdx.y;
+	auto allObjectRects = new ObjectRect[WIDTH * HEIGHT];
 
-	if(x >= width || y >= height)
-		return;
-	const int id = x + y * blockDim.x * gridDim.x;
+	CheckPerf(do_work(width, height, allObjects, allObjectRects), "To Rect");
 
-	if (frame[id] == levelVal)
-		dstFrame[id] = 1;
-	else
-		dstFrame[id] = 0;
+	ShowFrame::DrawRectangles(frame, allObjectRects, width, height);
+
+	delete[] allObjectRects;
+	delete[] allObjects;
+	cudaFreeHost(labelsOnHost);
 }
