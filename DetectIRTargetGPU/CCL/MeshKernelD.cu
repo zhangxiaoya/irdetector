@@ -86,7 +86,7 @@ __global__ void MeshKernelDLabelling(int* label, int* reference, const int width
 }
 
 
-__device__ unsigned char IMin(unsigned char a, unsigned char b)
+__device__ int IMin(int a, int b)
 {
 	return a < b ? a : b;
 }
