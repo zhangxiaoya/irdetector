@@ -173,7 +173,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Models\LogLevel.hpp" />
     <ClInclude Include="Models\ObjectRect.h" />
     <ClInclude Include="Models\Point.h" />
+    <ClInclude Include="Monitor\Monitor.hpp" />
     <ClInclude Include="Segmentation\segementationHelper.cuh" />
+    <ClInclude Include="Validation\Validation.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CCL\MeshKernelD.cu" />
