@@ -7,6 +7,8 @@
 #include <iomanip>
 #include <Windows.h>
 
+#include "../Models/FourLimits.h"
+
 #define CHECK(call)                                                        \
 {                                                                          \
 	const cudaError_t error = call;                                        \
@@ -27,15 +29,26 @@
 	printf("Operation of %20s Use Time:%f\n", message, (t2.QuadPart - t1.QuadPart)*1.0 / tc.QuadPart);       \
 };
 
-struct FourLimits
+struct Point
 {
-	FourLimits(): top(-1), bottom(-1), left(-1), right(-1)
+	explicit Point(int _x = -1, int _y = -1): x(_x), y(_y)
 	{
 	}
-	int top;
-	int bottom;
-	int left;
-	int right;
+
+	int x;
+	int y;
+};
+
+struct ObjectRect
+{
+	ObjectRect(): width(0), height(0)
+	{
+	}
+
+	Point lt;
+	Point rb;
+	int width;
+	int height;
 };
 
 void GetAllObjects(int width, int height, int* labelsOnHost, FourLimits* allObjects)
@@ -83,6 +96,19 @@ void GetAllObjects(int width, int height, int* labelsOnHost, FourLimits* allObje
 	}
 }
 
+void do_work(int width, int height, FourLimits* allObjects, ObjectRect* allObjectRects)
+{
+	for(auto i = 0;i < width * height;++i)
+	{
+		if (allObjects[i].top == -1)
+			continue;
+		allObjectRects[i].width = allObjects[i].right - allObjects[i].left + 1;
+		allObjectRects[i].height = allObjects[i].bottom - allObjects[i].top + 1;
+		allObjectRects[i].lt = Point(allObjects[i].left, allObjects[i].top);
+		allObjectRects[i].rb = Point(allObjects[i].right, allObjects[i].bottom);
+	}
+}
+
 void Segmentation(unsigned char* frame, int width, int height)
 {
 	int* labelsOnHost;
@@ -101,6 +127,11 @@ void Segmentation(unsigned char* frame, int width, int height)
 
 	CheckPerf(GetAllObjects(width, height, labelsOnHost, allObjects),"All Objects");
 
+	auto allObjectRects = new ObjectRect[WIDTH * HEIGHT];
+
+	CheckPerf(do_work(width, height, allObjects, allObjectRects), "To Rect");
+
+	delete[] allObjectRects;
 	delete[] allObjects;
 	cudaFreeHost(labelsOnHost);
 }

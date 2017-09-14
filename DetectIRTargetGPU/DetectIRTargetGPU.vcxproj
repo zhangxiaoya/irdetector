@@ -167,6 +167,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="LevelDiscretization\LevelDiscretizationKernel.cuh" />
     <ClInclude Include="LevelDiscretization\LevelDiscretizationOnCPU.hpp" />
     <ClInclude Include="LogPrinter\LogPrinter.hpp" />
+    <ClInclude Include="Models\FourLimits.h" />
     <ClInclude Include="Models\LogLevel.hpp" />
     <ClInclude Include="Segmentation\segementationHelper.cuh" />
   </ItemGroup>

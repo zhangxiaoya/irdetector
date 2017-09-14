@@ -75,6 +75,9 @@
     <ClInclude Include="Assistants\ShowFrame.hpp">
       <Filter>Assistants</Filter>
     </ClInclude>
+    <ClInclude Include="Models\FourLimits.h">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
