@@ -84,6 +84,12 @@
     <ClInclude Include="Models\ObjectRect.h">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Checkers\CheckCUDAReturnStatus.h">
+      <Filter>Checkers</Filter>
+    </ClInclude>
+    <ClInclude Include="Checkers\CheckPerf.h">
+      <Filter>Checkers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

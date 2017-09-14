@@ -9,27 +9,7 @@
 #include "../Models/FourLimits.h"
 #include "../Models/Point.h"
 #include "../Models/ObjectRect.h"
-
-#define CHECK(call)                                                        \
-{                                                                          \
-	const cudaError_t error = call;                                        \
-	if(error != cudaSuccess)                                               \
-	{                                                                      \
-		printf("Error: %s: %d,  " __FILE__, __LINE__);                     \
-		printf("code:%d, reason: %s\n", error, cudaGetErrorString(error)); \
-	}                                                                      \
-}
-
-#define CheckPerf(call, message)                                                                             \
-{                                                                                                            \
-	LARGE_INTEGER t1, t2, tc;                                                                                \
-	QueryPerformanceFrequency(&tc);                                                                          \
-	QueryPerformanceCounter(&t1);                                                                            \
-	call;                                                                                                    \
-	QueryPerformanceCounter(&t2);                                                                            \
-	printf("Operation of %20s Use Time:%f\n", message, (t2.QuadPart - t1.QuadPart)*1.0 / tc.QuadPart);       \
-};
-
+#include "../Checkers/CheckPerf.h"
 
 void GetAllObjects(int width, int height, int* labelsOnHost, FourLimits* allObjects)
 {
