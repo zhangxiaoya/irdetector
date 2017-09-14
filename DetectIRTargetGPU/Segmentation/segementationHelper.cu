@@ -91,6 +91,8 @@ void Segmentation(unsigned char* frame, int width, int height)
 
 	CheckPerf(do_work(width, height, allObjects, allObjectRects), "To Rect");
 
+	ShowFrame::DrawRectangles(frame, allObjectRects, width, height);
+
 	delete[] allObjectRects;
 	delete[] allObjects;
 	cudaFreeHost(labelsOnHost);
