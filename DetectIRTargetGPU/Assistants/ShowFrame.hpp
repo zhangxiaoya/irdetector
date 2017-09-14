@@ -2,8 +2,8 @@
 #define __SHOW_FRAME__
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-
 #include <fstream>
+#include "../Headers/GlobalMainHeaders.h"
 
 class ShowFrame
 {
@@ -13,7 +13,7 @@ public:
 
 	static void Show(std::string titleName, unsigned char* frame, const int width, const int height);
 
-	static void ToTxt(unsigned char* frame, const int width,  const int height);
+	static void ToTxt(unsigned char* frame, std::string fileName, const int width,  const int height);
 };
 
 template<typename T>
@@ -30,10 +30,9 @@ void ShowFrame::ToMat(T* frame, const int width, const int height, cv::Mat& img,
 	}
 }
 
-inline void ShowFrame::ToTxt(unsigned char* frame, const int width, const int height)
+inline void ShowFrame::ToTxt(unsigned char* frame, std::string fileName, const int width, const int height)
 {
-	std::string fileName = "data.txt";
-	std::ofstream fout("data.txt");
+	std::ofstream fout(fileName);
 
 	if (fout.is_open())
 	{
@@ -45,6 +44,10 @@ inline void ShowFrame::ToTxt(unsigned char* frame, const int width, const int he
 			}
 			fout << std::endl;
 		}
+	}
+	else
+	{
+		logPrinter.PrintLogs("Since cannot open this file, Wtite pixels data to text file faild", Error);
 	}
 }
 

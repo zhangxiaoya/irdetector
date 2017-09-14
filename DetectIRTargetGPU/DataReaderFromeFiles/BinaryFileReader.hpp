@@ -4,6 +4,7 @@
 #include "Headers/GlobalMainHeaders.h"
 #include "Common/SplitBinaryFile.hpp"
 #include <fstream>
+#include <cuda_runtime_api.h>
 
 class BinaryFileReader
 {
@@ -194,7 +195,7 @@ inline bool BinaryFileReader::InitSpaceOnHost()
 	// frame data of each frame is on pinned memory
 	for (auto i = 0; i < frameCount; ++i)
 	{
-		auto cuda_error = cudaMallocHost(&dataMatrix[i], WIDTH * HEIGHT);
+		auto cuda_error = cudaMallocHost((void**)&dataMatrix[i], WIDTH * HEIGHT);
 		if (cuda_error != cudaSuccess)
 		{
 			logPrinter.PrintLogs("Init space on host failed! Starting roll back ...", LogLevel::Error);

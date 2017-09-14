@@ -35,7 +35,7 @@ void Segmentation(unsigned char* frame, int width, int height)
 	cv::Mat img;
 	ShowFrame::ToMat<unsigned char>(frame, width, height, img, CV_8UC1);
 
-	ShowFrame::ToTxt(frame, width, height);
+	ShowFrame::ToTxt(frame, "data.txt", width, height);
 
 	CheckPerf(MeshCCL(frame, labelsOnHost, width, height),"Mesh CCL");
 
