@@ -27,6 +27,62 @@
 	printf("Operation of %20s Use Time:%f\n", message, (t2.QuadPart - t1.QuadPart)*1.0 / tc.QuadPart);       \
 };
 
+struct FourLimits
+{
+	FourLimits(): top(-1), bottom(-1), left(-1), right(-1)
+	{
+	}
+	int top;
+	int bottom;
+	int left;
+	int right;
+};
+
+void GetAllObjects(int width, int height, int* labelsOnHost, FourLimits* allObjects)
+{
+	// top
+	for(auto r = 0; r < height;++r)
+	{
+		for(auto c = 0;c < width;++c)
+		{
+			auto label = labelsOnHost[r * width + c];
+			if (allObjects[label].top == -1)
+				allObjects[label].top = r;
+		}
+	}
+	// bottom
+	for (auto r = height -1; r >= 0; --r)
+	{
+		for (auto c = 0; c < width; ++c)
+		{
+			auto label = labelsOnHost[r * width + c];
+			if (allObjects[label].bottom == -1)
+				allObjects[label].bottom = r;
+		}
+	}
+
+	// left
+	for (auto c = 0; c < width; ++c)
+	{
+		for (auto r = 0; r < height; ++r)
+		{
+			auto label = labelsOnHost[r * width + c];
+			if (allObjects[label].left == -1)
+				allObjects[label].left = c;
+		}
+	}
+	// right
+	for (auto c = width -1; c >= 0; --c)
+	{
+		for (auto r = 0; r < height; ++r)
+		{
+			auto label = labelsOnHost[r * width + c];
+			if (allObjects[label].right == -1)
+				allObjects[label].right = c;
+		}
+	}
+}
+
 void Segmentation(unsigned char* frame, int width, int height)
 {
 	int* labelsOnHost;
@@ -41,23 +97,10 @@ void Segmentation(unsigned char* frame, int width, int height)
 
 	ShowFrame::ToTxt<int>(labelsOnHost,"lables.txt", width, height);
 
+	auto allObjects = new FourLimits[WIDTH * HEIGHT];
+
+	CheckPerf(GetAllObjects(width, height, labelsOnHost, allObjects),"All Objects");
+
+	delete[] allObjects;
 	cudaFreeHost(labelsOnHost);
-}
-
-struct FourLimits
-{
-	int top;
-	int bottopm;
-	int left;
-	int right;
-};
-
-__global__ void GetAllFourLimits(unsigned char* frame, int width, int height)
-{
-
-}
-
-__device__ unsigned char diff(int a,int b)
-{
-	return  abs((a & 0xff) - (b & 0xff));
 }
