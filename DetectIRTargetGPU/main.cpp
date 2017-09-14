@@ -10,6 +10,7 @@
 #include "Segmentation/segementationHelper.cuh"
 #include "Assistants/ShowFrame.hpp"
 #include <cuda_runtime_api.h>
+#include "Validation/Validation.hpp"
 
 inline bool cudaDeviceInit(int argc, const char** argv)
 {
@@ -50,6 +51,10 @@ int main(int argc, char* argv[])
 	auto cudaInitStatus = cudaDeviceInit(argc, const_cast<const char **>(argv));
 	if (cudaInitStatus)
 	{
+		Validation validation;
+		validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
+		validation.VailidationAll();
+		/*
 		unsigned char* originalFrameOnDeivce;
 		unsigned char* resultOnDevice;
 
@@ -60,7 +65,6 @@ int main(int argc, char* argv[])
 		auto dilationResultOfGPU = new unsigned char[WIDTH * HEIGHT];
 
 		std::string fileName = "D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin";
-
 		auto fileReader = new BinaryFileReader(fileName);
 
 		fileReader->ReadBinaryFileToHostMemory();
@@ -109,14 +113,15 @@ int main(int argc, char* argv[])
 
 			logPrinter.PrintLogs("segementation On GPU", Info);
 			Segmentation(dilationResultOfGPU, WIDTH, HEIGHT);
-		}
+			*/
+//		}
 
-		cudaFree(originalFrameOnDeivce);
-		cudaFree(resultOnDevice);
-		delete[] dilationResultOfCPU;
-		delete[] dilationResultOfGPU;
+//		cudaFree(originalFrameOnDeivce);
+//		cudaFree(resultOnDevice);
+//		delete[] dilationResultOfCPU;
+//		delete[] dilationResultOfGPU;
 
-		delete fileReader;
+//		delete fileReader;
 		cudaDeviceRelease();
 	}
 

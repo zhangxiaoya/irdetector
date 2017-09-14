@@ -37,6 +37,9 @@
     <Filter Include="Monitor">
       <UniqueIdentifier>{dc8c7f8f-2c45-435d-ad26-40b65b9bf526}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Validation">
+      <UniqueIdentifier>{951d2b82-5408-4564-a268-d7fe97c6e76b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\GlobalMainHeaders.h">
@@ -95,6 +98,9 @@
     </ClInclude>
     <ClInclude Include="Monitor\Monitor.hpp">
       <Filter>Monitor</Filter>
+    </ClInclude>
+    <ClInclude Include="Validation\Validation.hpp">
+      <Filter>Validation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
