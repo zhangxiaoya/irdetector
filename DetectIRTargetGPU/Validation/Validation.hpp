@@ -38,6 +38,11 @@ public:
 
 	void VailidationAll();
 
+private:
+	bool CheckFileReader() const;
+
+	bool CheckInitSpace() const;
+
 protected:
 	bool DilationValidation() const;
 
@@ -92,20 +97,33 @@ inline void Validation::ResetResultsToZero() const
 	cudaMemcpy(resultOfLevelDiscretizationOnDevice, resultOfLevelDiscretizationOnHostUseGPU, sizeof(unsigned char)*width * height, cudaMemcpyHostToDevice);
 }
 
-inline void Validation::VailidationAll()
+inline bool Validation::CheckFileReader() const
 {
 	if(fileReader == nullptr)
 	{
 		logPrinter.PrintLogs("File Reader is Not Ready!", Error);
 		system("Pause");
-		exit(-1);
+		return true;
 	}
+	return false;
+}
+
+inline bool Validation::CheckInitSpace() const
+{
 	if (isInitSpaceReady == false)
 	{
 		logPrinter.PrintLogs("Init Space on Device and Host First!", Error);
 		system("Pause");
 		exit(-1);
 	}
+	return false;
+}
+
+inline void Validation::VailidationAll()
+{
+	if (CheckFileReader()) return;
+	if (CheckInitSpace()) return;
+
 	auto frameCount = fileReader->GetFrameCount();
 	auto dataPoint = fileReader->GetDataPoint();
 
@@ -181,12 +199,13 @@ inline void Validation::InitSpace()
 
 inline void Validation::DestroySpace() const
 {
-	cudaFree(this->originalFrameOnDeivce);
-	cudaFree(this->resultOfDilationOnDevice);
-	cudaFree(this->resultOfLevelDiscretizationOnDevice);
+	auto status = true;
+	CheckCUDAReturnStatus(cudaFree(this->originalFrameOnDeivce), status);
+	CheckCUDAReturnStatus(cudaFree(this->resultOfDilationOnDevice), status);
+	CheckCUDAReturnStatus(cudaFree(this->resultOfLevelDiscretizationOnDevice), status);
 
-	cudaFreeHost(this->resultOfDilationOnHostUseCPU);
-	cudaFreeHost(this->resultOfDilationOnHostUseGPU);
-	cudaFreeHost(this->resultOfLevelDiscretizationOnHostUseCPU);
-	cudaFreeHost(this->resultOfLevelDiscretizationOnHostUseGPU);
+	CheckCUDAReturnStatus(cudaFreeHost(this->resultOfDilationOnHostUseCPU), status);
+	CheckCUDAReturnStatus(cudaFreeHost(this->resultOfDilationOnHostUseGPU), status);
+	CheckCUDAReturnStatus(cudaFreeHost(this->resultOfLevelDiscretizationOnHostUseCPU),  status);
+	CheckCUDAReturnStatus(cudaFreeHost(this->resultOfLevelDiscretizationOnHostUseGPU),  status);
 }

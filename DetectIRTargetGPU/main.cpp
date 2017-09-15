@@ -122,8 +122,8 @@ int main(int argc, char* argv[])
 //		delete[] dilationResultOfGPU;
 
 //		delete fileReader;
-		cudaDeviceRelease();
 	}
+	cudaDeviceRelease();
 
 	system("Pause");
 	return 0;
