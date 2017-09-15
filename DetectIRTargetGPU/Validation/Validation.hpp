@@ -3,7 +3,7 @@
 #include "../Models/LogLevel.hpp"
 #include "../LogPrinter/LogPrinter.hpp"
 #include "../Dilations/DilatetionOnCPU.hpp"
-#include "../Dilations/DilatetionKernel.h"
+#include "../Dilations/DilatetionKernel.cuh"
 #include "../Checkers/CheckDiff.hpp"
 #include "../LevelDiscretization/LevelDiscretizationOnCPU.hpp"
 #include "../LevelDiscretization/LevelDiscretizationKernel.cuh"
@@ -183,7 +183,7 @@ inline bool Validation::DilationValidation() const
 	DilationOnCPU::dilationCPU(originalFrameOnHost, resultOfDilationOnHostUseCPU, width, height, 1);
 
 	logPrinter.PrintLogs("Dialtion On GPU", Info);
-	FilterDilation(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1);
+	DilationFilter(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1);
 	cudaMemcpy(resultOfDilationOnHostUseGPU, resultOfDilationOnDevice, width * height, cudaMemcpyDeviceToHost);
 
 	return CheckDiff::Check<unsigned char>(resultOfDilationOnHostUseCPU, resultOfDilationOnHostUseGPU, width, height);
