@@ -144,15 +144,12 @@ __global__ void labeling(int labelList[], int reference[], int width, int height
 }
 
 
-void MeshCCL(unsigned char* frameOnDevice, int* labelsOnDevice, int* referenceOfLabelsOnDevice, int width, int height)
+void MeshCCL(unsigned char* frameOnDevice, int* labelsOnDevice, int* referenceOfLabelsOnDevice, bool* modificationFlagOnDevice, int width, int height)
 {
 	auto degreeOfConnectivity = 4;
 	unsigned char threshold = 0;
 
 	auto N = width * height;
-
-	bool* markFlagOnDevice;
-	cudaMalloc(reinterpret_cast<void**>(&markFlagOnDevice), sizeof(bool));
 
 	dim3 grid((width + BlockX - 1) / BlockX, (height + BlockY - 1) / BlockY);
 	dim3 threads(BlockX, BlockY);
@@ -162,14 +159,14 @@ void MeshCCL(unsigned char* frameOnDevice, int* labelsOnDevice, int* referenceOf
 	while (true)
 	{
 		auto markFlagOnHost = false;
-		cudaMemcpy(markFlagOnDevice, &markFlagOnHost, sizeof(bool), cudaMemcpyHostToDevice);
+		cudaMemcpy(modificationFlagOnDevice, &markFlagOnHost, sizeof(bool), cudaMemcpyHostToDevice);
 
 		if (degreeOfConnectivity == 4)
-			Scanning<<<grid, threads>>>(frameOnDevice, labelsOnDevice, referenceOfLabelsOnDevice, markFlagOnDevice, N, width, height, threshold);
+			Scanning<<<grid, threads>>>(frameOnDevice, labelsOnDevice, referenceOfLabelsOnDevice, modificationFlagOnDevice, N, width, height, threshold);
 		else
-			scanning8<<<grid, threads>>>(frameOnDevice, labelsOnDevice, referenceOfLabelsOnDevice, markFlagOnDevice, N, width, height, threshold);
+			scanning8<<<grid, threads>>>(frameOnDevice, labelsOnDevice, referenceOfLabelsOnDevice, modificationFlagOnDevice, N, width, height, threshold);
 
-		cudaMemcpy(&markFlagOnHost, markFlagOnDevice, sizeof(bool), cudaMemcpyDeviceToHost);
+		cudaMemcpy(&markFlagOnHost, modificationFlagOnDevice, sizeof(bool), cudaMemcpyDeviceToHost);
 
 		if (markFlagOnHost)
 		{

@@ -4,6 +4,6 @@
 const auto BlockX = 32;
 const auto BlockY = 32;
 
-void MeshCCL(unsigned char* frameOnDevice, int* labelsOnDevice, int* referenceOfLabelsOnDevice, int width, int height);
+void MeshCCL(unsigned char* frameOnDevice, int* labelsOnDevice, int* referenceOfLabelsOnDevice, bool* modificationFlagOnDevice, int width, int height);
 
 #endif

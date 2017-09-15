@@ -72,11 +72,14 @@ void Segmentation(unsigned char* frameOnHost, int width, int height)
 	int* labelsOnHost;
 	int* labelsOnDevice;
 	int* referenceOfLablesOnDevice;
+	bool* modificationFlagOnDevice;
 	unsigned char* frameOnDevice;
+
 	cudaMallocHost((void**)&labelsOnHost, width * height * sizeof(int));
 	cudaMalloc((void**)&frameOnDevice, width * height * sizeof(unsigned char));
 	cudaMalloc((void**)&labelsOnDevice, sizeof(int) * width * height);
 	cudaMalloc((void**)&referenceOfLablesOnDevice, sizeof(int) * width* height);
+	cudaMalloc((void**)&modificationFlagOnDevice, sizeof(bool));
 
 	cudaMemcpy(frameOnDevice, frameOnHost, sizeof(unsigned char) * width * height, cudaMemcpyHostToDevice);
 
@@ -85,7 +88,7 @@ void Segmentation(unsigned char* frameOnHost, int width, int height)
 
 	ShowFrame::ToTxt<unsigned char>(frameOnHost, "data.txt", width, height);
 
-	CheckPerf(MeshCCL(frameOnDevice, labelsOnDevice, referenceOfLablesOnDevice,width, height),"Mesh CCL");
+	CheckPerf(MeshCCL(frameOnDevice, labelsOnDevice, referenceOfLablesOnDevice,modificationFlagOnDevice,width, height),"Mesh CCL");
 
 	cudaMemcpy(labelsOnHost, labelsOnDevice, sizeof(int) * width * height, cudaMemcpyDeviceToHost);
 
@@ -107,4 +110,5 @@ void Segmentation(unsigned char* frameOnHost, int width, int height)
 	cudaFree(labelsOnDevice);
 	cudaFree(referenceOfLablesOnDevice);
 	cudaFree(frameOnDevice);
+	cudaFree(modificationFlagOnDevice);
 }
