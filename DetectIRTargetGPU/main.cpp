@@ -1,37 +1,12 @@
-#include <iostream>
-
 #include "Headers/GlobalMainHeaders.h"
-#include "DataReaderFromeFiles/BinaryFileReader.hpp"
-#include "Dilations/DilatetionOnCPU.hpp"
-#include "Dilations/DilatetionKernel.h"
 #include "Checkers/CheckDiff.hpp"
-#include "LevelDiscretization/LevelDiscretizationOnCPU.hpp"
-#include "LevelDiscretization/LevelDiscretizationKernel.cuh"
-#include "Segmentation/segementationHelper.cuh"
 #include "Assistants/ShowFrame.hpp"
-#include <cuda_runtime_api.h>
 #include "Validation/Validation.hpp"
+#include "Init/Init.hpp"
 
-inline bool cudaDeviceInit(int argc, const char** argv)
-{
-	int deviceCount;
-	cudaGetDeviceCount(&deviceCount);
-
-	if (deviceCount == 0)
-	{
-		logPrinter.PrintLogs("CUDA error: no devices supporting CUDA.", Error);
-		exit(EXIT_FAILURE);
-	}
-
-	auto cudaStatus = cudaSetDevice(0);
-	if (cudaStatus != cudaSuccess)
-	{
-		logPrinter.PrintLogs("cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?", Error);
-		return false;
-	}
-	logPrinter.PrintLogs("cudaSetDevice success!", Info);
-	return true;
-}
+const unsigned int WIDTH = 320;
+const unsigned int HEIGHT = 256;
+const unsigned BYTESIZE = 2;
 
 void cudaDeviceRelease()
 {
@@ -48,7 +23,7 @@ void cudaDeviceRelease()
 
 int main(int argc, char* argv[])
 {
-	auto cudaInitStatus = cudaDeviceInit(argc, const_cast<const char **>(argv));
+	auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
 		Validation validation;

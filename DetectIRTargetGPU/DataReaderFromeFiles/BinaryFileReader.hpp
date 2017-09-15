@@ -12,7 +12,10 @@ public:
 	explicit BinaryFileReader(const std::string& binary_file_name)
 		: frameCount(0),
 		  dataMatrix(nullptr),
-		  binaryFileName(binary_file_name)
+		  binaryFileName(binary_file_name),
+		  width(320),
+		  height(256),
+		  ByteSize(2)
 	{
 	}
 
@@ -37,12 +40,17 @@ protected:
 
 	static void ConstitudePixel(unsigned char highPart, unsigned char lowPart, uint16_t& perPixel);
 
-	static void ChangeRows(unsigned& row, unsigned& col);
+	void ChangeRows(unsigned& row, unsigned& col) const;
 
 private:
 	unsigned int frameCount;
 	unsigned char** dataMatrix;
+
 	std::string binaryFileName;
+
+	int width;
+	int height;
+	int ByteSize;
 };
 
 inline BinaryFileReader::~BinaryFileReader()
@@ -80,7 +88,7 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 		auto init_space_on_host = InitSpaceOnHost();
 		if (init_space_on_host)
 		{
-			auto originalPerFramePixelArray = new uint16_t[WIDTH * HEIGHT];
+			auto originalPerFramePixelArray = new uint16_t[width * height];
 			auto iterationText = new char[200];
 
 			// init some variables
@@ -101,7 +109,7 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 					break;
 
 				// per frame
-				while (byteIndex - 2 < WIDTH * HEIGHT * BYTESIZE)
+				while (byteIndex - 2 < width * height * ByteSize)
 				{
 					// take 16-bit space per pixel
 					uint16_t perPixel;
@@ -180,7 +188,7 @@ inline void BinaryFileReader::CalculateFrameCount(std::ifstream& fin)
 	fin.seekg(0, std::ios::end);
 	auto len = fin.tellg();
 
-	frameCount = len * 1.0 / (WIDTH * HEIGHT * 2);
+	frameCount = len * 1.0 / (width * height * 2);
 
 	fin.seekg(0, std::ios::beg);
 	logPrinter.PrintLogs("The image count in this binary file is ", LogLevel::Info, frameCount);
@@ -195,7 +203,7 @@ inline bool BinaryFileReader::InitSpaceOnHost()
 	// frame data of each frame is on pinned memory
 	for (auto i = 0; i < frameCount; ++i)
 	{
-		auto cuda_error = cudaMallocHost((void**)&dataMatrix[i], WIDTH * HEIGHT);
+		auto cuda_error = cudaMallocHost((void**)&dataMatrix[i], width * height);
 		if (cuda_error != cudaSuccess)
 		{
 			logPrinter.PrintLogs("Init space on host failed! Starting roll back ...", LogLevel::Error);
@@ -219,10 +227,10 @@ inline void BinaryFileReader::ConstitudePixel(unsigned char highPart, unsigned c
 	perPixel |= lowPart;
 }
 
-inline void BinaryFileReader::ChangeRows(unsigned& row, unsigned& col)
+inline void BinaryFileReader::ChangeRows(unsigned& row, unsigned& col) const
 {
 	col++;
-	if (col == WIDTH)
+	if (col == width)
 	{
 		col = 0;
 		row++;

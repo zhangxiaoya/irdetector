@@ -40,6 +40,9 @@
     <Filter Include="Validation">
       <UniqueIdentifier>{951d2b82-5408-4564-a268-d7fe97c6e76b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Init">
+      <UniqueIdentifier>{b0fab0ca-275c-4cf0-a26b-d1d1c362ebf6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\GlobalMainHeaders.h">
@@ -101,6 +104,9 @@
     </ClInclude>
     <ClInclude Include="Validation\Validation.hpp">
       <Filter>Validation</Filter>
+    </ClInclude>
+    <ClInclude Include="Init\Init.hpp">
+      <Filter>Init</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

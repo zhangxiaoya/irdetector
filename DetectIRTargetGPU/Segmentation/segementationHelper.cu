@@ -83,11 +83,11 @@ void Segmentation(unsigned char* frame, int width, int height)
 
 	ShowFrame::ToTxt<int>(labelsOnHost,"lables.txt", width, height);
 
-	auto allObjects = new FourLimits[WIDTH * HEIGHT];
+	auto allObjects = new FourLimits[width * height];
 
 	CheckPerf(GetAllObjects(width, height, labelsOnHost, allObjects),"All Objects");
 
-	auto allObjectRects = new ObjectRect[WIDTH * HEIGHT];
+	auto allObjectRects = new ObjectRect[width * height];
 
 	CheckPerf(do_work(width, height, allObjects, allObjectRects), "To Rect");
 
