@@ -207,7 +207,8 @@ inline bool Validation::CCLValidation() const
 	MeshCCLOnCPU::ccl(resultOfLevelDiscretizationOnHostUseCPU, resultOfCCLOnHostUseCPU, width, height, 4, 0);
 
 	logPrinter.PrintLogs("CCL On GPU", Info);
-	MeshCCL(resultOfLevelDiscretizationOnHostUseGPU, resultOfCCLOnHostUseGPU, width, height);
+	MeshCCL(resultOfLevelDiscretizationOnHostUseGPU, resultOfCCLOnDevice, width, height);
+	cudaMemcpy(resultOfCCLOnHostUseGPU, resultOfCCLOnDevice, sizeof(int) * width * height, cudaMemcpyDeviceToHost);
 	return CheckDiff::Check<int>(resultOfCCLOnHostUseCPU, resultOfCCLOnHostUseGPU, width, height);
 }
 
