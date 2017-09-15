@@ -10,6 +10,7 @@
 #include "../Checkers/CheckCUDAReturnStatus.h"
 #include "../CCL/MeshCCLOnCPU.hpp"
 #include "../CCL/MeshCCLKernelD.cuh"
+#include "../Checkers/CheckPerf.h"
 
 class Validation
 {
@@ -210,7 +211,7 @@ inline bool Validation::CCLValidation() const
 	MeshCCLOnCPU::ccl(resultOfLevelDiscretizationOnHostUseCPU, resultOfCCLOnHostUseCPU, width, height, 4, 0);
 
 	logPrinter.PrintLogs("CCL On GPU", Info);
-	MeshCCL(resultOfLevelDiscretizationOnHostUseGPU, resultOfCCLOnDevice, referenceOfCCLOnDevice, modificationFlagOnDevice, width, height);
+	CheckPerf(MeshCCL(resultOfLevelDiscretizationOnHostUseGPU, resultOfCCLOnDevice, referenceOfCCLOnDevice, modificationFlagOnDevice, width, height), "CCL On GPU");
 	cudaMemcpy(resultOfCCLOnHostUseGPU, resultOfCCLOnDevice, sizeof(int) * width * height, cudaMemcpyDeviceToHost);
 	return CheckDiff::Check<int>(resultOfCCLOnHostUseCPU, resultOfCCLOnHostUseGPU, width, height);
 }
