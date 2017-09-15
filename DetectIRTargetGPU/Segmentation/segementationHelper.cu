@@ -1,11 +1,9 @@
-#include "segementationHelper.cuh"
 #include <cuda_runtime_api.h>
-#include "../CCL/MeshCCLKernelD.cuh"
 #include <iostream>
-#include "../Assistants/ShowFrame.hpp"
 #include <iomanip>
-#include <Windows.h>
-
+#include "segementationHelper.cuh"
+#include "../Assistants/ShowFrame.hpp"
+#include "../CCL/MeshCCLKernelD.cuh"
 #include "../Models/FourLimits.h"
 #include "../Models/Point.h"
 #include "../Models/ObjectRect.h"
