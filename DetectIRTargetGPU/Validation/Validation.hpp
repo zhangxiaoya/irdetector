@@ -128,7 +128,7 @@ inline bool Validation::CheckInitSpace() const
 	{
 		logPrinter.PrintLogs("Init Space on Device and Host First!", Error);
 		system("Pause");
-		exit(-1);
+		return true;
 	}
 	return false;
 }
@@ -153,6 +153,7 @@ inline void Validation::VailidationAll()
 		ResetResultsToZero();
 
 		originalFrameOnHost = dataPoint[i];
+		cudaMemcpy(originalFrameOnDeivce, originalFrameOnHost, sizeof(unsigned char) *width * height, cudaMemcpyHostToDevice);
 
 		checkResult = DilationValidation();
 		if(checkResult == false)
@@ -177,8 +178,6 @@ inline void Validation::VailidationAll()
 
 inline bool Validation::DilationValidation() const
 {
-	cudaMemcpy(originalFrameOnDeivce, originalFrameOnHost, sizeof(unsigned char) *width * height, cudaMemcpyHostToDevice);
-
 	logPrinter.PrintLogs("Dilation on CPU!", Info);
 	DilationOnCPU::DilationCPU(originalFrameOnHost, resultOfDilationOnHostUseCPU, width, height, 1);
 
@@ -231,7 +230,8 @@ inline void Validation::InitSpace()
 
 inline void Validation::DestroySpace() const
 {
-	auto status = true;
+	bool status;
+
 	CheckCUDAReturnStatus(cudaFree(this->originalFrameOnDeivce), status);
 	CheckCUDAReturnStatus(cudaFree(this->resultOfDilationOnDevice), status);
 	CheckCUDAReturnStatus(cudaFree(this->resultOfLevelDiscretizationOnDevice), status);
