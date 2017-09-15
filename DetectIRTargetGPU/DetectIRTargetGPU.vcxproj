@@ -157,7 +157,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Assistants\ShowFrame.hpp" />
-    <ClInclude Include="CCL\MeshKernelD.cuh" />
+    <ClInclude Include="CCL\MeshCCLKernelD.cuh" />
     <ClInclude Include="Checkers\CheckCUDAReturnStatus.h" />
     <ClInclude Include="Checkers\CheckDiff.hpp" />
     <ClInclude Include="Checkers\CheckPerf.h" />
@@ -179,7 +179,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Validation\Validation.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="CCL\MeshKernelD.cu" />
+    <CudaCompile Include="CCL\MeshCCLKernelD.cu" />
     <CudaCompile Include="Dilations\DilatetionKernel.cu" />
     <CudaCompile Include="LevelDiscretization\LevelDiscretizationKernel.cu" />
     <CudaCompile Include="Segmentation\segementationHelper.cu" />

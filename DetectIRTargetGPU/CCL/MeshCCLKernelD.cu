@@ -1,4 +1,4 @@
-#include "MeshKernelD.cuh"
+#include "MeshCCLKernelD.cuh"
 #include <vector_types.h>
 #include <cuda_runtime_api.h>
 #include <device_launch_parameters.h>

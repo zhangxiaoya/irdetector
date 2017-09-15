@@ -1,6 +1,6 @@
 #include "segementationHelper.cuh"
 #include <cuda_runtime_api.h>
-#include "../CCL/MeshKernelD.cuh"
+#include "../CCL/MeshCCLKernelD.cuh"
 #include <iostream>
 #include "../Assistants/ShowFrame.hpp"
 #include <iomanip>

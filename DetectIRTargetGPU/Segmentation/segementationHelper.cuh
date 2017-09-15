@@ -1,4 +1,3 @@
-#include <host_defines.h>
 #ifndef __SEGEMENTATION_HELPER_H__
 #define __SEGEMENTATION_HELPER_H__
 

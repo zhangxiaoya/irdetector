@@ -75,9 +75,6 @@
     <ClInclude Include="Checkers\CheckDiff.hpp">
       <Filter>Checkers</Filter>
     </ClInclude>
-    <ClInclude Include="CCL\MeshKernelD.cuh">
-      <Filter>CCL</Filter>
-    </ClInclude>
     <ClInclude Include="Segmentation\segementationHelper.cuh">
       <Filter>Segmentation</Filter>
     </ClInclude>
@@ -108,6 +105,9 @@
     <ClInclude Include="Init\Init.hpp">
       <Filter>Init</Filter>
     </ClInclude>
+    <ClInclude Include="CCL\MeshCCLKernelD.cuh">
+      <Filter>CCL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -122,11 +122,11 @@
     <CudaCompile Include="LevelDiscretization\LevelDiscretizationKernel.cu">
       <Filter>LevelDiscretization</Filter>
     </CudaCompile>
-    <CudaCompile Include="CCL\MeshKernelD.cu">
-      <Filter>CCL</Filter>
-    </CudaCompile>
     <CudaCompile Include="Segmentation\segementationHelper.cu">
       <Filter>Segmentation</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CCL\MeshCCLKernelD.cu">
+      <Filter>CCL</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>
