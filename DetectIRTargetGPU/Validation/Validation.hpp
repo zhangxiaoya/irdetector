@@ -27,6 +27,7 @@ public:
 		  resultOfCCLOnDevice(nullptr),
 		  resultOfCCLOnHostUseCPU(nullptr),
 		  resultOfCCLOnHostUseGPU(nullptr),
+		  referenceOfCCLOnDevice(nullptr),
 		  isInitSpaceReady(false),
 		  width(320),
 		  height(256)
@@ -75,6 +76,7 @@ private:
 	int* resultOfCCLOnDevice;
 	int* resultOfCCLOnHostUseCPU;
 	int* resultOfCCLOnHostUseGPU;
+	int* referenceOfCCLOnDevice;
 
 	bool isInitSpaceReady;
 
@@ -206,7 +208,7 @@ inline bool Validation::CCLValidation() const
 	MeshCCLOnCPU::ccl(resultOfLevelDiscretizationOnHostUseCPU, resultOfCCLOnHostUseCPU, width, height, 4, 0);
 
 	logPrinter.PrintLogs("CCL On GPU", Info);
-	MeshCCL(resultOfLevelDiscretizationOnHostUseGPU, resultOfCCLOnDevice, width, height);
+	MeshCCL(resultOfLevelDiscretizationOnHostUseGPU, resultOfCCLOnDevice, referenceOfCCLOnDevice, width, height);
 	cudaMemcpy(resultOfCCLOnHostUseGPU, resultOfCCLOnDevice, sizeof(int) * width * height, cudaMemcpyDeviceToHost);
 	return CheckDiff::Check<int>(resultOfCCLOnHostUseCPU, resultOfCCLOnHostUseGPU, width, height);
 }
@@ -219,6 +221,7 @@ inline void Validation::InitSpace()
 	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfDilationOnDevice, sizeof(unsigned char) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfLevelDiscretizationOnDevice, sizeof(unsigned char) * height * width), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfCCLOnDevice, sizeof(int) * height * width), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc((void**)&this->referenceOfCCLOnDevice, sizeof(int) * height * width), isInitSpaceReady);
 
 	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfDilationOnHostUseCPU,sizeof(unsigned char) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfDilationOnHostUseGPU,sizeof(unsigned char) * width * height), isInitSpaceReady);
@@ -236,6 +239,7 @@ inline void Validation::DestroySpace() const
 	CheckCUDAReturnStatus(cudaFree(this->resultOfDilationOnDevice), status);
 	CheckCUDAReturnStatus(cudaFree(this->resultOfLevelDiscretizationOnDevice), status);
 	CheckCUDAReturnStatus(cudaFree(this->resultOfCCLOnDevice), status);
+	CheckCUDAReturnStatus(cudaFree(this->referenceOfCCLOnDevice), status);
 
 	CheckCUDAReturnStatus(cudaFreeHost(this->resultOfDilationOnHostUseCPU), status);
 	CheckCUDAReturnStatus(cudaFreeHost(this->resultOfDilationOnHostUseGPU), status);

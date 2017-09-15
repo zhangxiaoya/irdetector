@@ -144,16 +144,12 @@ __global__ void labeling(int labelList[], int reference[], int width, int height
 }
 
 
-void MeshCCL(unsigned char* frameOnDevice, int* labelsOnDevice, int width, int height)
+void MeshCCL(unsigned char* frameOnDevice, int* labelsOnDevice, int* referenceOfLabelsOnDevice, int width, int height)
 {
-	int* ReferenceOnDevice;
-
 	auto degreeOfConnectivity = 4;
 	unsigned char threshold = 0;
 
 	auto N = width * height;
-
-	cudaMalloc(reinterpret_cast<void**>(&ReferenceOnDevice), sizeof(int) * N);
 
 	bool* markFlagOnDevice;
 	cudaMalloc(reinterpret_cast<void**>(&markFlagOnDevice), sizeof(bool));
@@ -161,7 +157,7 @@ void MeshCCL(unsigned char* frameOnDevice, int* labelsOnDevice, int width, int h
 	dim3 grid((width + BlockX - 1) / BlockX, (height + BlockY - 1) / BlockY);
 	dim3 threads(BlockX, BlockY);
 
-	InitCCLOnDevice<<<grid, threads>>>(labelsOnDevice, ReferenceOnDevice, width, height);
+	InitCCLOnDevice<<<grid, threads>>>(labelsOnDevice, referenceOfLabelsOnDevice, width, height);
 
 	while (true)
 	{
@@ -169,23 +165,21 @@ void MeshCCL(unsigned char* frameOnDevice, int* labelsOnDevice, int width, int h
 		cudaMemcpy(markFlagOnDevice, &markFlagOnHost, sizeof(bool), cudaMemcpyHostToDevice);
 
 		if (degreeOfConnectivity == 4)
-			Scanning<<<grid, threads>>>(frameOnDevice, labelsOnDevice, ReferenceOnDevice, markFlagOnDevice, N, width, height, threshold);
+			Scanning<<<grid, threads>>>(frameOnDevice, labelsOnDevice, referenceOfLabelsOnDevice, markFlagOnDevice, N, width, height, threshold);
 		else
-			scanning8<<<grid, threads>>>(frameOnDevice, labelsOnDevice, ReferenceOnDevice, markFlagOnDevice, N, width, height, threshold);
+			scanning8<<<grid, threads>>>(frameOnDevice, labelsOnDevice, referenceOfLabelsOnDevice, markFlagOnDevice, N, width, height, threshold);
 
 		cudaMemcpy(&markFlagOnHost, markFlagOnDevice, sizeof(bool), cudaMemcpyDeviceToHost);
 
 		if (markFlagOnHost)
 		{
-			analysis<<<grid, threads>>>(labelsOnDevice, ReferenceOnDevice, width, height);
+			analysis<<<grid, threads>>>(labelsOnDevice, referenceOfLabelsOnDevice, width, height);
 			cudaThreadSynchronize();
-			labeling<<<grid, threads>>>(labelsOnDevice, ReferenceOnDevice, width, height);
+			labeling<<<grid, threads>>>(labelsOnDevice, referenceOfLabelsOnDevice, width, height);
 		}
 		else
 		{
 			break;
 		}
 	}
-
-	cudaFree(ReferenceOnDevice);
 }
