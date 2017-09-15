@@ -8,7 +8,9 @@
 class CUDAInit
 {
 public:
-	static inline bool cudaDeviceInit();
+	static bool cudaDeviceInit();
+
+	static void cudaDeviceRelease();
 };
 
 inline bool CUDAInit::cudaDeviceInit()
@@ -24,6 +26,7 @@ inline bool CUDAInit::cudaDeviceInit()
 
 	auto status = true;
 	CheckCUDAReturnStatus(cudaSetDevice(0), status);
+
 	if (status == false)
 	{
 		logPrinter.PrintLogs("cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?", Error);
@@ -32,4 +35,15 @@ inline bool CUDAInit::cudaDeviceInit()
 
 	logPrinter.PrintLogs("cudaSetDevice success!", Info);
 	return status;
+}
+
+inline void CUDAInit::cudaDeviceRelease()
+{
+	auto status = true;
+	CheckCUDAReturnStatus(cudaDeviceReset(), status);
+
+	if (status == true)
+	{
+		logPrinter.PrintLogs("cudaDeviceReset success!", Info);
+	}
 }
