@@ -36,7 +36,7 @@ public:
 
 	void InitValidationData(std::string validationFileName);
 
-	bool VailidationAll();
+	void VailidationAll();
 
 protected:
 	bool DilationValidation() const;
@@ -46,6 +46,8 @@ protected:
 	void InitSpace();
 
 	void DestroySpace() const;
+
+	void ResetResultsToZero() const;
 
 private:
 	BinaryFileReader* fileReader;
@@ -80,13 +82,35 @@ inline void Validation::InitValidationData(std::string validationFileName)
 	this->InitSpace();
 }
 
-inline bool Validation::VailidationAll()
+inline void Validation::ResetResultsToZero() const
 {
+	memset(resultOfDilationOnHostUseCPU, 0, width * height * sizeof(unsigned char));
+	memset(resultOfDilationOnHostUseGPU, 0, width * height * sizeof(unsigned char));
+	memset(resultOfLevelDiscretizationOnHostUseCPU, 0, width * height * sizeof(unsigned char));
+	memset(resultOfLevelDiscretizationOnHostUseGPU, 0, width * height * sizeof(unsigned char));
+	cudaMemcpy(resultOfDilationOnDevice, resultOfDilationOnHostUseGPU, sizeof(unsigned char)*width * height, cudaMemcpyHostToDevice);
+	cudaMemcpy(resultOfLevelDiscretizationOnDevice, resultOfLevelDiscretizationOnHostUseGPU, sizeof(unsigned char)*width * height, cudaMemcpyHostToDevice);
+}
+
+inline void Validation::VailidationAll()
+{
+	if(fileReader == nullptr)
+	{
+		logPrinter.PrintLogs("File Reader is Not Ready!", Error);
+		system("Pause");
+		exit(-1);
+	}
+	if (isInitSpaceReady == false)
+	{
+		logPrinter.PrintLogs("Init Space on Device and Host First!", Error);
+		system("Pause");
+		exit(-1);
+	}
 	auto frameCount = fileReader->GetFrameCount();
 	auto dataPoint = fileReader->GetDataPoint();
 
+	logPrinter.PrintLogs("Test the accuracy for this test file ... ", Info);
 	auto checkResult = false;
-
 	char iterationText[200];
 
 	for(auto i = 0;i<frameCount;++i)
@@ -94,12 +118,7 @@ inline bool Validation::VailidationAll()
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);
 
-		memset(resultOfDilationOnHostUseCPU, 0, width * height * sizeof(unsigned char));
-		memset(resultOfDilationOnHostUseGPU, 0, width * height * sizeof(unsigned char));
-		memset(resultOfLevelDiscretizationOnHostUseCPU, 0, width * height * sizeof(unsigned char));
-		memset(resultOfLevelDiscretizationOnHostUseGPU, 0, width * height * sizeof(unsigned char));
-		cudaMemcpy(resultOfDilationOnDevice, resultOfDilationOnHostUseGPU, sizeof(unsigned char)*width * height, cudaMemcpyHostToDevice);
-		cudaMemcpy(resultOfLevelDiscretizationOnDevice, resultOfLevelDiscretizationOnHostUseGPU, sizeof(unsigned char)*width * height, cudaMemcpyHostToDevice);
+		ResetResultsToZero();
 
 		originalFrameOnHost = dataPoint[i];
 
@@ -114,7 +133,10 @@ inline bool Validation::VailidationAll()
 		if(checkResult == false)
 			break;
 	}
-	return checkResult;
+	if(checkResult == true)
+	{
+		logPrinter.PrintLogs("All test cases passed!", Info);
+	}
 }
 
 inline bool Validation::DilationValidation() const
