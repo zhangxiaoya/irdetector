@@ -180,7 +180,7 @@ inline bool Validation::DilationValidation() const
 	cudaMemcpy(originalFrameOnDeivce, originalFrameOnHost, sizeof(unsigned char) *width * height, cudaMemcpyHostToDevice);
 
 	logPrinter.PrintLogs("Dilation on CPU!", Info);
-	DilationOnCPU::dilationCPU(originalFrameOnHost, resultOfDilationOnHostUseCPU, width, height, 1);
+	DilationOnCPU::DilationCPU(originalFrameOnHost, resultOfDilationOnHostUseCPU, width, height, 1);
 
 	logPrinter.PrintLogs("Dialtion On GPU", Info);
 	DilationFilter(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1);
