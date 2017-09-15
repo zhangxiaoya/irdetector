@@ -13,7 +13,15 @@ class Validation
 {
 public:
 	explicit Validation(BinaryFileReader* file_reader = nullptr)
-		: fileReader(file_reader), originalFrameOnHost(nullptr), originalFrameOnDeivce(nullptr), resultOfDilationOnHostUseCPU(nullptr), resultOfDilationOnHostUseGPU(nullptr), resultOfDilationOnDevice(nullptr), resultOfLevelDiscretizationOnHostUseCPU(nullptr), resultOfLevelDiscretizationOnHostUseGPU(nullptr), resultOfLevelDiscretizationOnDevice(nullptr),
+		: fileReader(file_reader),
+		  originalFrameOnHost(nullptr),
+		  originalFrameOnDeivce(nullptr),
+		  resultOfDilationOnHostUseCPU(nullptr),
+		  resultOfDilationOnHostUseGPU(nullptr),
+		  resultOfDilationOnDevice(nullptr),
+		  resultOfLevelDiscretizationOnHostUseCPU(nullptr),
+		  resultOfLevelDiscretizationOnHostUseGPU(nullptr),
+		  resultOfLevelDiscretizationOnDevice(nullptr),
 		  width(320),
 		  height(256)
 	{
@@ -65,7 +73,8 @@ inline void Validation::InitValidationData(std::string validationFileName)
 	}
 	fileReader = new BinaryFileReader(validationFileName);
 	fileReader->ReadBinaryFileToHostMemory();
-	InitSpace();
+
+	this->InitSpace();
 }
 
 inline bool Validation::VailidationAll()
@@ -75,7 +84,7 @@ inline bool Validation::VailidationAll()
 
 	auto checkResult = false;
 
-	auto iterationText = new char[200];
+	char iterationText[200];
 
 	for(auto i = 0;i<frameCount;++i)
 	{
@@ -133,14 +142,14 @@ inline bool Validation::LevelDiscretizationValidation() const
 
 inline void Validation::InitSpace() const
 {
-	cudaMalloc((void**)&this->originalFrameOnDeivce, sizeof(unsigned char) * width * height);
-	cudaMalloc((void**)&this->resultOfDilationOnDevice, sizeof(unsigned char) * width * height);
-	cudaMalloc((void**)&this->resultOfLevelDiscretizationOnDevice, sizeof(unsigned char) * height * width);
+	CheckCUDAReturnStatus(cudaMalloc((void**)&this->originalFrameOnDeivce, sizeof(unsigned char) * width * height));
+	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfDilationOnDevice, sizeof(unsigned char) * width * height));
+	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfLevelDiscretizationOnDevice, sizeof(unsigned char) * height * width));
 
-	cudaMallocHost((void**)&this->resultOfDilationOnHostUseCPU,sizeof(unsigned char) * width * height);
-	cudaMallocHost((void**)&this->resultOfDilationOnHostUseGPU,sizeof(unsigned char) * width * height);
-	cudaMallocHost((void**)&this->resultOfLevelDiscretizationOnHostUseCPU, sizeof(unsigned char) *width * height);
-	cudaMallocHost((void**)&this->resultOfLevelDiscretizationOnHostUseGPU, sizeof(unsigned char) *width * height);
+	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfDilationOnHostUseCPU,sizeof(unsigned char) * width * height));
+	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfDilationOnHostUseGPU,sizeof(unsigned char) * width * height));
+	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfLevelDiscretizationOnHostUseCPU, sizeof(unsigned char) *width * height));
+	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfLevelDiscretizationOnHostUseGPU, sizeof(unsigned char) *width * height));
 }
 
 inline void Validation::DestroySpace() const
