@@ -8,10 +8,12 @@
 class CheckDiff
 {
 public:
-	static bool Check(unsigned char* resultOnCPU, unsigned char* resultOnGPU, int width, int height);
+	template<typename T>
+	static bool Check(T* resultOnCPU, T* resultOnGPU, int width, int height);
 };
 
-inline bool CheckDiff::Check(unsigned char* resultOnCPU, unsigned char* resultOnGPU, int width, int height)
+template<typename T>
+bool CheckDiff::Check(T* resultOnCPU, T* resultOnGPU, int width, int height)
 {
 	for (auto r = 0; r < height; r++)
 	{
@@ -22,7 +24,7 @@ inline bool CheckDiff::Check(unsigned char* resultOnCPU, unsigned char* resultOn
 				std::ostringstream oss;
 				oss << "Expected: " << static_cast<int>(resultOnCPU[r * width + c]) << ", actual: " << static_cast<int>(resultOnGPU[r * width + c]) << ", on: " << r << ", " << c << std::endl;
 				auto errorMsg = oss.str();
-				logPrinter.PrintLogs(errorMsg, LogLevel::Error);
+				logPrinter.PrintLogs(errorMsg, Error);
 				return false;
 			}
 		}
