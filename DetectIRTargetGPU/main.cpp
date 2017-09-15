@@ -1,4 +1,3 @@
-#include "Assistants/ShowFrame.hpp"
 #include "Validation/Validation.hpp"
 #include "Init/Init.hpp"
 
@@ -14,9 +13,6 @@ int main(int argc, char* argv[])
 		Validation validation;
 		validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
 		validation.VailidationAll();
-
-		//			logPrinter.PrintLogs("segementation On GPU", Info);
-		//			Segmentation(dilationResultOfGPU, WIDTH, HEIGHT);
 	}
 	CUDAInit::cudaDeviceRelease();
 
