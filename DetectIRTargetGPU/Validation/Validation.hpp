@@ -22,6 +22,7 @@ public:
 		  resultOfLevelDiscretizationOnHostUseCPU(nullptr),
 		  resultOfLevelDiscretizationOnHostUseGPU(nullptr),
 		  resultOfLevelDiscretizationOnDevice(nullptr),
+		  isInitSpaceReady(false),
 		  width(320),
 		  height(256)
 	{
@@ -42,7 +43,7 @@ protected:
 
 	bool LevelDiscretizationValidation() const;
 
-	void InitSpace() const;
+	void InitSpace();
 
 	void DestroySpace() const;
 
@@ -57,6 +58,8 @@ private:
 	unsigned char* resultOfLevelDiscretizationOnHostUseCPU;
 	unsigned char* resultOfLevelDiscretizationOnHostUseGPU;
 	unsigned char* resultOfLevelDiscretizationOnDevice;
+
+	bool isInitSpaceReady;
 
 	int width;
 	int height;
@@ -140,16 +143,18 @@ inline bool Validation::LevelDiscretizationValidation() const
 	return CheckDiff::Check(resultOfLevelDiscretizationOnHostUseCPU, resultOfLevelDiscretizationOnHostUseGPU, width, height);
 }
 
-inline void Validation::InitSpace() const
+inline void Validation::InitSpace()
 {
-	CheckCUDAReturnStatus(cudaMalloc((void**)&this->originalFrameOnDeivce, sizeof(unsigned char) * width * height));
-	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfDilationOnDevice, sizeof(unsigned char) * width * height));
-	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfLevelDiscretizationOnDevice, sizeof(unsigned char) * height * width));
+	isInitSpaceReady = true;
 
-	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfDilationOnHostUseCPU,sizeof(unsigned char) * width * height));
-	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfDilationOnHostUseGPU,sizeof(unsigned char) * width * height));
-	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfLevelDiscretizationOnHostUseCPU, sizeof(unsigned char) *width * height));
-	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfLevelDiscretizationOnHostUseGPU, sizeof(unsigned char) *width * height));
+	CheckCUDAReturnStatus(cudaMalloc((void**)&this->originalFrameOnDeivce, sizeof(unsigned char) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfDilationOnDevice, sizeof(unsigned char) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfLevelDiscretizationOnDevice, sizeof(unsigned char) * height * width), isInitSpaceReady);
+
+	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfDilationOnHostUseCPU,sizeof(unsigned char) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfDilationOnHostUseGPU,sizeof(unsigned char) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfLevelDiscretizationOnHostUseCPU, sizeof(unsigned char) *width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfLevelDiscretizationOnHostUseGPU, sizeof(unsigned char) *width * height), isInitSpaceReady);
 }
 
 inline void Validation::DestroySpace() const
