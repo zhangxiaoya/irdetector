@@ -3,13 +3,14 @@
 #include "../Models/LogLevel.hpp"
 #include "../LogPrinter/LogPrinter.hpp"
 #include "../Dilations/DilatetionOnCPU.hpp"
-#include "../Dilations/DilatetionKernel.h"
+#include "../Dilations/DilatetionKernel.cuh"
 #include "../Checkers/CheckDiff.hpp"
 #include "../LevelDiscretization/LevelDiscretizationOnCPU.hpp"
 #include "../LevelDiscretization/LevelDiscretizationKernel.cuh"
 #include "../Checkers/CheckCUDAReturnStatus.h"
 #include "../CCL/MeshCCLOnCPU.hpp"
 #include "../CCL/MeshCCLKernelD.cuh"
+#include "../Checkers/CheckPerf.h"
 
 class Validation
 {
@@ -27,6 +28,8 @@ public:
 		  resultOfCCLOnDevice(nullptr),
 		  resultOfCCLOnHostUseCPU(nullptr),
 		  resultOfCCLOnHostUseGPU(nullptr),
+		  referenceOfCCLOnDevice(nullptr),
+		  modificationFlagOnDevice(nullptr),
 		  isInitSpaceReady(false),
 		  width(320),
 		  height(256)
@@ -75,6 +78,8 @@ private:
 	int* resultOfCCLOnDevice;
 	int* resultOfCCLOnHostUseCPU;
 	int* resultOfCCLOnHostUseGPU;
+	int* referenceOfCCLOnDevice;
+	bool* modificationFlagOnDevice;
 
 	bool isInitSpaceReady;
 
@@ -128,7 +133,7 @@ inline bool Validation::CheckInitSpace() const
 	{
 		logPrinter.PrintLogs("Init Space on Device and Host First!", Error);
 		system("Pause");
-		exit(-1);
+		return true;
 	}
 	return false;
 }
@@ -153,6 +158,7 @@ inline void Validation::VailidationAll()
 		ResetResultsToZero();
 
 		originalFrameOnHost = dataPoint[i];
+		cudaMemcpy(originalFrameOnDeivce, originalFrameOnHost, sizeof(unsigned char) *width * height, cudaMemcpyHostToDevice);
 
 		checkResult = DilationValidation();
 		if(checkResult == false)
@@ -177,13 +183,11 @@ inline void Validation::VailidationAll()
 
 inline bool Validation::DilationValidation() const
 {
-	cudaMemcpy(originalFrameOnDeivce, originalFrameOnHost, sizeof(unsigned char) *width * height, cudaMemcpyHostToDevice);
-
 	logPrinter.PrintLogs("Dilation on CPU!", Info);
-	DilationOnCPU::dilationCPU(originalFrameOnHost, resultOfDilationOnHostUseCPU, width, height, 1);
+	DilationOnCPU::DilationCPU(originalFrameOnHost, resultOfDilationOnHostUseCPU, width, height, 1);
 
 	logPrinter.PrintLogs("Dialtion On GPU", Info);
-	FilterDilation(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1);
+	DilationFilter(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1);
 	cudaMemcpy(resultOfDilationOnHostUseGPU, resultOfDilationOnDevice, width * height, cudaMemcpyDeviceToHost);
 
 	return CheckDiff::Check<unsigned char>(resultOfDilationOnHostUseCPU, resultOfDilationOnHostUseGPU, width, height);
@@ -207,7 +211,8 @@ inline bool Validation::CCLValidation() const
 	MeshCCLOnCPU::ccl(resultOfLevelDiscretizationOnHostUseCPU, resultOfCCLOnHostUseCPU, width, height, 4, 0);
 
 	logPrinter.PrintLogs("CCL On GPU", Info);
-	MeshCCL(resultOfLevelDiscretizationOnHostUseGPU, resultOfCCLOnHostUseGPU, width, height);
+	CheckPerf(MeshCCL(resultOfLevelDiscretizationOnHostUseGPU, resultOfCCLOnDevice, referenceOfCCLOnDevice, modificationFlagOnDevice, width, height), "CCL On GPU");
+	cudaMemcpy(resultOfCCLOnHostUseGPU, resultOfCCLOnDevice, sizeof(int) * width * height, cudaMemcpyDeviceToHost);
 	return CheckDiff::Check<int>(resultOfCCLOnHostUseCPU, resultOfCCLOnHostUseGPU, width, height);
 }
 
@@ -219,6 +224,9 @@ inline void Validation::InitSpace()
 	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfDilationOnDevice, sizeof(unsigned char) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfLevelDiscretizationOnDevice, sizeof(unsigned char) * height * width), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfCCLOnDevice, sizeof(int) * height * width), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc((void**)&this->referenceOfCCLOnDevice, sizeof(int) * height * width), isInitSpaceReady);
+
+	CheckCUDAReturnStatus(cudaMalloc((void**)&this->modificationFlagOnDevice, sizeof(bool)), isInitSpaceReady);
 
 	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfDilationOnHostUseCPU,sizeof(unsigned char) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfDilationOnHostUseGPU,sizeof(unsigned char) * width * height), isInitSpaceReady);
@@ -230,11 +238,15 @@ inline void Validation::InitSpace()
 
 inline void Validation::DestroySpace() const
 {
-	auto status = true;
+	bool status;
+
 	CheckCUDAReturnStatus(cudaFree(this->originalFrameOnDeivce), status);
 	CheckCUDAReturnStatus(cudaFree(this->resultOfDilationOnDevice), status);
 	CheckCUDAReturnStatus(cudaFree(this->resultOfLevelDiscretizationOnDevice), status);
 	CheckCUDAReturnStatus(cudaFree(this->resultOfCCLOnDevice), status);
+	CheckCUDAReturnStatus(cudaFree(this->referenceOfCCLOnDevice), status);
+
+	CheckCUDAReturnStatus(cudaFree(this->modificationFlagOnDevice), status);
 
 	CheckCUDAReturnStatus(cudaFreeHost(this->resultOfDilationOnHostUseCPU), status);
 	CheckCUDAReturnStatus(cudaFreeHost(this->resultOfDilationOnHostUseGPU), status);

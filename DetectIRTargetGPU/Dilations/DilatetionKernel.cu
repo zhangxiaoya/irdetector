@@ -2,20 +2,21 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include <cmath>
+#include "../Checkers/CheckCUDAReturnStatus.h"
 
 typedef unsigned char(*pointFunction_t)(unsigned char, unsigned char);
 
-__device__ unsigned char pComputeMin(unsigned char a, unsigned char b)
+__device__ unsigned char UCMinOnDevice(unsigned char a, unsigned char b)
 {
 	return (a < b) ? a : b;
 }
 
-__device__ unsigned char pComputeMax(unsigned char a, unsigned char b)
+__device__ unsigned char UCMaxOnDevice(unsigned char a, unsigned char b)
 {
 	return (a > b) ? a : b;
 }
 
-__device__ void FilterStep2K(unsigned char* src, unsigned char* dst, int width, int height, int tile_w, int tile_h, const int radio, const pointFunction_t pPointOperation)
+__device__ void FilterStep2Kernel(unsigned char* srcFrameOnDevice, unsigned char* dstFrameOnDevice, int width, int height, int tileWidth, int tileHeight, const int radius, const pointFunction_t pPointOperation)
 {
 	extern __shared__ unsigned char smem[];
 
@@ -24,8 +25,8 @@ __device__ void FilterStep2K(unsigned char* src, unsigned char* dst, int width, 
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
 
-	auto x = bx * tile_w + tx;
-	auto y = by * tile_h + ty - radio;
+	auto x = bx * tileWidth + tx;
+	auto y = by * tileHeight + ty - radius;
 
 	smem[ty * blockDim.x + tx] = 0;
 	__syncthreads();
@@ -33,83 +34,85 @@ __device__ void FilterStep2K(unsigned char* src, unsigned char* dst, int width, 
 	{
 		return;
 	}
-	smem[ty * blockDim.x + tx] = src[y * width + x];
+	smem[ty * blockDim.x + tx] = srcFrameOnDevice[y * width + x];
 	__syncthreads();
-	if (y < (by * tile_h) || y >= ((by + 1) * tile_h))
+	if (y < (by * tileHeight) || y >= ((by + 1) * tileHeight))
 	{
 		return;
 	}
-	auto smem_thread = &smem[(ty - radio) * blockDim.x + tx];
+	auto smem_thread = &smem[(ty - radius) * blockDim.x + tx];
 	auto val = smem_thread[0];
 #pragma unroll
-	for (auto yy = 1; yy <= 2 * radio; yy++)
+	for (auto yy = 1; yy <= 2 * radius; yy++)
 	{
 		val = pPointOperation(val, smem_thread[yy * blockDim.x]);
 	}
-	dst[y * width + x] = val;
+	dstFrameOnDevice[y * width + x] = val;
 }
 
-__device__ void FilterStep1K(unsigned char* src, unsigned char* dst, int width, int height, int tile_w, int tile_h, const int radio, const pointFunction_t pPointOperation)
+__device__ void FilterStep1Kernel(unsigned char* srcFrameOnDevice, unsigned char* dstFrameOnDevice, int width, int height, int tileWidth, int tileHeight, const int radius, const pointFunction_t pPointOperation)
 {
 	extern __shared__ unsigned char smem[];
 	int tx = threadIdx.x;
 	int ty = threadIdx.y;
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
-	auto x = bx * tile_w + tx - radio;
-	auto y = by * tile_h + ty;
+	auto x = bx * tileWidth + tx - radius;
+	auto y = by * tileHeight + ty;
 	smem[ty * blockDim.x + tx] = 0;
 	__syncthreads();
 	if (x < 0 || x >= width || y >= height)
 	{
 		return;
 	}
-	smem[ty * blockDim.x + tx] = src[y * width + x];
+	smem[ty * blockDim.x + tx] = srcFrameOnDevice[y * width + x];
 	__syncthreads();
-	if (x < (bx * tile_w) || x >= ((bx + 1) * tile_w))
+	if (x < (bx * tileWidth) || x >= ((bx + 1) * tileWidth))
 	{
 		return;
 	}
-	auto smem_thread = &smem[ty * blockDim.x + tx - radio];
+	auto smem_thread = &smem[ty * blockDim.x + tx - radius];
 	auto val = smem_thread[0];
 #pragma unroll
-	for (auto xx = 1; xx <= 2 * radio; xx++)
+	for (auto xx = 1; xx <= 2 * radius; xx++)
 	{
 		val = pPointOperation(val, smem_thread[xx]);
 	}
-	dst[y * width + x] = val;
+	dstFrameOnDevice[y * width + x] = val;
 }
 
-__global__ void FilterDStep1(unsigned char* src, unsigned char* dst, int width, int height, int tile_w, int tile_h, const int radio)
+__global__ void DilationFilterStep1(unsigned char* srcFrameOnDevice, unsigned char* dstFrameOnDevice, int width, int height, int tileWidh, int tileHeight, const int radius)
 {
-	FilterStep1K(src, dst, width, height, tile_w, tile_h, radio, pComputeMax);
+	FilterStep1Kernel(srcFrameOnDevice, dstFrameOnDevice, width, height, tileWidh, tileHeight, radius, UCMaxOnDevice);
 }
 
-__global__ void FilterDStep2(unsigned char* src, unsigned char* dst, int width, int height, int tile_w, int tile_h, const int radio)
+__global__ void DilationFilterStep2(unsigned char* srcFrameOnDevice, unsigned char* dstFrameOnDevice, int width, int height, int tileWidth, int tileHeight, const int radius)
 {
-	FilterStep2K(src, dst, width, height, tile_w, tile_h, radio, pComputeMax);
+	FilterStep2Kernel(srcFrameOnDevice, dstFrameOnDevice, width, height, tileWidth, tileHeight, radius, UCMaxOnDevice);
 }
 
-void FilterDilation(unsigned char* src, unsigned char* dst, int width, int height, int radio)
+void DilationFilter(unsigned char* srcFrameOnDevice, unsigned char* dstFrameOnDevice, int width, int height, int radius)
 {
-	unsigned char* tempResultOnDevice;
-	cudaMalloc(&tempResultOnDevice, width * height);
+	auto status = true;
+	unsigned char* firstStepResultOnDevice;
+	CheckCUDAReturnStatus(cudaMalloc((void**)&firstStepResultOnDevice, width * height * sizeof(unsigned char)), status);
 
-	auto tile_w1 = 256;
-	auto tile_h1 = 1;
+	auto tileWidthOfStep1 = 256;
+	auto tileHeightOfStep1 = 1;
 
-	dim3 block2(tile_w1 + (2 * radio), tile_h1);
-	dim3 grid2(ceil(static_cast<float>(width) / tile_w1), ceil(static_cast<float>(height) / tile_h1));
+	dim3 blockOfStep1(tileWidthOfStep1 + (2 * radius), tileHeightOfStep1);
+	dim3 gridOfStep1(ceil(static_cast<float>(width) / tileWidthOfStep1), ceil(static_cast<float>(height) / tileHeightOfStep1));
 
-	auto tile_w2 = 4;
-	auto tile_h2 = 64;
+	auto tileWidthOfStep2 = 4;
+	auto tileHeightOfStep2 = 64;
 
-	dim3 block3(tile_w2, tile_h2 + (2 * radio));
-	dim3 grid3(ceil(static_cast<float>(width) / tile_w2), ceil(static_cast<float>(height) / tile_h2));
+	dim3 blockOfStep2(tileWidthOfStep2, tileHeightOfStep2 + (2 * radius));
+	dim3 gridOfStep2(ceil(static_cast<float>(width) / tileWidthOfStep2), ceil(static_cast<float>(height) / tileHeightOfStep2));
 
-	FilterDStep1 <<<grid2, block2, block2.y * block2.x >>>(src, tempResultOnDevice, width, height, tile_w1, tile_h1, radio);
-	(cudaDeviceSynchronize());
-	FilterDStep2 <<<grid3, block3, block3.y * block3.x >>>(tempResultOnDevice, dst, width, height, tile_w2, tile_h2, radio);
-	auto cudaerr = cudaDeviceSynchronize();
-	cudaFree(tempResultOnDevice);
+	DilationFilterStep1<<<gridOfStep1, blockOfStep1, blockOfStep1.y * blockOfStep1.x >>>(srcFrameOnDevice, firstStepResultOnDevice, width, height, tileWidthOfStep1, tileHeightOfStep1, radius);
+	CheckCUDAReturnStatus(cudaDeviceSynchronize(),status);
+	DilationFilterStep2<<<gridOfStep2, blockOfStep2, blockOfStep2.y * blockOfStep2.x >>>(firstStepResultOnDevice, dstFrameOnDevice, width, height, tileWidthOfStep2, tileHeightOfStep2, radius);
+	CheckCUDAReturnStatus(cudaDeviceSynchronize(), status);
+
+	CheckCUDAReturnStatus(cudaFree(firstStepResultOnDevice), status);
 }

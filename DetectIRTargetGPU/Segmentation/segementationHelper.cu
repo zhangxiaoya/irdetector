@@ -1,11 +1,9 @@
-#include "segementationHelper.cuh"
 #include <cuda_runtime_api.h>
-#include "../CCL/MeshCCLKernelD.cuh"
 #include <iostream>
-#include "../Assistants/ShowFrame.hpp"
 #include <iomanip>
-#include <Windows.h>
-
+#include "segementationHelper.cuh"
+#include "../Assistants/ShowFrame.hpp"
+#include "../CCL/MeshCCLKernelD.cuh"
 #include "../Models/FourLimits.h"
 #include "../Models/Point.h"
 #include "../Models/ObjectRect.h"
@@ -69,17 +67,30 @@ void do_work(int width, int height, FourLimits* allObjects, ObjectRect* allObjec
 	}
 }
 
-void Segmentation(unsigned char* frame, int width, int height)
+void Segmentation(unsigned char* frameOnHost, int width, int height)
 {
 	int* labelsOnHost;
-	cudaMallocHost(reinterpret_cast<void**>(&labelsOnHost), width * height * sizeof(int));
+	int* labelsOnDevice;
+	int* referenceOfLablesOnDevice;
+	bool* modificationFlagOnDevice;
+	unsigned char* frameOnDevice;
+
+	cudaMallocHost((void**)&labelsOnHost, width * height * sizeof(int));
+	cudaMalloc((void**)&frameOnDevice, width * height * sizeof(unsigned char));
+	cudaMalloc((void**)&labelsOnDevice, sizeof(int) * width * height);
+	cudaMalloc((void**)&referenceOfLablesOnDevice, sizeof(int) * width* height);
+	cudaMalloc((void**)&modificationFlagOnDevice, sizeof(bool));
+
+	cudaMemcpy(frameOnDevice, frameOnHost, sizeof(unsigned char) * width * height, cudaMemcpyHostToDevice);
 
 	cv::Mat img;
-	ShowFrame::ToMat<unsigned char>(frame, width, height, img, CV_8UC1);
+	ShowFrame::ToMat<unsigned char>(frameOnHost, width, height, img, CV_8UC1);
 
-	ShowFrame::ToTxt<unsigned char>(frame, "data.txt", width, height);
+	ShowFrame::ToTxt<unsigned char>(frameOnHost, "data.txt", width, height);
 
-	CheckPerf(MeshCCL(frame, labelsOnHost, width, height),"Mesh CCL");
+	CheckPerf(MeshCCL(frameOnDevice, labelsOnDevice, referenceOfLablesOnDevice,modificationFlagOnDevice,width, height),"Mesh CCL");
+
+	cudaMemcpy(labelsOnHost, labelsOnDevice, sizeof(int) * width * height, cudaMemcpyDeviceToHost);
 
 	ShowFrame::ToTxt<int>(labelsOnHost,"lables.txt", width, height);
 
@@ -91,9 +102,13 @@ void Segmentation(unsigned char* frame, int width, int height)
 
 	CheckPerf(do_work(width, height, allObjects, allObjectRects), "To Rect");
 
-	ShowFrame::DrawRectangles(frame, allObjectRects, width, height);
+	ShowFrame::DrawRectangles(frameOnHost, allObjectRects, width, height);
 
 	delete[] allObjectRects;
 	delete[] allObjects;
 	cudaFreeHost(labelsOnHost);
+	cudaFree(labelsOnDevice);
+	cudaFree(referenceOfLablesOnDevice);
+	cudaFree(frameOnDevice);
+	cudaFree(modificationFlagOnDevice);
 }

@@ -63,9 +63,6 @@
     <ClInclude Include="Common\Util.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Dilations\DilatetionKernel.h">
-      <Filter>Dilations</Filter>
-    </ClInclude>
     <ClInclude Include="LevelDiscretization\LevelDiscretizationOnCPU.hpp">
       <Filter>LevelDiscretization</Filter>
     </ClInclude>
@@ -110,6 +107,9 @@
     </ClInclude>
     <ClInclude Include="CCL\MeshCCLOnCPU.hpp">
       <Filter>CCL</Filter>
+    </ClInclude>
+    <ClInclude Include="Dilations\DilatetionKernel.cuh">
+      <Filter>Dilations</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
