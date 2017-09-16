@@ -7,6 +7,10 @@
 #include "Checkers/CheckDiff.hpp"
 #include "LevelDiscretization/LevelDiscretizationOnCPU.hpp"
 #include "LevelDiscretization/LevelDiscretizationKernel.cuh"
+#include "Segmentation/segementationHelper.cuh"
+#include "Assistants/ShowFrame.hpp"
+#include <cuda_runtime_api.h>
+#include "Validation/Validation.hpp"
 
 inline bool cudaDeviceInit(int argc, const char** argv)
 {
@@ -19,7 +23,6 @@ inline bool cudaDeviceInit(int argc, const char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	// Choose which GPU to run on, change this on a multi-GPU system.
 	auto cudaStatus = cudaSetDevice(0);
 	if (cudaStatus != cudaSuccess)
 	{
@@ -48,17 +51,20 @@ int main(int argc, char* argv[])
 	auto cudaInitStatus = cudaDeviceInit(argc, const_cast<const char **>(argv));
 	if (cudaInitStatus)
 	{
-		unsigned char* frameOnDeivce;
+		Validation validation;
+		validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
+		validation.VailidationAll();
+		/*
+		unsigned char* originalFrameOnDeivce;
 		unsigned char* resultOnDevice;
 
-		cudaMalloc(&frameOnDeivce, WIDTH * HEIGHT);
-		cudaMalloc(&resultOnDevice, WIDTH * HEIGHT);
+		cudaMalloc(reinterpret_cast<void**>(&originalFrameOnDeivce), WIDTH * HEIGHT);
+		cudaMalloc(reinterpret_cast<void**>(&resultOnDevice), WIDTH * HEIGHT);
 
-		auto dilationResultOnCPU = new unsigned char[WIDTH * HEIGHT];
-		auto dilationResultOnGPU = new unsigned char[WIDTH * HEIGHT];
+		auto dilationResultOfCPU = new unsigned char[WIDTH * HEIGHT];
+		auto dilationResultOfGPU = new unsigned char[WIDTH * HEIGHT];
 
-		std::string fileName = "C:\\D\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin";
-
+		std::string fileName = "D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin";
 		auto fileReader = new BinaryFileReader(fileName);
 
 		fileReader->ReadBinaryFileToHostMemory();
@@ -68,49 +74,54 @@ int main(int argc, char* argv[])
 		auto iterationText = new char[200];
 		for (auto i = 0; i < frameCount; ++i)
 		{
-			memset(dilationResultOnGPU, 0, WIDTH * HEIGHT);
-			memset(dilationResultOnCPU, 0, WIDTH * HEIGHT);
+			memset(dilationResultOfGPU, 0, WIDTH * HEIGHT);
+			memset(dilationResultOfCPU, 0, WIDTH * HEIGHT);
 
 			auto perFrame = dataPoint[i];
 
 			logPrinter.PrintLogs("Dilation on CPU!", Info);
-			DilationOnCPU::dilationCPU(perFrame, dilationResultOnCPU, WIDTH, HEIGHT, 1);
+			DilationOnCPU::dilationCPU(perFrame, dilationResultOfCPU, WIDTH, HEIGHT, 1);
 
 			sprintf_s(iterationText, 200, "Copy the %04d frame to device", i);
 			logPrinter.PrintLogs(iterationText, Info);
-			cudaMemcpy(frameOnDeivce, perFrame, WIDTH * HEIGHT, cudaMemcpyHostToDevice);
+			cudaMemcpy(originalFrameOnDeivce, perFrame, WIDTH * HEIGHT, cudaMemcpyHostToDevice);
 
 			logPrinter.PrintLogs("Dialtion On GPU", Info);
-			FilterDilation(frameOnDeivce, resultOnDevice, WIDTH, HEIGHT, 1);
+			FilterDilation(originalFrameOnDeivce, resultOnDevice, WIDTH, HEIGHT, 1);
 
-			cudaMemcpy(dilationResultOnGPU, resultOnDevice, WIDTH * HEIGHT, cudaMemcpyDeviceToHost);
+			cudaMemcpy(dilationResultOfGPU, resultOnDevice, WIDTH * HEIGHT, cudaMemcpyDeviceToHost);
 
-			if (!CheckDiff::Check(dilationResultOnCPU, dilationResultOnGPU, WIDTH, HEIGHT))
+			if (!CheckDiff::Check(dilationResultOfCPU, dilationResultOfGPU, WIDTH, HEIGHT))
 			{
 				break;
 			}
-
 
 			logPrinter.PrintLogs("Level Discretization On CPU", Info);
-			LevelDiscretizationOnCPU::LevelDiscretization(dilationResultOnCPU, WIDTH, HEIGHT, 15);
+			LevelDiscretizationOnCPU::LevelDiscretization(dilationResultOfCPU, WIDTH, HEIGHT, 15);
 
-			cudaMemcpy(frameOnDeivce, dilationResultOnGPU, WIDTH * HEIGHT, cudaMemcpyHostToDevice);
+//			cudaMemcpy(originalFrameOnDeivce, dilationResultOfGPU, WIDTH * HEIGHT, cudaMemcpyHostToDevice);
 			logPrinter.PrintLogs("Level Discretization On GPU", Info);
-			LevelDiscretizationOnGPU(frameOnDeivce, WIDTH, HEIGHT, 15);
-			cudaMemcpy(dilationResultOnGPU, frameOnDeivce, WIDTH * HEIGHT, cudaMemcpyDeviceToHost);
+			LevelDiscretizationOnGPU(resultOnDevice, WIDTH, HEIGHT, 15);
+			cudaMemcpy(dilationResultOfGPU, resultOnDevice, WIDTH * HEIGHT, cudaMemcpyDeviceToHost);
 
-			if (!CheckDiff::Check(dilationResultOnCPU, dilationResultOnGPU, WIDTH, HEIGHT))
+			if (!CheckDiff::Check(dilationResultOfCPU, dilationResultOfGPU, WIDTH, HEIGHT))
 			{
 				break;
 			}
-		}
 
-		cudaFree(frameOnDeivce);
-		cudaFree(resultOnDevice);
-		delete[] dilationResultOnCPU;
-		delete[] dilationResultOnGPU;
+			ShowFrame::Show("After dilation and level discretization on GPU", dilationResultOfGPU, WIDTH, HEIGHT);
 
-		delete fileReader;
+			logPrinter.PrintLogs("segementation On GPU", Info);
+			Segmentation(dilationResultOfGPU, WIDTH, HEIGHT);
+			*/
+//		}
+
+//		cudaFree(originalFrameOnDeivce);
+//		cudaFree(resultOnDevice);
+//		delete[] dilationResultOfCPU;
+//		delete[] dilationResultOfGPU;
+
+//		delete fileReader;
 		cudaDeviceRelease();
 	}
 
