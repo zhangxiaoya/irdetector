@@ -3,6 +3,7 @@
 #include <cuda_runtime_api.h>
 #include "../Checkers/CheckCUDAReturnStatus.h"
 #include "../Headers/GlobalMainHeaders.h"
+#include "../Dilations/DilatetionKernel.cuh"
 
 class Detector
 {
@@ -12,9 +13,11 @@ public:
 	~Detector();
 
 	bool InitSpace();
-	void CopyFrameData(unsigned char* frame);
 
 	void DetectTargets(unsigned char* frame);
+
+private:
+	void CopyFrameData(unsigned char* frame);
 
 protected:
 	bool ReleaseSpace();
@@ -23,20 +26,25 @@ private:
 	int width;
 	int height;
 
+	int radius;
+
 	bool isInitSpaceReady;
 	bool isFrameDataReady;
 
 	unsigned char* originalFrameOnHost;
 	unsigned char* originalFrameOnDevice;
+	unsigned char* dilationResultOnDevice;
 };
 
 inline Detector::Detector(int _width = 320, int _height = 256)
 	: width(_width),
 	  height(_height),
+	  radius(1),
 	  isInitSpaceReady(true),
 	  isFrameDataReady(true),
 	  originalFrameOnHost(nullptr),
-	  originalFrameOnDevice(nullptr)
+	  originalFrameOnDevice(nullptr),
+	  dilationResultOnDevice(nullptr)
 {
 }
 
@@ -50,16 +58,30 @@ inline bool Detector::ReleaseSpace()
 	if (this->originalFrameOnDevice != nullptr)
 	{
 		CheckCUDAReturnStatus(cudaFreeHost(this->originalFrameOnHost), status);
+		if (status == true)
+		{
+			this->originalFrameOnHost = nullptr;
+		}
 	}
 	if (this->originalFrameOnDevice != nullptr)
 	{
 		CheckCUDAReturnStatus(cudaFree(this->originalFrameOnDevice), status);
+		if (status == true)
+		{
+			this->originalFrameOnDevice = nullptr;
+		}
+	}
+	if (this->dilationResultOnDevice != nullptr)
+	{
+		CheckCUDAReturnStatus(cudaFree(this->dilationResultOnDevice), status);
+		if (status == true)
+		{
+			this->dilationResultOnDevice == nullptr;
+		}
 	}
 
 	if(status == true)
 	{
-		this->originalFrameOnDevice = nullptr;
-		this->originalFrameOnHost = nullptr;
 		logPrinter.PrintLogs("Release space success!", LogLevel::Info);
 	}
 	else
@@ -78,6 +100,7 @@ inline bool Detector::InitSpace()
 	isInitSpaceReady = true;
 	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->originalFrameOnHost), sizeof(unsigned char) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->originalFrameOnDevice), sizeof(unsigned char) * width * height),isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->dilationResultOnDevice), sizeof(unsigned char) * width * height), isInitSpaceReady);
 
 	return isInitSpaceReady;
 }
@@ -98,7 +121,8 @@ inline void Detector::DetectTargets(unsigned char* frame)
 	CopyFrameData(frame);
 	if(isFrameDataReady == true)
 	{
-
+		// dilation on gpu
+		DilationFilter(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, radius);
 	}
 }
 #endif
