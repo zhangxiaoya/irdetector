@@ -9,6 +9,7 @@
 #include "../Models/FourLimits.h"
 #include "../Models/Point.h"
 #include "../Models/ObjectRect.h"
+#include "../Assistants/ShowFrame.hpp"
 
 class Detector
 {
@@ -176,7 +177,7 @@ inline bool Detector::InitSpace()
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->modificationFlagOnDevice), sizeof(bool)),isInitSpaceReady);
 
 	allObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * width * height));
-	allObjectRects = static_cast<ObjectRect*>(malloc(sizeof(FourLimits) * width * height));
+	allObjectRects = static_cast<ObjectRect*>(malloc(sizeof(ObjectRect) * width * height));
 	return isInitSpaceReady;
 }
 
@@ -186,6 +187,7 @@ inline void Detector::CopyFrameData(unsigned char* frame)
 
 	memcpy(this->originalFrameOnHost, frame, sizeof(unsigned char) * width * height);
 	memset(this->allObjects, -1, sizeof(FourLimits) * width * height);
+	memset(this->allObjectRects, 0, sizeof(ObjectRect) * width * height);
 
 	CheckCUDAReturnStatus(cudaMemcpy(this->originalFrameOnDevice, this->originalFrameOnHost, sizeof(unsigned char) * width * height, cudaMemcpyHostToDevice), isFrameDataReady);
 	if(isInitSpaceReady == false)
@@ -275,6 +277,9 @@ inline void Detector::DetectTargets(unsigned char* frame)
 
 		// convert all obejct to rect
 		ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
+
+		// show result
+		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
 	}
 }
 #endif
