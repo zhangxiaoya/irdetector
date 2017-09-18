@@ -279,7 +279,7 @@ inline void Detector::DetectTargets(unsigned char* frame)
 		ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
 
 		// show result
-		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+//		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
 	}
 }
 #endif

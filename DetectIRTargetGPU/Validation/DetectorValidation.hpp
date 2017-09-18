@@ -79,6 +79,6 @@ inline void DetectorValidation::VailidationAll()
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);
 
-		detector->DetectTargets(dataPoint[i]);
+		CheckPerf(detector->DetectTargets(dataPoint[i]), "whole");
 	}
 }
