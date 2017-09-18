@@ -7,6 +7,8 @@
 #include "../LevelDiscretization/LevelDiscretizationKernel.cuh"
 #include "../CCL/MeshCCLKernelD.cuh"
 #include "../Models/FourLimits.h"
+#include "../Models/Point.h"
+#include "../Models/ObjectRect.h"
 
 class Detector
 {
@@ -23,6 +25,8 @@ private:
 	void CopyFrameData(unsigned char* frame);
 
 	static void GetAllObjects(int* labelsOnHost, FourLimits* allObjects, int width, int height);
+
+	static void ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height);
 
 protected:
 	bool ReleaseSpace();
@@ -48,6 +52,7 @@ private:
 	bool* modificationFlagOnDevice;
 
 	FourLimits* allObjects;
+	ObjectRect* allObjectRects;
 };
 
 inline Detector::Detector(int _width = 320, int _height = 256)
@@ -64,7 +69,8 @@ inline Detector::Detector(int _width = 320, int _height = 256)
 	  labelsOnDevice(nullptr),
 	  referenceOfLabelsOnDevice(nullptr),
 	  modificationFlagOnDevice(nullptr),
-	  allObjects(nullptr)
+	  allObjects(nullptr),
+	  allObjectRects(nullptr)
 {
 }
 
@@ -133,7 +139,14 @@ inline bool Detector::ReleaseSpace()
 		}
 	}
 
-	allObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * width * height));
+	if(this->allObjects != nullptr)
+	{
+		delete[] allObjects;
+	}
+	if(this->allObjectRects != nullptr)
+	{
+		delete[] allObjectRects;
+	}
 
 	if(status == true)
 	{
@@ -162,7 +175,8 @@ inline bool Detector::InitSpace()
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->referenceOfLabelsOnDevice), sizeof(int) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->modificationFlagOnDevice), sizeof(bool)),isInitSpaceReady);
 
-	delete[] allObjects;
+	allObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * width * height));
+	allObjectRects = static_cast<ObjectRect*>(malloc(sizeof(FourLimits) * width * height));
 	return isInitSpaceReady;
 }
 
@@ -225,6 +239,19 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 	}
 }
 
+inline void Detector::ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height)
+{
+	for (auto i = 0; i < width * height; ++i)
+	{
+		if (allObjects[i].top == -1)
+			continue;
+		allObjectRects[i].width = allObjects[i].right - allObjects[i].left + 1;
+		allObjectRects[i].height = allObjects[i].bottom - allObjects[i].top + 1;
+		allObjectRects[i].lt = Point(allObjects[i].left, allObjects[i].top);
+		allObjectRects[i].rb = Point(allObjects[i].right, allObjects[i].bottom);
+	}
+}
+
 inline void Detector::DetectTargets(unsigned char* frame)
 {
 	CopyFrameData(frame);
@@ -245,6 +272,9 @@ inline void Detector::DetectTargets(unsigned char* frame)
 
 		// get all object
 		GetAllObjects(labelsOnHost, allObjects, width, height);
+
+		// convert all obejct to rect
+		ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
 	}
 }
 #endif
