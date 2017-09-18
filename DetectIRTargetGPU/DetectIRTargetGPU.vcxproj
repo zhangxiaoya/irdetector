@@ -178,6 +178,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Models\Point.h" />
     <ClInclude Include="Monitor\Monitor.hpp" />
     <ClInclude Include="Segmentation\segementationHelper.cuh" />
+    <ClInclude Include="Validation\DetectorValidation.hpp" />
     <ClInclude Include="Validation\Validation.hpp" />
   </ItemGroup>
   <ItemGroup>

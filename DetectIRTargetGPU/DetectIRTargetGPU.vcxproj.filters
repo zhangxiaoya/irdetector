@@ -114,6 +114,9 @@
     <ClInclude Include="Dilations\DilatetionKernel.cuh">
       <Filter>Dilations</Filter>
     </ClInclude>
+    <ClInclude Include="Validation\DetectorValidation.hpp">
+      <Filter>Validation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
