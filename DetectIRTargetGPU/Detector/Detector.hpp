@@ -12,6 +12,9 @@ public:
 	~Detector();
 
 	bool InitSpace();
+	void CopyFrameData(unsigned char* frame);
+
+	void DetectTargets(unsigned char* frame);
 
 protected:
 	bool ReleaseSpace();
@@ -21,6 +24,7 @@ private:
 	int height;
 
 	bool isInitSpaceReady;
+	bool isFrameDataReady;
 
 	unsigned char* originalFrameOnHost;
 	unsigned char* originalFrameOnDevice;
@@ -30,6 +34,7 @@ inline Detector::Detector(int _width = 320, int _height = 256)
 	: width(_width),
 	  height(_height),
 	  isInitSpaceReady(true),
+	  isFrameDataReady(true),
 	  originalFrameOnHost(nullptr),
 	  originalFrameOnDevice(nullptr)
 {
@@ -75,5 +80,25 @@ inline bool Detector::InitSpace()
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->originalFrameOnDevice), sizeof(unsigned char) * width * height),isInitSpaceReady);
 
 	return isInitSpaceReady;
+}
+
+inline void Detector::CopyFrameData(unsigned char* frame)
+{
+	this->isFrameDataReady = true;
+	memcpy(this->originalFrameOnHost, frame, sizeof(unsigned char) * width * height);
+	CheckCUDAReturnStatus(cudaMemcpy(this->originalFrameOnDevice, this->originalFrameOnHost, sizeof(unsigned char) * width * height, cudaMemcpyHostToDevice), isFrameDataReady);
+	if(isInitSpaceReady == false)
+	{
+		logPrinter.PrintLogs("Copy current frame data failed!", LogLevel::Error);
+	}
+}
+
+inline void Detector::DetectTargets(unsigned char* frame)
+{
+	CopyFrameData(frame);
+	if(isFrameDataReady == true)
+	{
+
+	}
 }
 #endif
