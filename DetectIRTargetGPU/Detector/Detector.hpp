@@ -5,6 +5,7 @@
 #include "../Headers/GlobalMainHeaders.h"
 #include "../Dilations/DilatetionKernel.cuh"
 #include "../LevelDiscretization/LevelDiscretizationKernel.cuh"
+#include "../CCL/MeshCCLKernelD.cuh"
 
 class Detector
 {
@@ -36,6 +37,11 @@ private:
 	unsigned char* originalFrameOnHost;
 	unsigned char* originalFrameOnDevice;
 	unsigned char* dilationResultOnDevice;
+
+	int* labelsOnDevice;
+	int* referenceOfLabelsOnDevice;
+
+	bool* modificationFlagOnDevice;
 };
 
 inline Detector::Detector(int _width = 320, int _height = 256)
@@ -47,12 +53,16 @@ inline Detector::Detector(int _width = 320, int _height = 256)
 	  isFrameDataReady(true),
 	  originalFrameOnHost(nullptr),
 	  originalFrameOnDevice(nullptr),
-	  dilationResultOnDevice(nullptr)
+	  dilationResultOnDevice(nullptr),
+	  labelsOnDevice(nullptr),
+	  referenceOfLabelsOnDevice(nullptr),
+	  modificationFlagOnDevice(nullptr)
 {
 }
 
 inline Detector::~Detector()
 {
+	ReleaseSpace();
 }
 
 inline bool Detector::ReleaseSpace()
@@ -82,6 +92,30 @@ inline bool Detector::ReleaseSpace()
 			this->dilationResultOnDevice == nullptr;
 		}
 	}
+	if(this->labelsOnDevice != nullptr)
+	{
+		CheckCUDAReturnStatus(cudaFree(this->labelsOnDevice), status);
+		if(status == true)
+		{
+			this->labelsOnDevice = nullptr;
+		}
+	}
+	if(this->referenceOfLabelsOnDevice != nullptr)
+	{
+		CheckCUDAReturnStatus(cudaFree(this->referenceOfLabelsOnDevice), status);
+		if(status == true)
+		{
+			this->referenceOfLabelsOnDevice = nullptr;
+		}
+	}
+	if(this->modificationFlagOnDevice != nullptr)
+	{
+		CheckCUDAReturnStatus(cudaFree(this->modificationFlagOnDevice), status);
+		if (status == true)
+		{
+			this->modificationFlagOnDevice = nullptr;
+		}
+	}
 
 	if(status == true)
 	{
@@ -102,8 +136,12 @@ inline bool Detector::InitSpace()
 
 	isInitSpaceReady = true;
 	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->originalFrameOnHost), sizeof(unsigned char) * width * height), isInitSpaceReady);
+
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->originalFrameOnDevice), sizeof(unsigned char) * width * height),isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->dilationResultOnDevice), sizeof(unsigned char) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->labelsOnDevice), sizeof(int) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->referenceOfLabelsOnDevice), sizeof(int) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->modificationFlagOnDevice), sizeof(bool)),isInitSpaceReady);
 
 	return isInitSpaceReady;
 }
@@ -111,8 +149,10 @@ inline bool Detector::InitSpace()
 inline void Detector::CopyFrameData(unsigned char* frame)
 {
 	this->isFrameDataReady = true;
+
 	memcpy(this->originalFrameOnHost, frame, sizeof(unsigned char) * width * height);
 	CheckCUDAReturnStatus(cudaMemcpy(this->originalFrameOnDevice, this->originalFrameOnHost, sizeof(unsigned char) * width * height, cudaMemcpyHostToDevice), isFrameDataReady);
+
 	if(isInitSpaceReady == false)
 	{
 		logPrinter.PrintLogs("Copy current frame data failed!", LogLevel::Error);
@@ -122,6 +162,7 @@ inline void Detector::CopyFrameData(unsigned char* frame)
 inline void Detector::DetectTargets(unsigned char* frame)
 {
 	CopyFrameData(frame);
+
 	if(isFrameDataReady == true)
 	{
 		// dilation on gpu
@@ -129,6 +170,9 @@ inline void Detector::DetectTargets(unsigned char* frame)
 
 		// level disretization on gpu
 		LevelDiscretizationOnGPU(this->dilationResultOnDevice, width, height, discretizationScale);
+
+		// CCL On Device
+		MeshCCL(this->dilationResultOnDevice, this->labelsOnDevice, this->referenceOfLabelsOnDevice, this->modificationFlagOnDevice, width, height);
 	}
 }
 #endif
