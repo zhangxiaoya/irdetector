@@ -43,6 +43,9 @@
     <Filter Include="Init">
       <UniqueIdentifier>{b0fab0ca-275c-4cf0-a26b-d1d1c362ebf6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Detector">
+      <UniqueIdentifier>{534ba27a-1193-4509-98ed-5f3bfd7871f9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\GlobalMainHeaders.h">
@@ -116,6 +119,9 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Common\SplitBinaryFile.hpp">
       <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Detector\Detector.hpp">
+      <Filter>Detector</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
