@@ -4,6 +4,7 @@
 #include "../Checkers/CheckCUDAReturnStatus.h"
 #include "../Headers/GlobalMainHeaders.h"
 #include "../Dilations/DilatetionKernel.cuh"
+#include "../LevelDiscretization/LevelDiscretizationKernel.cuh"
 
 class Detector
 {
@@ -27,6 +28,7 @@ private:
 	int height;
 
 	int radius;
+	int discretizationScale;
 
 	bool isInitSpaceReady;
 	bool isFrameDataReady;
@@ -40,6 +42,7 @@ inline Detector::Detector(int _width = 320, int _height = 256)
 	: width(_width),
 	  height(_height),
 	  radius(1),
+	  discretizationScale(15),
 	  isInitSpaceReady(true),
 	  isFrameDataReady(true),
 	  originalFrameOnHost(nullptr),
@@ -123,6 +126,9 @@ inline void Detector::DetectTargets(unsigned char* frame)
 	{
 		// dilation on gpu
 		DilationFilter(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, radius);
+
+		// level disretization on gpu
+		LevelDiscretizationOnGPU(this->dilationResultOnDevice, width, height, discretizationScale);
 	}
 }
 #endif
