@@ -117,6 +117,9 @@
     <ClInclude Include="Validation\DetectorValidation.hpp">
       <Filter>Validation</Filter>
     </ClInclude>
+    <ClInclude Include="Monitor\Filter.hpp">
+      <Filter>Monitor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
