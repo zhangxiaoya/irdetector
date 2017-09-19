@@ -33,7 +33,10 @@ private:
 	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
 	void MergeObjects() const;
+
 	void RemoveObjectWithLowContrast() const;
+
+	void RemoveInValidObjects();
 
 protected:
 	bool ReleaseSpace();
@@ -60,7 +63,10 @@ private:
 	bool* modificationFlagOnDevice;
 
 	FourLimits* allObjects;
+	FourLimits* allValidObjects;
 	ObjectRect* allObjectRects;
+
+	int validObjectsCount;
 
 	int TARGET_WIDTH_MAX_LIMIT;
 	int TARGET_HEIGHT_MAX_LIMIT;
@@ -82,7 +88,9 @@ inline Detector::Detector(int _width = 320, int _height = 256)
 	  referenceOfLabelsOnDevice(nullptr),
 	  modificationFlagOnDevice(nullptr),
 	  allObjects(nullptr),
+	  allValidObjects(nullptr),
 	  allObjectRects(nullptr),
+	  validObjectsCount(0),
 	  TARGET_WIDTH_MAX_LIMIT(20),
 	  TARGET_HEIGHT_MAX_LIMIT(20)
 {
@@ -169,6 +177,10 @@ inline bool Detector::ReleaseSpace()
 	{
 		delete[] allObjectRects;
 	}
+	if(this->allValidObjects != nullptr)
+	{
+		delete[] allValidObjects;
+	}
 
 	if(status == true)
 	{
@@ -200,6 +212,7 @@ inline bool Detector::InitSpace()
 
 	allObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * width * height));
 	allObjectRects = static_cast<ObjectRect*>(malloc(sizeof(ObjectRect) * width * height));
+	allValidObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * width * height));
 	return isInitSpaceReady;
 }
 
@@ -305,35 +318,35 @@ inline bool Detector::CheckCross(const FourLimits& objectFirst, const FourLimits
 
 inline void Detector::MergeObjects() const
 {
-	for (auto i = 0; i < width * height; ++i)
+	for (auto i = 0; i < validObjectsCount; ++i)
 	{
-		if (allObjects[i].top == -1)
+		if (allValidObjects[i].top == -1)
 			continue;
-		for (auto j = 0; j < width * height; ++j)
+		for (auto j = 0; j < validObjectsCount; ++j)
 		{
-			if (i == j || allObjects[j].top == -1)
+			if (i == j || allValidObjects[j].top == -1)
 				continue;
-			if (CheckCross(allObjects[i], allObjects[j]))
+			if (CheckCross(allValidObjects[i], allValidObjects[j]))
 			{
-				allObjects[j].top = -1;
+				allValidObjects[j].top = -1;
 
-				if (allObjects[i].top > allObjects[j].top)
-					allObjects[i].top = allObjects[j].top;
+				if (allValidObjects[i].top > allValidObjects[j].top)
+					allValidObjects[i].top = allValidObjects[j].top;
 
-				if (allObjects[i].left > allObjects[j].left)
-					allObjects[i].left = allObjects[j].left;
+				if (allValidObjects[i].left > allValidObjects[j].left)
+					allValidObjects[i].left = allValidObjects[j].left;
 
-				if (allObjects[i].right < allObjects[j].right)
-					allObjects[i].right = allObjects[j].right;
+				if (allValidObjects[i].right < allValidObjects[j].right)
+					allValidObjects[i].right = allValidObjects[j].right;
 
-				if (allObjects[i].bottom < allObjects[j].bottom)
-					allObjects[i].bottom = allObjects[j].bottom;
+				if (allValidObjects[i].bottom < allValidObjects[j].bottom)
+					allValidObjects[i].bottom = allValidObjects[j].bottom;
 			}
 
-			if ((allObjects[i].bottom - allObjects[i].top) > TARGET_HEIGHT_MAX_LIMIT ||
-				(allObjects[i].right - allObjects[i].left) > TARGET_WIDTH_MAX_LIMIT)
+			if ((allValidObjects[i].bottom - allValidObjects[i].top) > TARGET_HEIGHT_MAX_LIMIT ||
+				(allValidObjects[i].right - allValidObjects[i].left) > TARGET_WIDTH_MAX_LIMIT)
 			{
-				allObjects[i].top = -1;
+				allValidObjects[i].top = -1;
 				break;
 			}
 		}
@@ -396,6 +409,19 @@ inline void Detector::RemoveObjectWithLowContrast() const
 	}
 }
 
+inline void Detector::RemoveInValidObjects()
+{
+	validObjectsCount = 0;
+	for (auto i = 0; i < width * height; ++i)
+	{
+		if (allObjects[i].top != -1)
+		{
+			allValidObjects[validObjectsCount] = allObjects[i];
+			validObjectsCount++;
+		}
+	}
+}
+
 inline void Detector::DetectTargets(unsigned char* frame)
 {
 	CopyFrameData(frame);
@@ -418,14 +444,16 @@ inline void Detector::DetectTargets(unsigned char* frame)
 		// get all object
 		GetAllObjects(labelsOnHost, allObjects, width, height);
 
+		// remove invalid objects
+		RemoveInValidObjects();
 		// convert all obejct to rect
-		ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
+//		ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
 
 		// show result
 //		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
 
 		// Merge all objects
-//		MergeObjects();
+		MergeObjects();
 
 		// Remove objects with low contrast
 		RemoveObjectWithLowContrast();
