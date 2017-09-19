@@ -29,6 +29,10 @@ private:
 
 	static void ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height);
 
+	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
+
+	void MergeObjects() const;
+
 protected:
 	bool ReleaseSpace();
 
@@ -54,6 +58,8 @@ private:
 
 	FourLimits* allObjects;
 	ObjectRect* allObjectRects;
+	int TARGET_WIDTH_MAX_LIMIT;
+	int TARGET_HEIGHT_MAX_LIMIT;
 };
 
 inline Detector::Detector(int _width = 320, int _height = 256)
@@ -71,7 +77,9 @@ inline Detector::Detector(int _width = 320, int _height = 256)
 	  referenceOfLabelsOnDevice(nullptr),
 	  modificationFlagOnDevice(nullptr),
 	  allObjects(nullptr),
-	  allObjectRects(nullptr)
+	  allObjectRects(nullptr),
+	  TARGET_WIDTH_MAX_LIMIT(20),
+	  TARGET_HEIGHT_MAX_LIMIT(20)
 {
 }
 
@@ -254,6 +262,66 @@ inline void Detector::ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect
 	}
 }
 
+inline bool Detector::CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const
+{
+	auto firstCenterX = (objectFirst.right + objectFirst.left) / 2;
+	auto firstCenterY = (objectFirst.bottom + objectFirst.top) / 2;
+
+	auto secondCenterX = (objectSecond.right + objectSecond.left) / 2;
+	auto secondCenterY = (objectSecond.bottom + objectSecond.top) / 2;
+
+	auto firstWidth = objectFirst.right - objectFirst.left + 1;
+	auto firstHeight = objectFirst.bottom - objectFirst.top + 1;
+
+	auto secondWidth = objectSecond.right - objectSecond.left + 1;
+	auto secondHeight = objectSecond.bottom - objectSecond.top + 1;
+
+	auto centerXDiff = std::abs(firstCenterX - secondCenterX);
+	auto centerYDiff = std::abs(firstCenterY - secondCenterY);
+
+	if (centerXDiff <= (firstWidth + secondWidth) / 2 + 1 && centerYDiff <= (firstHeight + secondHeight) / 2 + 1)
+		return true;
+
+	return false;
+}
+
+inline void Detector::MergeObjects() const
+{
+	for (auto i = 0; i < width * height; ++i)
+	{
+		if (allObjects[i].top == -1)
+			continue;
+		for (auto j = 0; j < width * height; ++j)
+		{
+			if (i == j || allObjects[j].top == -1)
+				continue;
+			if (CheckCross(allObjects[i], allObjects[j]))
+			{
+				allObjects[j].top = -1;
+
+				if (allObjects[i].top > allObjects[j].top)
+					allObjects[i].top = allObjects[j].top;
+
+				if (allObjects[i].left > allObjects[j].left)
+					allObjects[i].left = allObjects[j].left;
+
+				if (allObjects[i].right < allObjects[j].right)
+					allObjects[i].right = allObjects[j].right;
+
+				if (allObjects[i].bottom < allObjects[j].bottom)
+					allObjects[i].bottom = allObjects[j].bottom;
+			}
+
+			if ((allObjects[i].bottom - allObjects[i].top) > TARGET_HEIGHT_MAX_LIMIT ||
+				(allObjects[i].right - allObjects[i].left) > TARGET_WIDTH_MAX_LIMIT)
+			{
+				allObjects[i].top = -1;
+				break;
+			}
+		}
+	}
+}
+
 inline void Detector::DetectTargets(unsigned char* frame)
 {
 	CopyFrameData(frame);
@@ -280,6 +348,9 @@ inline void Detector::DetectTargets(unsigned char* frame)
 
 		// show result
 //		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+
+		// Merge all objects
+		MergeObjects();
 	}
 }
 #endif
