@@ -1,7 +1,9 @@
 #ifndef __DILATIONONCPU__
 #define __DILATIONONCPU__
 #include <limits>
-#include "../Common/Util.h"
+
+#define IMAX(a,b) (a > b) ? a : b;
+#define IMIN(a,b) (a < b) ? a : b;
 
 inline unsigned char UCMaxOnHost(unsigned char a, unsigned char b)
 {
