@@ -10,6 +10,7 @@
 #include "../Models/Point.h"
 #include "../Models/ObjectRect.h"
 #include "../Assistants/ShowFrame.hpp"
+#include "../Common/Util.h"
 
 class Detector
 {
@@ -32,6 +33,7 @@ private:
 	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
 	void MergeObjects() const;
+	void RemoveObjectWithLowContrast() const;
 
 protected:
 	bool ReleaseSpace();
@@ -49,6 +51,7 @@ private:
 	unsigned char* originalFrameOnHost;
 	unsigned char* originalFrameOnDevice;
 	unsigned char* dilationResultOnDevice;
+	unsigned char* discretizationResultOnHost;
 
 	int* labelsOnHost;
 	int* labelsOnDevice;
@@ -58,6 +61,7 @@ private:
 
 	FourLimits* allObjects;
 	ObjectRect* allObjectRects;
+
 	int TARGET_WIDTH_MAX_LIMIT;
 	int TARGET_HEIGHT_MAX_LIMIT;
 };
@@ -72,6 +76,7 @@ inline Detector::Detector(int _width = 320, int _height = 256)
 	  originalFrameOnHost(nullptr),
 	  originalFrameOnDevice(nullptr),
 	  dilationResultOnDevice(nullptr),
+	  discretizationResultOnHost(nullptr),
 	  labelsOnHost(nullptr),
 	  labelsOnDevice(nullptr),
 	  referenceOfLabelsOnDevice(nullptr),
@@ -105,6 +110,14 @@ inline bool Detector::ReleaseSpace()
 		if(status == true)
 		{
 			this->labelsOnHost = nullptr;
+		}
+	}
+	if (this -> discretizationResultOnHost != nullptr)
+	{
+		CheckCUDAReturnStatus(cudaFreeHost(this->discretizationResultOnHost), status);
+		if(status == true)
+		{
+			this->discretizationResultOnHost = nullptr;
 		}
 	}
 	if (this->originalFrameOnDevice != nullptr)
@@ -177,6 +190,7 @@ inline bool Detector::InitSpace()
 	isInitSpaceReady = true;
 	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->originalFrameOnHost), sizeof(unsigned char) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->labelsOnHost), sizeof(int) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->discretizationResultOnHost), sizeof(unsigned char) * width * height), isInitSpaceReady);
 
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->originalFrameOnDevice), sizeof(unsigned char) * width * height),isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->dilationResultOnDevice), sizeof(unsigned char) * width * height), isInitSpaceReady);
@@ -224,6 +238,8 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 			auto label = labelsOnHost[r * width + c];
 			if (allObjects[label].bottom == -1)
 				allObjects[label].bottom = r;
+			if (allObjects[label].bottom - allObjects[label].top + 1 < 2)
+				allObjects[label].top = -1;
 		}
 	}
 
@@ -245,6 +261,8 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 			auto label = labelsOnHost[r * width + c];
 			if (allObjects[label].right == -1)
 				allObjects[label].right = c;
+			if (allObjects[label].right - allObjects[label].left + 1 < 2)
+				allObjects[label].top = -1;
 		}
 	}
 }
@@ -322,6 +340,62 @@ inline void Detector::MergeObjects() const
 	}
 }
 
+inline void Detector::RemoveObjectWithLowContrast() const
+{
+	for (auto i = 0; i < width * height; ++i)
+	{
+		if(allObjects[i].top == -1)
+			continue;
+
+		unsigned char averageValue = 0;
+		unsigned char centerValue = 0;
+
+		auto objectWidth = allObjects[i].right - allObjects[i].left + 1;
+		auto objectHeight = allObjects[i].bottom - allObjects[i].top + 1;
+
+		auto surroundBoxWidth = 3 * objectWidth;
+		auto surroundBoxHeight = 3 * objectHeight;
+
+		auto centerX = (allObjects[i].right + allObjects[i].left) / 2;
+		auto centerY = (allObjects[i].bottom + allObjects[i].top) / 2;
+
+		auto leftTopX = centerX - surroundBoxWidth / 2;
+		if (leftTopX < 0)
+		{
+			leftTopX = 0;
+		}
+
+		auto leftTopY = centerY - surroundBoxHeight / 2;
+		if (leftTopY < 0)
+		{
+			leftTopY = 0;
+		}
+
+		auto rightBottomX = leftTopX + surroundBoxWidth;
+		if (rightBottomX >= width)
+		{
+			rightBottomX = width - 1;
+		}
+
+		auto rightBottomY = leftTopY + surroundBoxHeight;
+		if (rightBottomY >= height)
+		{
+			rightBottomY = height - 1;
+		}
+
+		FourLimits surroundingBox(leftTopY,rightBottomY, leftTopX, rightBottomX);\
+
+		Util::CalculateAverage(discretizationResultOnHost, surroundingBox, averageValue, objectWidth);
+
+		Util::CalCulateCenterValue(discretizationResultOnHost, centerValue, objectWidth, centerX, centerY);
+
+		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(averageValue)) < 3)
+		{
+			allObjects[i].top = -1;
+		}
+	}
+}
+
 inline void Detector::DetectTargets(unsigned char* frame)
 {
 	CopyFrameData(frame);
@@ -339,6 +413,7 @@ inline void Detector::DetectTargets(unsigned char* frame)
 
 		// copy labels from device to host
 		cudaMemcpy(this->labelsOnHost, this->labelsOnDevice, sizeof(int) * width * height, cudaMemcpyDeviceToHost);
+		cudaMemcpy(this->discretizationResultOnHost, this->dilationResultOnDevice, sizeof(unsigned char) * width * height, cudaMemcpyDeviceToHost);
 
 		// get all object
 		GetAllObjects(labelsOnHost, allObjects, width, height);
@@ -350,7 +425,11 @@ inline void Detector::DetectTargets(unsigned char* frame)
 //		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
 
 		// Merge all objects
-		MergeObjects();
+//		MergeObjects();
+
+		// Remove objects with low contrast
+		RemoveObjectWithLowContrast();
+
 	}
 }
 #endif

@@ -1,7 +1,11 @@
 #pragma once
 struct FourLimits
 {
-	FourLimits() : top(-1), bottom(-1), left(-1), right(-1)
+	explicit FourLimits(int _top = -1, int _bottom = -1, int _left = -1, int _right = -1)
+		: top(_top),
+		  bottom(_bottom),
+		  left(_left),
+		  right(_right)
 	{
 	}
 	int top;
