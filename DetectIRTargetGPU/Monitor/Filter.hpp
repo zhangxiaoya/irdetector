@@ -81,7 +81,30 @@ inline bool Filter::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPre
 
 inline bool Filter::CheckCoverageOfPreprocessedFrame(unsigned char* frameOnHost, int width, const FourLimits& object)
 {
-	return true;
+	auto sum = 0;
+	sum += frameOnHost[object.top * width + object.left];
+	sum += frameOnHost[object.bottom * width + object.left];
+	sum += frameOnHost[object.top * width + object.right];
+	sum += frameOnHost[object.bottom * width + object.right];
+
+	auto maxValue = static_cast<unsigned char>(sum / 4);
+
+	auto count = 0;
+	for (auto r = object.top; r <= object.bottom; ++r)
+	{
+		for (auto c = object.left; c <= object.right; ++c)
+		{
+			if (frameOnHost[r * width + c] >= maxValue)
+				count++;
+		}
+	}
+
+	auto objectWidth = object.right - object.left + 1;
+	auto objectHeight = object.bottom - object.top + 1;
+	if (static_cast<double>(count) / (objectHeight * objectWidth) > 0.15)
+		return true;
+
+	return false;
 }
 
 inline bool Filter::CheckInsideBoundaryDescendGradient(unsigned char* frameOnHost, int width, const FourLimits& object)
