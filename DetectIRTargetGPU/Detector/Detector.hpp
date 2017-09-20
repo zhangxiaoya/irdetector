@@ -11,6 +11,7 @@
 #include "../Models/ObjectRect.h"
 #include "../Assistants/ShowFrame.hpp"
 #include "../Common/Util.h"
+#include "../Monitor/Filter.hpp"
 
 class Detector
 {
@@ -37,6 +38,8 @@ private:
 	void RemoveObjectWithLowContrast() const;
 
 	void RemoveInValidObjects();
+
+	void RemoveInvalidObjectAfterMerge();
 
 protected:
 	bool ReleaseSpace();
@@ -422,6 +425,23 @@ inline void Detector::RemoveInValidObjects()
 	}
 }
 
+inline void Detector::RemoveInvalidObjectAfterMerge()
+{
+	auto newValidaObjectCount = 0;
+	for (auto i = 0; i < validObjectsCount;)
+	{
+		if (allValidObjects[i].top == -1)
+		{
+			i++;
+			continue;
+		}
+		allValidObjects[newValidaObjectCount] = allValidObjects[i];
+		++i;
+		newValidaObjectCount++;
+	}
+	validObjectsCount = newValidaObjectCount;
+}
+
 inline void Detector::DetectTargets(unsigned char* frame)
 {
 	CopyFrameData(frame);
@@ -458,6 +478,8 @@ inline void Detector::DetectTargets(unsigned char* frame)
 		// Remove objects with low contrast
 		RemoveObjectWithLowContrast();
 
+		// Remove objects after merge
+		RemoveInvalidObjectAfterMerge();
 	}
 }
 #endif
