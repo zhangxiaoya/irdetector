@@ -91,6 +91,27 @@ inline bool Filter::CheckInsideBoundaryDescendGradient(unsigned char* frameOnHos
 
 inline bool Filter::CheckStandardDeviation(unsigned char* frameOnHost, int width, const FourLimits& object)
 {
-	return true;
+	unsigned char averageValue;
+	Util::CalculateAverage(frameOnHost, object, averageValue, width);
+
+	uint64_t sum = 0;
+	for (auto r = object.top; r <= object.bottom; ++r)
+	{
+		for (auto c = object.left; c <= object.right; ++c)
+		{
+			sum += (frameOnHost[r * width + c] - averageValue) * (frameOnHost[r * width + c] - averageValue);
+		}
+	}
+	auto objectWidth = object.right - object.left + 1;
+	auto objectHeight = object.bottom - object.top + 1;
+	auto standardDeviation = sqrt(sum / (objectWidth * objectHeight));
+
+	auto k = 2;
+	auto adaptiveThreshold = standardDeviation * k + averageValue;
+
+	if (adaptiveThreshold >= 150)
+		return true;
+
+	return false;
 }
 #endif
