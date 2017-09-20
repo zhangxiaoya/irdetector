@@ -73,6 +73,8 @@ private:
 
 	int TARGET_WIDTH_MAX_LIMIT;
 	int TARGET_HEIGHT_MAX_LIMIT;
+
+	Filter filters;
 };
 
 inline Detector::Detector(int _width = 320, int _height = 256)
@@ -480,6 +482,17 @@ inline void Detector::DetectTargets(unsigned char* frame)
 
 		// Remove objects after merge
 		RemoveInvalidObjectAfterMerge();
+
+		for(auto i =0; i < validObjectsCount; ++i)
+		{
+			filters.CheckCoverageOfPreprocessedFrame(discretizationResultOnHost, width, allValidObjects[i]);
+			filters.CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(discretizationResultOnHost, width, height, allValidObjects[i]);
+			filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, width, height, allValidObjects[i]);
+			filters.CheckInsideBoundaryDescendGradient(originalFrameOnHost, width, allValidObjects[i]);
+			filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, width, height, allValidObjects[i]);
+			filters.CheckStandardDeviation(originalFrameOnHost, width, allValidObjects[i]);
+			filters.InitBuObject(originalFrameOnHost, discretizationResultOnHost, allValidObjects[i],width);
+		}
 	}
 }
 #endif

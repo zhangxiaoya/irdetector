@@ -1,5 +1,6 @@
 #ifndef __FILTER_H__
 #define __FILTER_H__
+
 #include "../Models/FourLimits.h"
 #include "../Common/Util.h"
 #include <cmath>
@@ -8,34 +9,36 @@
 class Filter
 {
 public:
-	static bool CheckOriginalImageSuroundedBox(unsigned char* originalFrameOnHost, int width, int height, const FourLimits& object);
+	Filter();
 
-	static bool CheckDiscretizedImageSuroundedBox(unsigned char* preprocessedFrameOnHost, int width, int height, const FourLimits& object);
+	bool CheckOriginalImageSuroundedBox(unsigned char* originalFrameOnHost, int width, int height, const FourLimits& object) const;
 
-	static bool CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* preprocessedFrameOnHost, int width, int height, const FourLimits& object);
+	bool CheckDiscretizedImageSuroundedBox(unsigned char* preprocessedFrameOnHost, int width, int height, const FourLimits& object) const;
 
-	static bool CheckCoverageOfPreprocessedFrame(unsigned char* preprocessedFrameOnHost, int width, const FourLimits& object);
+	bool CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* preprocessedFrameOnHost, int width, int height, const FourLimits& object) const;
 
-	static bool CheckInsideBoundaryDescendGradient(unsigned char* originalFrameOnHost, int width, const FourLimits& object);
+	bool CheckCoverageOfPreprocessedFrame(unsigned char* preprocessedFrameOnHost, int width, const FourLimits& object) const;
 
-	static bool CheckStandardDeviation(unsigned char* originalFrameOnHost, int width, const FourLimits& object);
+	bool CheckInsideBoundaryDescendGradient(unsigned char* originalFrameOnHost, int width, const FourLimits& object) const;
 
-	static void InitBuObject(unsigned char* frameOfOriginalImage, unsigned char* frameOfPreprocessedImage, const FourLimits& object, int width);
+	bool CheckStandardDeviation(unsigned char* originalFrameOnHost, int width, const FourLimits& object) const;
+
+	void InitBuObject(unsigned char* frameOfOriginalImage, unsigned char* frameOfPreprocessedImage, const FourLimits& object, int width);
 
 private:
-	static bool CheckPeakValueAndAverageValue(unsigned char* frameOnHost, int width, int height, const FourLimits& object, unsigned char centerValueOfCurrentRect, int convexPartition, int concavePartition);
+	bool CheckPeakValueAndAverageValue(unsigned char* frameOnHost, int width, int height, const FourLimits& object, unsigned char centerValueOfCurrentRect, int convexPartition, int concavePartition) const;
 
-	static int centerX;
-	static int centerY;
-	static int objectWidth;
-	static int objectHeight;
-	static unsigned char centerValueOfOriginalImage;
-	static unsigned char centerValueOfPreprocessedImage;
-	static unsigned char averageValueOfOriginalImage;
-	static unsigned char averageValueOfPreprocessedImage;
+	int centerX;
+	int centerY;
+	int objectWidth;
+	int objectHeight;
+	unsigned char centerValueOfOriginalImage;
+	unsigned char centerValueOfPreprocessedImage;
+	unsigned char averageValueOfOriginalImage;
+	unsigned char averageValueOfPreprocessedImage;
 };
 
-inline bool Filter::CheckPeakValueAndAverageValue(unsigned char* frameOnHost, int width, int height, const FourLimits& object, unsigned char centerValueOfCurrentRect, int convexPartition, int concavePartition)
+inline bool Filter::CheckPeakValueAndAverageValue(unsigned char* frameOnHost, int width, int height, const FourLimits& object, unsigned char centerValueOfCurrentRect, int convexPartition, int concavePartition) const
 {
 	auto surroundingBoxWidth = 3 * objectWidth;
 	auto surroundingBoxHeight = 3 * objectHeight;
@@ -67,17 +70,26 @@ inline bool Filter::CheckPeakValueAndAverageValue(unsigned char* frameOnHost, in
 	return false;
 }
 
-inline bool Filter::CheckOriginalImageSuroundedBox(unsigned char* originalFrameOnHost, int width, int height, const FourLimits& object)
+inline Filter::Filter(): centerX(0), centerY(0),
+                         objectWidth(0), objectHeight(0),
+                         centerValueOfOriginalImage(0),
+                         centerValueOfPreprocessedImage(0),
+                         averageValueOfOriginalImage(0),
+                         averageValueOfPreprocessedImage(0)
+{
+}
+
+inline bool Filter::CheckOriginalImageSuroundedBox(unsigned char* originalFrameOnHost, int width, int height, const FourLimits& object) const
 {
 	return CheckPeakValueAndAverageValue(originalFrameOnHost, width, height, object, centerValueOfOriginalImage, ConvexPartitionOfOriginalImage, ConcavePartitionOfOriginalImage);
 }
 
-inline bool Filter::CheckDiscretizedImageSuroundedBox(unsigned char* preprocessedFrameOnHost, int width, int height, const FourLimits& object)
+inline bool Filter::CheckDiscretizedImageSuroundedBox(unsigned char* preprocessedFrameOnHost, int width, int height, const FourLimits& object) const
 {
 	return CheckPeakValueAndAverageValue(preprocessedFrameOnHost, width, height, object, centerValueOfPreprocessedImage, ConvexPartitionOfDiscretizedImage, ConcavePartitionOfDiscretizedImage);
 }
 
-inline bool Filter::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* preprocessedFrameOnHost, int width, int height, const FourLimits& object)
+inline bool Filter::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* preprocessedFrameOnHost, int width, int height, const FourLimits& object) const
 {
 	auto pixelValueOverCenterValueCount = 0;
 	auto pixelCountOfSurroundingBoundary = 0;
@@ -176,7 +188,7 @@ inline bool Filter::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPre
 	return false;
 }
 
-inline bool Filter::CheckCoverageOfPreprocessedFrame(unsigned char* preprocessedFrameOnHost, int width, const FourLimits& object)
+inline bool Filter::CheckCoverageOfPreprocessedFrame(unsigned char* preprocessedFrameOnHost, int width, const FourLimits& object) const
 {
 	auto sum = 0;
 	sum += preprocessedFrameOnHost[object.top * width + object.left];
@@ -202,7 +214,7 @@ inline bool Filter::CheckCoverageOfPreprocessedFrame(unsigned char* preprocessed
 	return false;
 }
 
-inline bool Filter::CheckInsideBoundaryDescendGradient(unsigned char* originalFrameOnHost, int width, const FourLimits& object)
+inline bool Filter::CheckInsideBoundaryDescendGradient(unsigned char* originalFrameOnHost, int width, const FourLimits& object) const
 {
 	auto topRowSum = 0;
 	auto bottomRowSum = 0;
@@ -235,7 +247,7 @@ inline bool Filter::CheckInsideBoundaryDescendGradient(unsigned char* originalFr
 	return false;
 }
 
-inline bool Filter::CheckStandardDeviation(unsigned char* originalFrameOnHost, int width, const FourLimits& object)
+inline bool Filter::CheckStandardDeviation(unsigned char* originalFrameOnHost, int width, const FourLimits& object) const
 {
 	uint64_t sum = 0;
 	for (auto r = object.top; r <= object.bottom; ++r)
