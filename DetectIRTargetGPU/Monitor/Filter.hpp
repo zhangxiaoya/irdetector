@@ -1,49 +1,87 @@
 #ifndef __FILTER_H__
 #define __FILTER_H__
 #include "../Models/FourLimits.h"
+#include "../Common/Util.h"
+#include <cmath>
+#include "../Headers/GlobalMainHeaders.h"
 
 class Filter
 {
 public:
-	static bool CheckOriginalImageSuroundedBox(unsigned char* frame, int width, const FourLimits& object);
+	static bool CheckOriginalImageSuroundedBox(unsigned char* frameOnHost, int width, int height, const FourLimits& object);
 
-	static bool CheckDiscretizedImageSuroundedBox(unsigned char* frame, int width, const FourLimits& object);
+	static bool CheckDiscretizedImageSuroundedBox(unsigned char* frameOnHost, int width, const FourLimits& object);
 
-	static bool CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* frame, int width, const FourLimits& object);
+	static bool CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* frameOnHost, int width, const FourLimits& object);
 
-	static bool CheckCoverageOfPreprocessedFrame(unsigned char* frame, int width, const FourLimits& object);
+	static bool CheckCoverageOfPreprocessedFrame(unsigned char* frameOnHost, int width, const FourLimits& object);
 
-	static bool CheckInsideBoundaryDescendGradient(unsigned char* frame, int width, const FourLimits& object);
+	static bool CheckInsideBoundaryDescendGradient(unsigned char* frameOnHost, int width, const FourLimits& object);
 
-	static bool CheckStandardDeviation(unsigned char* frame, int width, const FourLimits& object);
+	static bool CheckStandardDeviation(unsigned char* frameOnHost, int width, const FourLimits& object);
 };
 
-inline bool Filter::CheckOriginalImageSuroundedBox(unsigned char* frame, int width, const FourLimits& object)
+inline bool Filter::CheckOriginalImageSuroundedBox(unsigned char* frameOnHost, int width, int height, const FourLimits& object)
+{
+	auto centerX = (object.left + object.right) / 2;
+	auto centerY = (object.top + object.bottom) / 2;
+
+	auto objectWidth = object.right - object.left + 1;
+	auto objectHeight = object.bottom - object.top + 1;
+
+	auto surroundingBoxWidth = 3 * objectWidth;
+	auto surroundingBoxHeight = 3 * objectHeight;
+
+	auto boxLeftTopX = centerX - surroundingBoxWidth / 2 >= 0 ? centerX - surroundingBoxWidth / 2 : 0;
+	auto boxLeftTopY = centerY - surroundingBoxHeight / 2 >= 0 ? centerY - surroundingBoxHeight / 2 : 0;
+
+	auto boxRightBottomX = centerX + surroundingBoxWidth / 2 < width ? centerX + surroundingBoxWidth / 2 : width - 1;
+	auto boxRightBottomY = centerY + surroundingBoxHeight / 2 < height ? centerY + surroundingBoxHeight / 2 : height - 1;
+
+	unsigned char avgValOfSurroundingBox;
+	unsigned char avgValOfCurrentRect;
+	Util::CalculateAverage(frameOnHost, FourLimits(boxLeftTopY, boxRightBottomY, boxLeftTopX, boxRightBottomX), avgValOfSurroundingBox, width);
+	Util::CalculateAverage(frameOnHost, object, avgValOfCurrentRect, width);
+
+	auto convexThresholdProportion = static_cast<double>(1 + ConvexPartitionOfOriginalImage) / ConvexPartitionOfOriginalImage;
+	auto concaveThresholdPropotion = static_cast<double>(1 - ConcavePartitionOfOriginalImage) / ConcavePartitionOfOriginalImage;
+	auto convexThreshold = avgValOfSurroundingBox * convexThresholdProportion;
+	auto concaveThreshold = avgValOfSurroundingBox * concaveThresholdPropotion;
+
+	if (abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < MinDiffOfConvextAndConcaveThreshold)
+		return false;
+
+	unsigned char centerValue = 0;
+	Util::CalCulateCenterValue(frameOnHost, centerValue, width, centerX, centerY);
+
+	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold || centerValue > convexThreshold || centerValue < concaveThreshold)
+	{
+		return true;
+	}
+	return false;
+}
+
+inline bool Filter::CheckDiscretizedImageSuroundedBox(unsigned char* frameOnHost, int width, const FourLimits& object)
 {
 	return true;
 }
 
-inline bool Filter::CheckDiscretizedImageSuroundedBox(unsigned char* frame, int width, const FourLimits& object)
+inline bool Filter::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* frameOnHost, int width, const FourLimits& object)
 {
 	return true;
 }
 
-inline bool Filter::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* frame, int width, const FourLimits& object)
+inline bool Filter::CheckCoverageOfPreprocessedFrame(unsigned char* frameOnHost, int width, const FourLimits& object)
 {
 	return true;
 }
 
-inline bool Filter::CheckCoverageOfPreprocessedFrame(unsigned char* frame, int width, const FourLimits& object)
+inline bool Filter::CheckInsideBoundaryDescendGradient(unsigned char* frameOnHost, int width, const FourLimits& object)
 {
 	return true;
 }
 
-inline bool Filter::CheckInsideBoundaryDescendGradient(unsigned char* frame, int width, const FourLimits& object)
-{
-	return true;
-}
-
-inline bool Filter::CheckStandardDeviation(unsigned char* frame, int width, const FourLimits& object)
+inline bool Filter::CheckStandardDeviation(unsigned char* frameOnHost, int width, const FourLimits& object)
 {
 	return true;
 }
