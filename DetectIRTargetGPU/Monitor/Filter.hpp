@@ -8,9 +8,9 @@
 class Filter
 {
 public:
-	static bool CheckOriginalImageSuroundedBox(unsigned char* frameOnHost, int width, int height, const FourLimits& object);
+	static bool CheckOriginalImageSuroundedBox(unsigned char* originalFrameOnHost, int width, int height, const FourLimits& object);
 
-	static bool CheckDiscretizedImageSuroundedBox(unsigned char* frameOnHost, int width, const FourLimits& object);
+	static bool CheckDiscretizedImageSuroundedBox(unsigned char* discretizatedFrameOnHost, int width, int height, const FourLimits& object);
 
 	static bool CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* frameOnHost, int width, const FourLimits& object);
 
@@ -19,9 +19,12 @@ public:
 	static bool CheckInsideBoundaryDescendGradient(unsigned char* frameOnHost, int width, const FourLimits& object);
 
 	static bool CheckStandardDeviation(unsigned char* frameOnHost, int width, const FourLimits& object);
+
+private:
+	static bool CheckPeakValueAndAverageValue(unsigned char* frameOnHost, int width, int height, const FourLimits& object, int convexPartition, int concavePartition);
 };
 
-inline bool Filter::CheckOriginalImageSuroundedBox(unsigned char* frameOnHost, int width, int height, const FourLimits& object)
+inline bool Filter::CheckPeakValueAndAverageValue(unsigned char* frameOnHost, int width, int height, const FourLimits& object, int convexPartition, int concavePartition)
 {
 	auto centerX = (object.left + object.right) / 2;
 	auto centerY = (object.top + object.bottom) / 2;
@@ -43,8 +46,8 @@ inline bool Filter::CheckOriginalImageSuroundedBox(unsigned char* frameOnHost, i
 	Util::CalculateAverage(frameOnHost, FourLimits(boxLeftTopY, boxRightBottomY, boxLeftTopX, boxRightBottomX), avgValOfSurroundingBox, width);
 	Util::CalculateAverage(frameOnHost, object, avgValOfCurrentRect, width);
 
-	auto convexThresholdProportion = static_cast<double>(1 + ConvexPartitionOfOriginalImage) / ConvexPartitionOfOriginalImage;
-	auto concaveThresholdPropotion = static_cast<double>(1 - ConcavePartitionOfOriginalImage) / ConcavePartitionOfOriginalImage;
+	auto convexThresholdProportion = static_cast<double>(1 + convexPartition) / convexPartition;
+	auto concaveThresholdPropotion = static_cast<double>(1 - concavePartition) / concavePartition;
 	auto convexThreshold = avgValOfSurroundingBox * convexThresholdProportion;
 	auto concaveThreshold = avgValOfSurroundingBox * concaveThresholdPropotion;
 
@@ -61,9 +64,14 @@ inline bool Filter::CheckOriginalImageSuroundedBox(unsigned char* frameOnHost, i
 	return false;
 }
 
-inline bool Filter::CheckDiscretizedImageSuroundedBox(unsigned char* frameOnHost, int width, const FourLimits& object)
+inline bool Filter::CheckOriginalImageSuroundedBox(unsigned char* originalFrameOnHost, int width, int height, const FourLimits& object)
 {
-	return true;
+	return CheckPeakValueAndAverageValue(originalFrameOnHost, width, height, object, ConvexPartitionOfOriginalImage, ConcavePartitionOfOriginalImage);
+}
+
+inline bool Filter::CheckDiscretizedImageSuroundedBox(unsigned char* discretizatedFrameOnHost, int width, int height, const FourLimits& object)
+{
+	return CheckPeakValueAndAverageValue(discretizatedFrameOnHost, width, height, object, ConvexPartitionOfDiscretizedImage, ConcavePartitionOfDiscretizedImage);
 }
 
 inline bool Filter::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* frameOnHost, int width, const FourLimits& object)
