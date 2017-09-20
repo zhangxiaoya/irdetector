@@ -355,22 +355,22 @@ inline void Detector::MergeObjects() const
 
 inline void Detector::RemoveObjectWithLowContrast() const
 {
-	for (auto i = 0; i < width * height; ++i)
+	for (auto i = 0; i < validObjectsCount; ++i)
 	{
-		if(allObjects[i].top == -1)
+		if(allValidObjects[i].top == -1)
 			continue;
 
 		unsigned char averageValue = 0;
 		unsigned char centerValue = 0;
 
-		auto objectWidth = allObjects[i].right - allObjects[i].left + 1;
-		auto objectHeight = allObjects[i].bottom - allObjects[i].top + 1;
+		auto objectWidth = allValidObjects[i].right - allValidObjects[i].left + 1;
+		auto objectHeight = allValidObjects[i].bottom - allValidObjects[i].top + 1;
 
 		auto surroundBoxWidth = 3 * objectWidth;
 		auto surroundBoxHeight = 3 * objectHeight;
 
-		auto centerX = (allObjects[i].right + allObjects[i].left) / 2;
-		auto centerY = (allObjects[i].bottom + allObjects[i].top) / 2;
+		auto centerX = (allValidObjects[i].right + allValidObjects[i].left) / 2;
+		auto centerY = (allValidObjects[i].bottom + allValidObjects[i].top) / 2;
 
 		auto leftTopX = centerX - surroundBoxWidth / 2;
 		if (leftTopX < 0)
@@ -396,7 +396,7 @@ inline void Detector::RemoveObjectWithLowContrast() const
 			rightBottomY = height - 1;
 		}
 
-		FourLimits surroundingBox(leftTopY,rightBottomY, leftTopX, rightBottomX);\
+		FourLimits surroundingBox(leftTopY, rightBottomY, leftTopX, rightBottomX);
 
 		Util::CalculateAverage(discretizationResultOnHost, surroundingBox, averageValue, objectWidth);
 
@@ -404,7 +404,7 @@ inline void Detector::RemoveObjectWithLowContrast() const
 
 		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(averageValue)) < 3)
 		{
-			allObjects[i].top = -1;
+			allValidObjects[i].top = -1;
 		}
 	}
 }
