@@ -12,7 +12,7 @@ public:
 
 	static bool CheckDiscretizedImageSuroundedBox(unsigned char* discretizatedFrameOnHost, int width, int height, const FourLimits& object);
 
-	static bool CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* frameOnHost, int width, const FourLimits& object);
+	static bool CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* frameOnHost, int width, int height, const FourLimits& object);
 
 	static bool CheckCoverageOfPreprocessedFrame(unsigned char* frameOnHost, int width, const FourLimits& object);
 
@@ -74,9 +74,112 @@ inline bool Filter::CheckDiscretizedImageSuroundedBox(unsigned char* discretizat
 	return CheckPeakValueAndAverageValue(discretizatedFrameOnHost, width, height, object, ConvexPartitionOfDiscretizedImage, ConcavePartitionOfDiscretizedImage);
 }
 
-inline bool Filter::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* frameOnHost, int width, const FourLimits& object)
+inline bool Filter::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned char* frameOnHost, int width, int height, const FourLimits& object)
 {
-	return true;
+	auto centerX = (object.left + object.right) / 2;
+	auto centerY = (object.top + object.bottom) / 2;
+
+	auto pixelValueOverCenterValueCount = 0;
+	auto pixelCountOfSurroundingBoundary = 0;
+
+	unsigned char centerValue = 0;
+	Util::CalCulateCenterValue(frameOnHost, centerValue, width, centerX, centerY);
+
+	unsigned char averageValue;
+	Util::CalculateAverage(frameOnHost,object,averageValue, width);
+
+	auto sum = 0;
+	auto topRow = object.top - 1;
+	if (topRow >= 0)
+	{
+		for (auto c = object.left; c <= object.right; ++c)
+		{
+			auto val = frameOnHost[topRow * width + c];
+			if(val >centerValue)
+				pixelValueOverCenterValueCount++;
+			sum += static_cast<int>(val);
+		}
+		pixelCountOfSurroundingBoundary += (object.right - object.left + 1);
+	}
+
+	auto bottomRow = object.bottom + 1;
+	if (bottomRow < height)
+	{
+		for (auto c = object.left; c <= object.right; ++c)
+		{
+			auto val = frameOnHost[bottomRow * width + c];
+			if (val >centerValue)
+				pixelValueOverCenterValueCount++;
+			sum += static_cast<int>(val);
+		}
+		pixelCountOfSurroundingBoundary += (object.right - object.left + 1);
+	}
+
+	auto leftCol = object.left - 1;
+	if (leftCol >= 0)
+	{
+		for (auto r = object.top; r <= object.bottom; ++r)
+		{
+			auto val = frameOnHost[r * width + leftCol];
+			if (val >centerValue)
+				pixelValueOverCenterValueCount++;
+			sum += static_cast<int>(val);
+		}
+		pixelCountOfSurroundingBoundary += (object.bottom - object.top + 1);
+	}
+
+	auto rightCol = object.right + 1;
+	if (rightCol < width)
+	{
+		for (auto r = object.top; r <= object.bottom; ++r)
+		{
+			auto val = frameOnHost[r * width + rightCol];
+			if (val >centerValue)
+				pixelValueOverCenterValueCount++;
+			sum += static_cast<int>(val);
+		}
+		pixelCountOfSurroundingBoundary += (object.bottom - object.top + 1);
+	}
+
+	if (leftCol >= 0 && topRow >= 0)
+	{
+		auto val = frameOnHost[topRow * width + leftCol];
+		if (val >centerValue)
+			pixelValueOverCenterValueCount++;
+		sum += static_cast<int>(val);
+		pixelCountOfSurroundingBoundary++;
+	}
+	if (leftCol >= 0 && bottomRow < height)
+	{
+		auto val = frameOnHost[bottomRow * width + leftCol];
+		if (val >centerValue)
+			pixelValueOverCenterValueCount++;
+		sum += static_cast<int>(val);
+		pixelCountOfSurroundingBoundary++;
+	}
+	if (rightCol < width && topRow >= 0)
+	{
+		auto val = frameOnHost[topRow * width + rightCol];
+		if (val >centerValue)
+			pixelValueOverCenterValueCount++;
+		sum += static_cast<int>(val);
+		pixelCountOfSurroundingBoundary++;
+	}
+	if (rightCol < width && bottomRow < height)
+	{
+		auto val = frameOnHost[bottomRow * width + rightCol];
+		if (val >centerValue)
+			pixelValueOverCenterValueCount++;
+		sum += static_cast<int>(val);
+		pixelCountOfSurroundingBoundary++;
+	}
+
+	auto avgSurroundingPixels = static_cast<unsigned char>(sum / pixelCountOfSurroundingBoundary);
+
+	if (pixelValueOverCenterValueCount < 2 && avgSurroundingPixels < (averageValue * 11 / 12))
+		return true;
+
+	return false;
 }
 
 inline bool Filter::CheckCoverageOfPreprocessedFrame(unsigned char* frameOnHost, int width, const FourLimits& object)
