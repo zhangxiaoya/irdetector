@@ -153,6 +153,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Common\SplitBinaryFile.hpp" />
+    <ClCompile Include="Detector\Detector.hpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -175,8 +176,10 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Models\LogLevel.hpp" />
     <ClInclude Include="Models\ObjectRect.h" />
     <ClInclude Include="Models\Point.h" />
+    <ClInclude Include="Monitor\Filter.hpp" />
     <ClInclude Include="Monitor\Monitor.hpp" />
     <ClInclude Include="Segmentation\segementationHelper.cuh" />
+    <ClInclude Include="Validation\DetectorValidation.hpp" />
     <ClInclude Include="Validation\Validation.hpp" />
   </ItemGroup>
   <ItemGroup>
