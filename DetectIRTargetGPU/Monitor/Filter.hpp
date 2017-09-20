@@ -86,7 +86,38 @@ inline bool Filter::CheckCoverageOfPreprocessedFrame(unsigned char* frameOnHost,
 
 inline bool Filter::CheckInsideBoundaryDescendGradient(unsigned char* frameOnHost, int width, const FourLimits& object)
 {
-	return true;
+	auto topRowSum = 0;
+	auto bottomRowSum = 0;
+	for (auto c = object.left; c <= object.right; ++c)
+	{
+		topRowSum += static_cast<int>(frameOnHost[object.top * width + c]);
+		bottomRowSum += static_cast<int>(frameOnHost[object.bottom * width + c]);
+	}
+	auto avgTop = static_cast<unsigned char>(topRowSum / (object.right - object.left + 1));
+	auto avgBottom = static_cast<unsigned char>(bottomRowSum / (object.right - object.left + 1));
+
+	auto leftSum = 0;
+	auto rightSum = 0;
+	for (auto r = object.top; r <= object.bottom; ++r)
+	{
+		leftSum += static_cast<int>(frameOnHost[r * width + object.left]);
+		rightSum += static_cast<int>(frameOnHost[r * width + object.right]);
+	}
+	auto avgLeft = static_cast<int>(leftSum / (object.bottom - object.top + 1));
+	auto avgRight = static_cast<int>(rightSum / (object.bottom - object.top + 1));
+
+	unsigned char averageValue;
+	Util::CalculateAverage(frameOnHost, object, averageValue, width);
+
+	auto count = 0;
+	if (avgLeft < averageValue) count++;
+	if (avgBottom < averageValue) count++;
+	if (avgRight < averageValue) count++;
+	if (avgTop < averageValue) count++;
+
+	if (count > 3)
+		return true;
+	return false;
 }
 
 inline bool Filter::CheckStandardDeviation(unsigned char* frameOnHost, int width, const FourLimits& object)
