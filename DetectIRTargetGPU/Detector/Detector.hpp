@@ -491,7 +491,7 @@ inline void Detector::DetectTargets(unsigned char* frame)
 			filters.CheckInsideBoundaryDescendGradient(originalFrameOnHost, width, allValidObjects[i]);
 			filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, width, height, allValidObjects[i]);
 			filters.CheckStandardDeviation(originalFrameOnHost, width, allValidObjects[i]);
-			filters.InitBuObject(originalFrameOnHost, discretizationResultOnHost, allValidObjects[i],width);
+			filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, allValidObjects[i],width);
 		}
 	}
 }

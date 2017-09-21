@@ -23,7 +23,7 @@ public:
 
 	bool CheckStandardDeviation(unsigned char* originalFrameOnHost, int width, const FourLimits& object) const;
 
-	void InitBuObject(unsigned char* frameOfOriginalImage, unsigned char* frameOfPreprocessedImage, const FourLimits& object, int width);
+	void InitObjectParameters(unsigned char* frameOfOriginalImage, unsigned char* frameOfPreprocessedImage, const FourLimits& object, int width);
 
 private:
 	bool CheckPeakValueAndAverageValue(unsigned char* frameOnHost, int width, int height, const FourLimits& object, unsigned char centerValueOfCurrentRect, int convexPartition, int concavePartition) const;
@@ -270,7 +270,7 @@ inline bool Filter::CheckStandardDeviation(unsigned char* originalFrameOnHost, i
 	return false;
 }
 
-inline void Filter::InitBuObject(unsigned char* frameOfOriginalImage, unsigned char* frameOfPreprocessedImage, const FourLimits& object, int width)
+inline void Filter::InitObjectParameters(unsigned char* frameOfOriginalImage, unsigned char* frameOfPreprocessedImage, const FourLimits& object, int width)
 {
 	centerX = (object.left + object.right) / 2;
 	centerY = (object.top + object.bottom) / 2;
