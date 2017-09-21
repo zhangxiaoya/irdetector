@@ -1,25 +1,17 @@
 ﻿#pragma once
-#include <WinSock2.h>
 #include <winsock.h>
 
-class DataReceiver
-{
-public:
-	static bool InitNetworks();
+bool InitNetworks();
 
-	static void Run();
+void Run(unsigned char* frameData);
 
-	static bool DestroyNetWork();
+bool DestroyNetWork();
 
-	static int hostPort;
-	static int width;
-	static int height;
-
-	static int reveiceDataBufferlen;
-
-	static SOCKET serverSocket;
-	static sockaddr_in remoteAddress;
-	static int remoteAddressLen;
-
-	static char* receiveDataBuffer;
-};
+extern int hostPort;
+extern int width;
+extern int height;
+extern int reveiceDataBufferlen;
+extern SOCKET serverSocket;
+extern sockaddr_in remoteAddress;
+extern int remoteAddressLen;
+extern char* receiveDataBuffer;

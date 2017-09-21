@@ -3,19 +3,19 @@
 
 #pragma comment(lib, "ws2_32.lib")
 
-int DataReceiver::hostPort = 8889;
-int DataReceiver::width = 320;
-int DataReceiver::height = 256;
+int hostPort = 8889;
+int width = 320;
+int height = 256;
 
-SOCKET DataReceiver::serverSocket = 0;
-sockaddr_in DataReceiver::remoteAddress;
+SOCKET serverSocket = 0;
+sockaddr_in remoteAddress;
 
-int DataReceiver::remoteAddressLen;
-int DataReceiver::reveiceDataBufferlen = 0;
+int remoteAddressLen;
+int reveiceDataBufferlen = 0;
 
-char* DataReceiver::receiveDataBuffer = nullptr;
+char* receiveDataBuffer = nullptr;
 
-bool DataReceiver::InitNetworks()
+bool InitNetworks()
 {
 	std::cout << "Init" << std::endl;
 
@@ -58,16 +58,16 @@ bool DataReceiver::InitNetworks()
 	return true;
 }
 
-void DataReceiver::Run()
+void Run(unsigned char* frameData)
 {
 	std::cout << "Wait for client" << std::endl;
 
-	while (true)
+	for (auto i = 0; i < 4; ++i)
 	{
 		auto ret = recvfrom(serverSocket, receiveDataBuffer, reveiceDataBufferlen, 0, reinterpret_cast<sockaddr *>(&remoteAddress), &remoteAddressLen);
 		if (ret > 0)
 		{
-			printf("接受到一个连接：%s \r\n", inet_ntoa(remoteAddress.sin_addr));
+			memcpy(frameData + i * reveiceDataBufferlen, receiveDataBuffer, sizeof(unsigned char) * reveiceDataBufferlen);
 			std::cout << "Receive data from clent!" << std::endl;
 		}
 		else
@@ -78,7 +78,7 @@ void DataReceiver::Run()
 	}
 }
 
-bool DataReceiver::DestroyNetWork()
+bool DestroyNetWork()
 {
 	delete[] receiveDataBuffer;
 
