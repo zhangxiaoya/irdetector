@@ -129,6 +129,9 @@
     <ClCompile Include="Detector\Detector.hpp">
       <Filter>Detector</Filter>
     </ClCompile>
+    <ClCompile Include="Models\ResultSegment.cpp">
+      <Filter>Models</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Dilations\DilatetionKernel.cu">
