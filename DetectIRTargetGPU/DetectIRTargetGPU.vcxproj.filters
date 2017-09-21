@@ -46,6 +46,9 @@
     <Filter Include="Detector">
       <UniqueIdentifier>{534ba27a-1193-4509-98ed-5f3bfd7871f9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{5fdf6299-8011-4e81-a87d-c734f1f10e20}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\GlobalMainHeaders.h">
@@ -120,6 +123,9 @@
     <ClInclude Include="Monitor\Filter.hpp">
       <Filter>Monitor</Filter>
     </ClInclude>
+    <ClInclude Include="Network\DataReceiver.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -131,6 +137,9 @@
     </ClCompile>
     <ClCompile Include="Models\ResultSegment.cpp">
       <Filter>Models</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\DataReceiver.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
