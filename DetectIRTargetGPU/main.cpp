@@ -21,10 +21,9 @@ unsigned char FrameDataInprocessing[FrameSize] = {0};
 
 Detector* detector = new Detector();
 
-BufferStruct Buffer(FrameSize, BufferSize);
+RingBufferStruct Buffer(FrameSize, BufferSize);
 
-
-void ProduceItem(BufferStruct* buffer)
+void ProduceItem(RingBufferStruct* buffer)
 {
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while ((buffer->write_position + 1) % BufferSize == buffer->read_position)
@@ -45,7 +44,7 @@ void ProduceItem(BufferStruct* buffer)
 	lock.unlock();
 }
 
-void ConsumeItem(BufferStruct* buffer)
+void ConsumeItem(RingBufferStruct* buffer)
 {
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while (buffer->write_position == buffer->read_position)
@@ -87,7 +86,7 @@ void ConsumerTask()
 	}
 }
 
-void InitBuffer(BufferStruct* buffer)
+void InitBuffer(RingBufferStruct* buffer)
 {
 	buffer->write_position = 0;
 	buffer->read_position = 0;

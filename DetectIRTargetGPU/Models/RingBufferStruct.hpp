@@ -1,9 +1,9 @@
 #pragma once
 #include <condition_variable>
 
-struct BufferStruct
+struct RingBufferStruct
 {
-	explicit BufferStruct(int frame_size, int buffer_size = 10)
+	explicit RingBufferStruct(int frame_size, int buffer_size = 10)
 		: item_buffer(nullptr),
 		  read_position(0),
 		  write_position(0),
@@ -13,7 +13,7 @@ struct BufferStruct
 		item_buffer = new unsigned char[bufferSize * frameSize];
 	}
 
-	~BufferStruct()
+	~RingBufferStruct()
 	{
 		delete[] item_buffer;
 	}
