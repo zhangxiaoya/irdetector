@@ -58,7 +58,7 @@ bool InitNetworks()
 	return true;
 }
 
-void Run(unsigned char* frameData)
+void GetOneFrameFromNetwork(unsigned char* frameData)
 {
 	std::cout << "Wait for client" << std::endl;
 
