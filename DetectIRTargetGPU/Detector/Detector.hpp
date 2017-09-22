@@ -12,6 +12,7 @@
 #include "../Assistants/ShowFrame.hpp"
 #include "../Common/Util.h"
 #include "../Monitor/Filter.hpp"
+#include "../Models/ResultSegment.hpp"
 
 class Detector
 {
@@ -22,7 +23,7 @@ public:
 
 	bool InitSpace();
 
-	void DetectTargets(unsigned char* frame);
+	void DetectTargets(unsigned char* frame, ResultSegment* result);
 
 private:
 	void CopyFrameData(unsigned char* frame);
@@ -444,7 +445,7 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 	validObjectsCount = newValidaObjectCount;
 }
 
-inline void Detector::DetectTargets(unsigned char* frame)
+inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 {
 	CopyFrameData(frame);
 
@@ -482,6 +483,9 @@ inline void Detector::DetectTargets(unsigned char* frame)
 
 		// Remove objects after merge
 		RemoveInvalidObjectAfterMerge();
+
+		// Copy frame header
+		memcpy(result->header, originalFrameOnHost + 2, 16);
 
 		for(auto i =0; i < validObjectsCount; ++i)
 		{
