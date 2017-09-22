@@ -1,9 +1,12 @@
 ﻿#pragma once
 #include <winsock.h>
+#include "../Models/ResultSegment.hpp"
 
 bool InitNetworks();
 
 bool GetOneFrameFromNetwork(unsigned char* frameData);
+
+bool SendResultToRemoteServer(ResultSegment& result);
 
 bool DestroyNetWork();
 
