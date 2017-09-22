@@ -26,8 +26,12 @@ Detector* detector = new Detector();
 // Definition of a ring buffer
 RingBufferStruct Buffer(FrameSize, BufferSize);
 
+/****************************************************************************************/
+/*                                Input Data Operation                                  */
+/****************************************************************************************/
 bool InputDataToBuffer(RingBufferStruct* buffer)
 {
+	// Check buffer is full or not, if full automatic unlock mutex
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while ((buffer->write_position + 1) % BufferSize == buffer->read_position)
 	{
@@ -35,25 +39,34 @@ bool InputDataToBuffer(RingBufferStruct* buffer)
 		buffer->buffer_not_full.wait(lock);
 	}
 
+	// Check finish stream end flag
 	if (GetOneFrameFromNetwork(FrameData) == false)
 	{
 		buffer->finish_flag = true;
 		return false;
 	}
-	memcpy(buffer->item_buffer + buffer->write_position * FrameSize, FrameData, FrameSize * sizeof(unsigned char));
 
+	// Copy data received from network to ring buffer and update ring buffer header pointer
+	memcpy(buffer->item_buffer + buffer->write_position * FrameSize, FrameData, FrameSize * sizeof(unsigned char));
 	buffer->write_position++;
 
+	// Reset data header pointer when to the end of buffer
 	if (buffer->write_position == BufferSize)
 		buffer->write_position = 0;
 
+	// Notify Detect thread
 	buffer->buffer_not_empty.notify_all();
 	lock.unlock();
 	return true;
 }
 
+
+/****************************************************************************************/
+/*                              Detect target Operation                                 */
+/****************************************************************************************/
 bool DetectTarget(RingBufferStruct* buffer)
 {
+	// Check buffer is empty or not, if empty automatic unlock mutex
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while (buffer->write_position == buffer->read_position)
 	{
