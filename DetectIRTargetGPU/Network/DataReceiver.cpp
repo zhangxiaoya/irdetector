@@ -1,6 +1,7 @@
 ﻿#include "DataReceiver.h"
 #include <iostream>
 #include "../Monitor/Filter.hpp"
+#include "../Models/ResultSegment.hpp"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -71,6 +72,18 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 			std::cout << "Finish receive data from client!\n";
 			return false;
 		}
+	}
+	return true;
+}
+
+bool SendResultToRemoteServer(ResultSegment& result)
+{
+	std::cout << "Sending result to remote server \n";
+
+	auto sendStatus = sendto(ServerSocket, reinterpret_cast<char*>(&result), sizeof(ResultSegment), 0, reinterpret_cast<sockaddr *>(&RemoteAddress), RemoteAddressLen);
+	if(sendStatus == SOCKET_ERROR)
+	{
+		return false;
 	}
 	return true;
 }
