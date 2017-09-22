@@ -20,6 +20,8 @@ static const int FrameSize = WIDTH * HEIGHT * BYTESIZE;
 
 unsigned char FrameData[FrameSize];
 unsigned char FrameDataInprocessing[FrameSize] = {0};
+ResultSegment ResultItem;
+static const int ResultItemSize = sizeof(ResultSegment);
 
 // Init one detector
 Detector* detector = new Detector();
@@ -65,17 +67,20 @@ bool InputDataToBuffer(RingBufferStruct* buffer)
 /****************************************************************************************/
 /*                              Detect target Operation                                 */
 /****************************************************************************************/
-bool DetectTarget(RingBufferStruct* buffer)
+bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 {
 	// Check buffer is empty or not, if empty automatic unlock mutex
-	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
+	std::unique_lock<std::mutex> readLock(buffer->bufferMutex);
 	while (buffer->write_position == buffer->read_position)
 	{
 		if (buffer->finish_flag == true)
+		{
+			resultBuffer->finish_flag = true;
 			return false;
+		}
 
 		std::cout << "Consumer is waiting for items...\n";
-		buffer->buffer_not_empty.wait(lock);
+		buffer->buffer_not_empty.wait(readLock);
 	}
 
 	memcpy(FrameDataInprocessing, buffer->item_buffer + buffer->read_position * FrameSize, FrameSize);
@@ -86,9 +91,57 @@ bool DetectTarget(RingBufferStruct* buffer)
 		buffer->read_position = 0;
 
 	buffer->buffer_not_full.notify_all();
+	readLock.unlock();
+
+	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItem), "whole");
+
+	// Check result buffer is full or not, if full automatic unlock mutex
+//	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
+//	while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
+//	{
+//		std::cout << "Producer is waiting for an empty slot...\n";
+//		resultBuffer->buffer_not_full.wait(writerLock);
+//	}
+//
+//	// Copy data received from network to ring buffer and update ring buffer header pointer
+//	memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItem, ResultItemSize);
+//	resultBuffer->write_position++;
+//
+//	// Reset data header pointer when to the end of buffer
+//	if (resultBuffer->write_position == BufferSize)
+//		resultBuffer->write_position = 0;
+//
+//	// Notify Detect thread
+//	resultBuffer->buffer_not_empty.notify_all();
+//	writerLock.unlock();
+	return true;
+}
+
+/****************************************************************************************/
+/*                               Send Result Operation                                  */
+/****************************************************************************************/
+bool OutputData(ResultBufferStruct* buffer)
+{
+	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
+	while (buffer->write_position == buffer->read_position)
+	{
+		if (buffer->finish_flag == true)
+			return false;
+
+		std::cout << "Send result thread is waiting for result items...\n";
+		buffer->buffer_not_empty.wait(lock);
+	}
+
+	SendResultToRemoteServer(buffer->item_buffer[buffer->read_position]);
+
+	buffer->read_position++;
+
+	if (buffer->read_position >= BufferSize)
+		buffer->read_position = 0;
+
+	buffer->buffer_not_full.notify_all();
 	lock.unlock();
 
-	CheckPerf(detector->DetectTargets(FrameDataInprocessing), "whole");
 	return true;
 }
 
@@ -108,7 +161,17 @@ void DetectTask()
 	// Detecting target
 	while (true)
 	{
-		if (DetectTarget(&Buffer) == false)
+		if (DetectTarget(&Buffer, &ResultBuffer) == false)
+			break;
+	}
+}
+
+void OutputDataTask()
+{
+	// Send data to remote server
+	while (true)
+	{
+		if (OutputData(&ResultBuffer) == false)
 			break;
 	}
 }
