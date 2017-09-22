@@ -9,6 +9,7 @@
 #include <thread>
 #include "Models/RingBufferStruct.hpp"
 
+// Definition of all const varibales
 const unsigned int WIDTH = 320;
 const unsigned int HEIGHT = 256;
 const unsigned BYTESIZE = 1;
@@ -19,8 +20,10 @@ static const int FrameSize = WIDTH * HEIGHT * BYTESIZE;
 unsigned char FrameData[FrameSize];
 unsigned char FrameDataInprocessing[FrameSize] = {0};
 
+// Init one detector
 Detector* detector = new Detector();
 
+// Definition of a ring buffer
 RingBufferStruct Buffer(FrameSize, BufferSize);
 
 void ProduceItem(RingBufferStruct* buffer)
@@ -128,6 +131,7 @@ int main(int argc, char* argv[])
 	// Release Cuda device
 	CUDAInit::cudaDeviceRelease();
 
+	delete detector;
 	system("Pause");
 	return 0;
 }
