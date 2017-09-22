@@ -4,7 +4,8 @@
 struct RingBufferStruct
 {
 	explicit RingBufferStruct(int frame_size, int buffer_size = 10)
-		: item_buffer(nullptr),
+		: finish_flag(false),
+		  item_buffer(nullptr),
 		  read_position(0),
 		  write_position(0),
 		  bufferSize(buffer_size),
@@ -18,6 +19,7 @@ struct RingBufferStruct
 		delete[] item_buffer;
 	}
 
+	bool finish_flag;
 	unsigned char* item_buffer;                      // »·ÐÎ»º³å
 	size_t read_position;
 	size_t write_position;

@@ -36,7 +36,10 @@ bool ProduceItem(RingBufferStruct* buffer)
 	}
 
 	if (GetOneFrameFromNetwork(FrameData) == false)
+	{
+		buffer->finish_flag = true;
 		return false;
+	}
 	memcpy(buffer->item_buffer + buffer->write_position * FrameSize, FrameData, FrameSize * sizeof(unsigned char));
 
 	buffer->write_position++;
@@ -49,11 +52,14 @@ bool ProduceItem(RingBufferStruct* buffer)
 	return true;
 }
 
-void ConsumeItem(RingBufferStruct* buffer)
+bool ConsumeItem(RingBufferStruct* buffer)
 {
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while (buffer->write_position == buffer->read_position)
 	{
+		if (buffer->finish_flag == true)
+			return false;
+
 		std::cout << "Consumer is waiting for items...\n";
 		buffer->buffer_not_empty.wait(lock);
 	}
@@ -69,6 +75,7 @@ void ConsumeItem(RingBufferStruct* buffer)
 	lock.unlock();
 
 	CheckPerf(detector->DetectTargets(FrameDataInprocessing), "whole");
+	return true;
 }
 
 
@@ -88,7 +95,8 @@ void ConsumerTask()
 	// Detecting target
 	while (true)
 	{
-		ConsumeItem(&Buffer);
+		if (ConsumeItem(&Buffer) == false)
+			break;
 	}
 }
 
@@ -132,9 +140,11 @@ int main(int argc, char* argv[])
 		//		visualEffectValidator.VailidationAll();
 	}
 	// Release Cuda device
-	CUDAInit::cudaDeviceRelease();
 
 	delete detector;
+
+	CUDAInit::cudaDeviceRelease();
+
 	system("Pause");
 	return 0;
 }
