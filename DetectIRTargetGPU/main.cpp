@@ -10,9 +10,9 @@
 #include "Models/RingBufferStruct.hpp"
 
 // Definition of all const varibales
-const unsigned int WIDTH = 320;
-const unsigned int HEIGHT = 256;
-const unsigned BYTESIZE = 1;
+extern const unsigned int WIDTH = 320;
+extern const unsigned int HEIGHT = 256;
+extern const unsigned int BYTESIZE = 1;
 
 static const int BufferSize = 10;
 static const int FrameSize = WIDTH * HEIGHT * BYTESIZE;
