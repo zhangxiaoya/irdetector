@@ -26,7 +26,7 @@ Detector* detector = new Detector();
 // Definition of a ring buffer
 RingBufferStruct Buffer(FrameSize, BufferSize);
 
-bool ProduceItem(RingBufferStruct* buffer)
+bool InputDataToBuffer(RingBufferStruct* buffer)
 {
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while ((buffer->write_position + 1) % BufferSize == buffer->read_position)
@@ -52,7 +52,7 @@ bool ProduceItem(RingBufferStruct* buffer)
 	return true;
 }
 
-bool ConsumeItem(RingBufferStruct* buffer)
+bool DetectTarget(RingBufferStruct* buffer)
 {
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while (buffer->write_position == buffer->read_position)
@@ -79,23 +79,23 @@ bool ConsumeItem(RingBufferStruct* buffer)
 }
 
 
-void ProducerTask()
+void InputDataTask()
 {
 	// Receiving data from network
 	while (true)
 	{
-		if(ProduceItem(&Buffer) == false)
+		if(InputDataToBuffer(&Buffer) == false)
 			break;
 		Sleep(1);
 	}
 }
 
-void ConsumerTask()
+void DetectTask()
 {
 	// Detecting target
 	while (true)
 	{
-		if (ConsumeItem(&Buffer) == false)
+		if (DetectTarget(&Buffer) == false)
 			break;
 	}
 }
@@ -109,7 +109,7 @@ void InitBuffer(RingBufferStruct* buffer)
 
 int main(int argc, char* argv[])
 {
-	// Init CUDA
+	// Init CUDA device
 	auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
@@ -122,12 +122,13 @@ int main(int argc, char* argv[])
 		// Init ring buffer
 		InitBuffer(&Buffer);
 
-		std::thread producer(ProducerTask);
-		std::thread consumer(ConsumerTask);
+		std::thread InputDataThread(InputDataTask);
+		std::thread DetectorThread(DetectTask);
 
-		producer.join();
-		consumer.join();
+		InputDataThread.join();
+		DetectorThread.join();
 
+		// Destroy Network
 		DestroyNetWork();
 
 		//		Validation validation;
@@ -139,10 +140,11 @@ int main(int argc, char* argv[])
 		//		visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_2.bin");
 		//		visualEffectValidator.VailidationAll();
 	}
-	// Release Cuda device
 
+	// Destroy detector
 	delete detector;
 
+	// Release Cuda device
 	CUDAInit::cudaDeviceRelease();
 
 	system("Pause");
