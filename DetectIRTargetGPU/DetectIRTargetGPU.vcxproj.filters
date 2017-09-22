@@ -129,6 +129,9 @@
     <ClInclude Include="Models\RingBufferStruct.hpp">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Models\ResultBufferStruct.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -138,11 +141,11 @@
     <ClCompile Include="Detector\Detector.hpp">
       <Filter>Detector</Filter>
     </ClCompile>
-    <ClCompile Include="Models\ResultSegment.cpp">
-      <Filter>Models</Filter>
-    </ClCompile>
     <ClCompile Include="Network\DataReceiver.cpp">
       <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Models\ResultSegment.hpp">
+      <Filter>Models</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
