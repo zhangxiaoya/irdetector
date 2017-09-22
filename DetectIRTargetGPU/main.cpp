@@ -16,30 +16,9 @@ static const int BufferSize = 10;
 static const int FrameSize = WIDTH * HEIGHT * BYTESIZE;
 
 unsigned char FrameData[FrameSize];
-unsigned char FrameDataInprocessing[FrameSize] = { 0 };
+unsigned char FrameDataInprocessing[FrameSize] = {0};
 
 Detector* detector = new Detector();
-
-//HANDLE dataMutex;
-//
-//DWORD WINAPI Detect(LPVOID lpParam)
-//{
-//	WaitForSingleObject(dataMutex, INFINITE);
-//	CheckPerf(detector->DetectTargets(FrameData), "whole");
-//	ReleaseMutex(dataMutex);
-//	return 0;
-//}
-//
-//DWORD WINAPI ReadData(LPVOID lpParam)
-//{
-//	WaitForSingleObject(dataMutex, INFINITE);
-//	GetOneFrameFromNetwork(FrameData);
-//	ReleaseMutex(dataMutex);
-//
-//	return 0;
-//}
-
-//static const int TotalCountOfProduction = 10;
 
 struct BufferStruct
 {
@@ -100,9 +79,9 @@ void ConsumeItem(BufferStruct* buffer)
 
 void ProducerTask()
 {
-	while(true)
+	while (true)
 	{
-		std::cout << "Receivce data from network" <<std::endl;
+		std::cout << "Receivce data from network" << std::endl;
 		ProduceItem(&Buffer);
 		Sleep(1);
 	}
@@ -136,58 +115,27 @@ int main(int argc, char* argv[])
 		// Init Detector Space
 		detector->InitSpace();
 
-//		while (true)
-//		{
-			InitBuffer(&Buffer);
+		// Init ring buffer
+		InitBuffer(&Buffer);
 
-			std::thread producer(ProducerTask);
-			std::thread consumer(ConsumerTask);
+		std::thread producer(ProducerTask);
+		std::thread consumer(ConsumerTask);
 
-			producer.join();
-			consumer.join();
+		producer.join();
+		consumer.join();
 
-//		}
-//		// Create Mutex
-//		dataMutex = CreateMutex(nullptr, FALSE, nullptr);
-//
-//		// Init Network socket
-//		InitNetworks();
-//
-//		// Init Detector Space
-//		detector->InitSpace();
-//
-//		HANDLE hThread1;
-//		HANDLE hThread2;
-//		while (true)
-//		{
-//			hThread1 = CreateThread(nullptr,
-//			                        0,
-//			                        ReadData,
-//			                        nullptr,
-//			                        0,
-//			                        nullptr);
-//			hThread2 = CreateThread(nullptr,
-//			                        0,
-//			                        Detect,
-//			                        nullptr,
-//			                        0,
-//			                        nullptr);
-//		}
-//
-//		CloseHandle(hThread1);
-//		CloseHandle(hThread2);
-//		DestroyNetWork();
-//
-//
-////		Validation validation;
-////		validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
-////		validation.VailidationAll();
+		DestroyNetWork();
 
-//		DetectorValidation visualEffectValidator;
-//		visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
-//		visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_2.bin");
-//		visualEffectValidator.VailidationAll();
+		//		Validation validation;
+		//		validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
+		//		validation.VailidationAll();
+
+		//		DetectorValidation visualEffectValidator;
+		//		visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
+		//		visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_2.bin");
+		//		visualEffectValidator.VailidationAll();
 	}
+	// Release Cuda device
 	CUDAInit::cudaDeviceRelease();
 
 	system("Pause");
