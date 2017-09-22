@@ -3,7 +3,7 @@
 
 bool InitNetworks();
 
-void GetOneFrameFromNetwork(unsigned char* frameData);
+bool GetOneFrameFromNetwork(unsigned char* frameData);
 
 bool DestroyNetWork();
 

@@ -14,7 +14,7 @@ extern const unsigned int WIDTH = 320;
 extern const unsigned int HEIGHT = 256;
 extern const unsigned int BYTESIZE = 1;
 
-static const int BufferSize = 10;
+static const int BufferSize = 2;
 static const int FrameSize = WIDTH * HEIGHT * BYTESIZE;
 
 unsigned char FrameData[FrameSize];
@@ -26,7 +26,7 @@ Detector* detector = new Detector();
 // Definition of a ring buffer
 RingBufferStruct Buffer(FrameSize, BufferSize);
 
-void ProduceItem(RingBufferStruct* buffer)
+bool ProduceItem(RingBufferStruct* buffer)
 {
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while ((buffer->write_position + 1) % BufferSize == buffer->read_position)
@@ -35,7 +35,8 @@ void ProduceItem(RingBufferStruct* buffer)
 		buffer->buffer_not_full.wait(lock);
 	}
 
-	GetOneFrameFromNetwork(FrameData);
+	if (GetOneFrameFromNetwork(FrameData) == false)
+		return false;
 	memcpy(buffer->item_buffer + buffer->write_position * FrameSize, FrameData, FrameSize * sizeof(unsigned char));
 
 	buffer->write_position++;
@@ -45,6 +46,7 @@ void ProduceItem(RingBufferStruct* buffer)
 
 	buffer->buffer_not_empty.notify_all();
 	lock.unlock();
+	return true;
 }
 
 void ConsumeItem(RingBufferStruct* buffer)
@@ -72,20 +74,21 @@ void ConsumeItem(RingBufferStruct* buffer)
 
 void ProducerTask()
 {
+	// Receiving data from network
 	while (true)
 	{
-		std::cout << "Receivce data from network" << std::endl;
-		ProduceItem(&Buffer);
+		if(ProduceItem(&Buffer) == false)
+			break;
 		Sleep(1);
 	}
 }
 
 void ConsumerTask()
 {
+	// Detecting target
 	while (true)
 	{
 		ConsumeItem(&Buffer);
-		std::cout << "Detect target" << std::endl;
 	}
 }
 

@@ -55,23 +55,24 @@ bool InitNetworks()
 	return true;
 }
 
-void GetOneFrameFromNetwork(unsigned char* frameData)
+bool GetOneFrameFromNetwork(unsigned char* frameData)
 {
 	std::cout << "Receive one frame data from rempote device \n";
 	for (auto i = 0; i < 4; ++i)
 	{
 		auto ret = recvfrom(ServerSocket, reinterpret_cast<char*>(ReceiveDataBuffer), ReveiceDataBufferlen, 0, reinterpret_cast<sockaddr *>(&RemoteAddress), &RemoteAddressLen);
-		if (ret > 0)
+		if (ret > 10)
 		{
 			memcpy(frameData + i * ReveiceDataBufferlen, ReceiveDataBuffer, sizeof(unsigned char) * ReveiceDataBufferlen);
 			std::cout << "Data segment " << i + 1 << "\n";
 		}
-		else
+		else if(ret == 10)
 		{
 			std::cout << "Finish receive data from client!\n";
-			break;
+			return false;
 		}
 	}
+	return true;
 }
 
 bool DestroyNetWork()
