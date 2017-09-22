@@ -13,7 +13,7 @@ struct ResultBufferStruct
 		  resultItemSize(0)
 	{
 		resultItemSize = sizeof(ResultSegment);
-		item_buffer = new unsigned char[bufferSize * resultItemSize];
+		item_buffer = new ResultSegment[bufferSize * resultItemSize];
 	}
 
 	~ResultBufferStruct()
@@ -22,7 +22,7 @@ struct ResultBufferStruct
 	}
 
 	bool finish_flag;
-	unsigned char* item_buffer;                      // 环形缓冲
+	ResultSegment* item_buffer;                      // 环形缓冲
 	size_t read_position;
 	size_t write_position;
 	std::mutex bufferMutex;
