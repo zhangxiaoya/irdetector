@@ -7,6 +7,7 @@
 #include <iostream>
 #include <mutex>
 #include <thread>
+#include "Models/RingBufferStruct.hpp"
 
 const unsigned int WIDTH = 320;
 const unsigned int HEIGHT = 256;
@@ -20,17 +21,7 @@ unsigned char FrameDataInprocessing[FrameSize] = {0};
 
 Detector* detector = new Detector();
 
-struct BufferStruct
-{
-	unsigned char item_buffer[BufferSize * FrameSize]; // 环形缓冲
-	size_t read_position;
-	size_t write_position;
-	std::mutex bufferMutex;
-	std::condition_variable buffer_not_full; // 条件变量, 指示产品缓冲区不为满.
-	std::condition_variable buffer_not_empty; // 条件变量, 指示产品缓冲区不为空.
-};
-
-BufferStruct Buffer;
+BufferStruct Buffer(FrameSize, BufferSize);
 
 
 void ProduceItem(BufferStruct* buffer)

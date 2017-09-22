@@ -126,6 +126,9 @@
     <ClInclude Include="Network\DataReceiver.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="Models\RingBufferStruct.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
