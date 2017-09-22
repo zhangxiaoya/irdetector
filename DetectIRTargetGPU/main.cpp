@@ -8,6 +8,7 @@
 #include <mutex>
 #include <thread>
 #include "Models/RingBufferStruct.hpp"
+#include "Models/ResultBufferStruct.hpp"
 
 // Definition of all const varibales
 extern const unsigned int WIDTH = 320;
@@ -25,6 +26,7 @@ Detector* detector = new Detector();
 
 // Definition of a ring buffer
 RingBufferStruct Buffer(FrameSize, BufferSize);
+ResultBufferStruct ResultBuffer(BufferSize);
 
 /****************************************************************************************/
 /*                                Input Data Operation                                  */
@@ -60,7 +62,6 @@ bool InputDataToBuffer(RingBufferStruct* buffer)
 	return true;
 }
 
-
 /****************************************************************************************/
 /*                              Detect target Operation                                 */
 /****************************************************************************************/
@@ -91,7 +92,6 @@ bool DetectTarget(RingBufferStruct* buffer)
 	return true;
 }
 
-
 void InputDataTask()
 {
 	// Receiving data from network
@@ -119,6 +119,12 @@ void InitBuffer(RingBufferStruct* buffer)
 	buffer->read_position = 0;
 }
 
+void InitResultBuffer(ResultBufferStruct* buffer)
+{
+	buffer->read_position = 0;
+	buffer->write_position = 0;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -134,6 +140,7 @@ int main(int argc, char* argv[])
 
 		// Init ring buffer
 		InitBuffer(&Buffer);
+		InitResultBuffer(&ResultBuffer);
 
 		std::thread InputDataThread(InputDataTask);
 		std::thread DetectorThread(DetectTask);
