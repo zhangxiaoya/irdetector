@@ -6,18 +6,20 @@
 #pragma comment(lib, "ws2_32.lib")
 
 // Definition of all variables used in network
-int HostPort = 8889;
-SOCKET ServerSocket = 0;
-sockaddr_in RemoteAddress;
-int RemoteAddressLen = 0;
+int HostPortForRemoteDataServer = 8889;
+int HostPortForRemoteResultServer = 8888;
+SOCKET RemoteDataServerSocket = 0;
+SOCKET RemoteResultServerSocket = 0;
+sockaddr_in RemoteDataServerSocketAddress;
+sockaddr_in RemoteResultServerSocketAddress;
+int RemoteDataServerSocketAddressLen = 0;
+int RemoteResultServerSocketAddressLen = 0;
+
 int ReveiceDataBufferlen = 0;
 unsigned char* ReceiveDataBuffer;
 
-bool InitNetworks()
+bool InitNetworkEnvironment()
 {
-	logPrinter.PrintLogs("Init Network for receive frame data from remote device!",LogLevel::Info);
-
-	// Init Network environment
 	WSADATA wsaData;
 	auto sockVersion = MAKEWORD(2, 2);
 	if (WSAStartup(sockVersion, &wsaData) != 0)
@@ -25,29 +27,72 @@ bool InitNetworks()
 		logPrinter.PrintLogs("Init network failed!", LogLevel::Error);
 		return false;
 	}
+	return true;
+}
 
-	// Create Socket
-	ServerSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (ServerSocket == SOCKET_ERROR)
+bool InitSocketForDataServer()
+{
+	// Create Socket for data server
+	RemoteDataServerSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (RemoteDataServerSocket == SOCKET_ERROR)
 	{
-		logPrinter.PrintLogs(" Create scoket error!", LogLevel::Error);
+		logPrinter.PrintLogs(" Create remote data server scoket error!", LogLevel::Error);
 		return false;
 	}
 
-	// Bind network address
+	// Bind network address for data server and socket address
 	sockaddr_in serverAddress;
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_port = htons(HostPort);
+	serverAddress.sin_port = htons(HostPortForRemoteDataServer);
 	serverAddress.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
-	if (bind(ServerSocket, reinterpret_cast<sockaddr *>(&serverAddress), sizeof(serverAddress)) == SOCKET_ERROR)
+	if (bind(RemoteDataServerSocket, reinterpret_cast<sockaddr *>(&serverAddress), sizeof(serverAddress)) == SOCKET_ERROR)
 	{
 		logPrinter.PrintLogs("Bind socket failed!", LogLevel::Error);
-		closesocket(ServerSocket);
+		closesocket(RemoteDataServerSocket);
 		return false;
 	}
 
-	// definition of remote address
-	RemoteAddressLen = sizeof(RemoteAddress);
+	// definition of remote data server address
+	RemoteDataServerSocketAddressLen = sizeof(RemoteDataServerSocketAddress);
+	return true;
+}
+
+bool InitSocketForResultServer()
+{
+	// Create Socket for result server
+	RemoteResultServerSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if(RemoteResultServerSocket == SOCKET_ERROR)
+	{
+		logPrinter.PrintLogs(" Create remote result server scoket error!", LogLevel::Error);
+		return false;
+	}
+
+	// Bind network address for result server and socket address
+	sockaddr_in resultServerAddress;
+	resultServerAddress.sin_family = AF_INET;
+	resultServerAddress.sin_port = htons(HostPortForRemoteResultServer);
+	resultServerAddress.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+	if (bind(RemoteResultServerSocket, reinterpret_cast<sockaddr *>(&resultServerAddress), sizeof(resultServerAddress)) == SOCKET_ERROR)
+	{
+		logPrinter.PrintLogs("Bind result server socket failed!", LogLevel::Error);
+		closesocket(RemoteResultServerSocket);
+		return false;
+	}
+
+	// definition of remote data server address
+	RemoteResultServerSocketAddressLen = sizeof(RemoteResultServerSocketAddress);
+	return true;
+}
+
+bool InitNetworks()
+{
+	logPrinter.PrintLogs("Init Network for receive frame data from remote device!",LogLevel::Info);
+
+	if (InitNetworkEnvironment() == false) return false;
+
+	if (InitSocketForDataServer() == false) return false;
+
+	if (InitSocketForResultServer() == false) return false;
 
 	// definition of receive data buffer
 	ReveiceDataBufferlen = WIDTH * HEIGHT * BYTESIZE / 4;
@@ -61,7 +106,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 	std::cout << "Receive one frame data from rempote device \n";
 	for (auto i = 0; i < 4; ++i)
 	{
-		auto ret = recvfrom(ServerSocket, reinterpret_cast<char*>(ReceiveDataBuffer), ReveiceDataBufferlen, 0, reinterpret_cast<sockaddr *>(&RemoteAddress), &RemoteAddressLen);
+		auto ret = recvfrom(RemoteDataServerSocket, reinterpret_cast<char*>(ReceiveDataBuffer), ReveiceDataBufferlen, 0, reinterpret_cast<sockaddr *>(&RemoteDataServerSocketAddress), &RemoteDataServerSocketAddressLen);
 		if (ret > 10)
 		{
 			memcpy(frameData + i * ReveiceDataBufferlen, ReceiveDataBuffer, sizeof(unsigned char) * ReveiceDataBufferlen);
@@ -80,7 +125,7 @@ bool SendResultToRemoteServer(ResultSegment& result)
 {
 	std::cout << "Sending result to remote server \n";
 
-	auto sendStatus = sendto(ServerSocket, reinterpret_cast<char*>(&result), sizeof(ResultSegment), 0, reinterpret_cast<sockaddr *>(&RemoteAddress), RemoteAddressLen);
+	auto sendStatus = sendto(RemoteResultServerSocket, reinterpret_cast<char*>(&result), sizeof(ResultSegment), 0, reinterpret_cast<sockaddr *>(&RemoteResultServerSocketAddress), RemoteResultServerSocketAddressLen);
 	if(sendStatus == SOCKET_ERROR)
 	{
 		return false;
@@ -92,7 +137,8 @@ bool DestroyNetWork()
 {
 	delete[] ReceiveDataBuffer;
 
-	closesocket(ServerSocket);
+	closesocket(RemoteDataServerSocket);
+	closesocket(RemoteResultServerSocket);
 	WSACleanup();
 	return true;
 }
