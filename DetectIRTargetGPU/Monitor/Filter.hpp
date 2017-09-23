@@ -25,6 +25,12 @@ public:
 
 	void InitObjectParameters(unsigned char* frameOfOriginalImage, unsigned char* frameOfPreprocessedImage, const FourLimits& object, int width);
 
+public:
+	void SetConvexPartitionOfOriginalImage(int value);
+	void SetConcavePartitionOfOriginalImage(int value);
+	void SetConvexPartitionOfDiscretizedImage(int value);
+	void SetConcavePartitionOfDiscretizedImage(int value);
+
 private:
 	bool CheckPeakValueAndAverageValue(unsigned char* frameOnHost, int width, int height, const FourLimits& object, unsigned char centerValueOfCurrentRect, int convexPartition, int concavePartition) const;
 
@@ -36,6 +42,13 @@ private:
 	unsigned char centerValueOfPreprocessedImage;
 	unsigned char averageValueOfOriginalImage;
 	unsigned char averageValueOfPreprocessedImage;
+
+	int ConvexPartitionOfOriginalImage;
+	int ConcavePartitionOfOriginalImage;
+	int ConvexPartitionOfDiscretizedImage;
+	int ConcavePartitionOfDiscretizedImage;
+
+	int const MinDiffOfConvextAndConcaveThreshold;
 };
 
 inline bool Filter::CheckPeakValueAndAverageValue(unsigned char* frameOnHost, int width, int height, const FourLimits& object, unsigned char centerValueOfCurrentRect, int convexPartition, int concavePartition) const
@@ -75,7 +88,12 @@ inline Filter::Filter(): centerX(0), centerY(0),
                          centerValueOfOriginalImage(0),
                          centerValueOfPreprocessedImage(0),
                          averageValueOfOriginalImage(0),
-                         averageValueOfPreprocessedImage(0)
+                         averageValueOfPreprocessedImage(0),
+                         ConvexPartitionOfOriginalImage(0),
+                         ConcavePartitionOfOriginalImage(0),
+                         ConvexPartitionOfDiscretizedImage(0),
+                         ConcavePartitionOfDiscretizedImage(0),
+                         MinDiffOfConvextAndConcaveThreshold(3)
 {
 }
 
@@ -282,6 +300,26 @@ inline void Filter::InitObjectParameters(unsigned char* frameOfOriginalImage, un
 	Util::CalculateAverage(frameOfPreprocessedImage, object, averageValueOfPreprocessedImage, width);
 	Util::CalCulateCenterValue(frameOfOriginalImage, centerValueOfOriginalImage, width, centerX, centerY);
 	Util::CalCulateCenterValue(frameOfPreprocessedImage, centerValueOfPreprocessedImage, width, centerX, centerY);
+}
+
+inline void Filter::SetConvexPartitionOfOriginalImage(int value)
+{
+	this->ConvexPartitionOfOriginalImage = value;
+}
+
+inline void Filter::SetConcavePartitionOfOriginalImage(int value)
+{
+	this->ConcavePartitionOfOriginalImage = value;
+}
+
+inline void Filter::SetConvexPartitionOfDiscretizedImage(int value)
+{
+	this->ConvexPartitionOfDiscretizedImage = value;
+}
+
+inline void Filter::SetConcavePartitionOfDiscretizedImage(int value)
+{
+	this->ConcavePartitionOfDiscretizedImage = value;
 }
 
 #endif
