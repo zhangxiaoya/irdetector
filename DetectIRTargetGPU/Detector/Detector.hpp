@@ -25,6 +25,8 @@ public:
 
 	void DetectTargets(unsigned char* frame, ResultSegment* result);
 
+	void SetAllParameters();
+
 private:
 	void CopyFrameData(unsigned char* frame);
 
@@ -76,6 +78,13 @@ private:
 	int TARGET_HEIGHT_MAX_LIMIT;
 
 	Filter filters;
+
+	bool CHECK_ORIGIN_FLAG;
+	bool CHECK_DECRETIZATED_FLAG;
+	bool CHECK_SURROUNDING_BOUNDARY_FLAG;
+	bool CHECK_INSIDE_BOUNDARY_FLAG;
+	bool CHECK_COVERAGE_FLAG;
+	bool CHECK_STANDARD_DEVIATION_FLAG;
 };
 
 inline Detector::Detector(int _width = 320, int _height = 256)
@@ -98,7 +107,13 @@ inline Detector::Detector(int _width = 320, int _height = 256)
 	  allObjectRects(nullptr),
 	  validObjectsCount(0),
 	  TARGET_WIDTH_MAX_LIMIT(20),
-	  TARGET_HEIGHT_MAX_LIMIT(20)
+	  TARGET_HEIGHT_MAX_LIMIT(20),
+	  CHECK_ORIGIN_FLAG(false),
+	  CHECK_DECRETIZATED_FLAG(false),
+	  CHECK_SURROUNDING_BOUNDARY_FLAG(false),
+	  CHECK_INSIDE_BOUNDARY_FLAG(false),
+	  CHECK_COVERAGE_FLAG(false),
+	  CHECK_STANDARD_DEVIATION_FLAG(false)
 {
 }
 
@@ -487,16 +502,57 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 		// Copy frame header
 		memcpy(result->header, originalFrameOnHost + 2, 16);
 
+		// Filter all candiates
 		for(auto i =0; i < validObjectsCount; ++i)
 		{
-			filters.CheckCoverageOfPreprocessedFrame(discretizationResultOnHost, width, allValidObjects[i]);
-			filters.CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(discretizationResultOnHost, width, height, allValidObjects[i]);
-			filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, width, height, allValidObjects[i]);
-			filters.CheckInsideBoundaryDescendGradient(originalFrameOnHost, width, allValidObjects[i]);
-			filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, width, height, allValidObjects[i]);
-			filters.CheckStandardDeviation(originalFrameOnHost, width, allValidObjects[i]);
-			filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, allValidObjects[i],width);
+			filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, allValidObjects[i], width);
+
+			auto currentResult = (CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, width, height, allValidObjects[i]))
+				|| (CHECK_DECRETIZATED_FLAG && filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, width, height, allValidObjects[i]));
+			if (currentResult == false)
+				continue;
+
+			if (CHECK_SURROUNDING_BOUNDARY_FLAG)
+			{
+				currentResult &= filters.CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(discretizationResultOnHost, width, height, allValidObjects[i]);
+				if (currentResult == false) continue;
+			}
+			if (CHECK_COVERAGE_FLAG)
+			{
+				currentResult &= filters.CheckCoverageOfPreprocessedFrame(discretizationResultOnHost, width, allValidObjects[i]);
+				if (currentResult == false) continue;
+			}
+			if (CHECK_INSIDE_BOUNDARY_FLAG)
+			{
+				currentResult &= filters.CheckInsideBoundaryDescendGradient(originalFrameOnHost, width, allValidObjects[i]);
+				if (currentResult == false) continue;
+			}
+			if (CHECK_STANDARD_DEVIATION_FLAG)
+			{
+				currentResult &= filters.CheckStandardDeviation(originalFrameOnHost, width, allValidObjects[i]);
+				if (currentResult == false) continue;
+			}
+			if (currentResult == true)
+				allValidObjects[i].top = -1;
 		}
+		// put all valid result to resultSegment
+		// To-Do
 	}
+}
+
+inline void Detector::SetAllParameters()
+{
+	CHECK_STANDARD_DEVIATION_FLAG = false;
+	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
+	CHECK_INSIDE_BOUNDARY_FLAG = true;
+	CHECK_COVERAGE_FLAG = false;
+
+	CHECK_ORIGIN_FLAG = true;
+	filters.SetConvexPartitionOfOriginalImage(10);
+	filters.SetConcavePartitionOfOriginalImage(1);
+
+	CHECK_DECRETIZATED_FLAG = false;
+	filters.SetConvexPartitionOfDiscretizedImage(5);
+	filters.SetConcavePartitionOfDiscretizedImage(1);
 }
 #endif
