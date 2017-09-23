@@ -196,32 +196,32 @@ int main(int argc, char* argv[])
 	if (cudaInitStatus)
 	{
 		// Init Network socket
-		InitNetworks();
+//		InitNetworks();
 
 		// Init Detector Space
-		detector->InitSpace();
+//		detector->InitSpace();
 
 		// Init ring buffer
-		InitBuffer(&Buffer);
-		InitResultBuffer(&ResultBuffer);
+//		InitBuffer(&Buffer);
+//		InitResultBuffer(&ResultBuffer);
 
-		std::thread InputDataThread(InputDataTask);
-		std::thread DetectorThread(DetectTask);
+//		std::thread InputDataThread(InputDataTask);
+//		std::thread DetectorThread(DetectTask);
 
-		InputDataThread.join();
-		DetectorThread.join();
+//		InputDataThread.join();
+//		DetectorThread.join();
 
 		// Destroy Network
-		DestroyNetWork();
+//		DestroyNetWork();
 
-		//		Validation validation;
-		//		validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
-		//		validation.VailidationAll();
+//				Validation validation;
+//				validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
+//				validation.VailidationAll();
 
-		//		DetectorValidation visualEffectValidator;
-		//		visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
-		//		visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_2.bin");
-		//		visualEffectValidator.VailidationAll();
+				DetectorValidation visualEffectValidator;
+				visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
+//				visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_2.bin");
+				visualEffectValidator.VailidationAll();
 	}
 
 	// Destroy detector
