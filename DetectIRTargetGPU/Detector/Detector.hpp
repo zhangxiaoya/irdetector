@@ -13,6 +13,12 @@
 #include "../Common/Util.h"
 #include "../Monitor/Filter.hpp"
 #include "../Models/ResultSegment.hpp"
+#include "../Headers/FourLimitsWithScore.hpp"
+
+inline bool CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b)
+{
+	return a.score > b.score;
+}
 
 class Detector
 {
@@ -43,6 +49,7 @@ private:
 	void RemoveInValidObjects();
 
 	void RemoveInvalidObjectAfterMerge();
+	void FalseAlarmFilter();
 
 protected:
 	bool ReleaseSpace();
@@ -71,8 +78,10 @@ private:
 	FourLimits* allObjects;
 	FourLimits* allValidObjects;
 	ObjectRect* allObjectRects;
+	FourLimitsWithScore* insideObjects;
 
 	int validObjectsCount;
+	int lastResultCount;
 
 	int TARGET_WIDTH_MAX_LIMIT;
 	int TARGET_HEIGHT_MAX_LIMIT;
@@ -105,7 +114,9 @@ inline Detector::Detector(int _width = 320, int _height = 256)
 	  allObjects(nullptr),
 	  allValidObjects(nullptr),
 	  allObjectRects(nullptr),
+	  insideObjects(nullptr),
 	  validObjectsCount(0),
+	  lastResultCount(0),
 	  TARGET_WIDTH_MAX_LIMIT(20),
 	  TARGET_HEIGHT_MAX_LIMIT(20),
 	  CHECK_ORIGIN_FLAG(false),
@@ -460,6 +471,59 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 	validObjectsCount = newValidaObjectCount;
 }
 
+inline void Detector::FalseAlarmFilter()
+{
+	this->insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * validObjectsCount));
+	lastResultCount = 0;
+
+	for(auto i =0; i < validObjectsCount; ++i)
+	{
+		auto score = 0;
+		filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, allValidObjects[i], width);
+
+		auto currentResult = (CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, width, height, allValidObjects[i]))
+			|| (CHECK_DECRETIZATED_FLAG && filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, width, height, allValidObjects[i]));
+		if (currentResult == false) continue;
+		score++;
+
+		if (CHECK_SURROUNDING_BOUNDARY_FLAG)
+		{
+			currentResult &= filters.CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(discretizationResultOnHost, width, height, allValidObjects[i]);
+			if (currentResult == false) continue;
+			score++;
+		}
+		if (CHECK_COVERAGE_FLAG)
+		{
+			currentResult &= filters.CheckCoverageOfPreprocessedFrame(discretizationResultOnHost, width, allValidObjects[i]);
+			if (currentResult == false) continue;
+			score++;
+		}
+		if (CHECK_INSIDE_BOUNDARY_FLAG)
+		{
+			currentResult &= filters.CheckInsideBoundaryDescendGradient(originalFrameOnHost, width, allValidObjects[i]);
+			if (currentResult == false) continue;
+			score++;
+		}
+		if (CHECK_STANDARD_DEVIATION_FLAG)
+		{
+			currentResult &= filters.CheckStandardDeviation(originalFrameOnHost, width, allValidObjects[i]);
+			if (currentResult == false) continue;
+			score++;
+		}
+		if (currentResult != true)
+			allValidObjects[i].top = -1;
+		else
+		{
+			this->insideObjects[i].object = allValidObjects[i];
+			this->insideObjects[i].score = score;
+			lastResultCount++;
+		}
+	}
+
+	if (lastResultCount >= 5)
+		std::sort(this->insideObjects, this->insideObjects + lastResultCount, CompareResult);
+}
+
 inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 {
 	CopyFrameData(frame);
@@ -503,40 +567,20 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 		memcpy(result->header, originalFrameOnHost + 2, 16);
 
 		// Filter all candiates
-		for(auto i =0; i < validObjectsCount; ++i)
-		{
-			filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, allValidObjects[i], width);
+		FalseAlarmFilter();
 
-			auto currentResult = (CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, width, height, allValidObjects[i]))
-				|| (CHECK_DECRETIZATED_FLAG && filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, width, height, allValidObjects[i]));
-			if (currentResult == false)
-				continue;
-
-			if (CHECK_SURROUNDING_BOUNDARY_FLAG)
-			{
-				currentResult &= filters.CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(discretizationResultOnHost, width, height, allValidObjects[i]);
-				if (currentResult == false) continue;
-			}
-			if (CHECK_COVERAGE_FLAG)
-			{
-				currentResult &= filters.CheckCoverageOfPreprocessedFrame(discretizationResultOnHost, width, allValidObjects[i]);
-				if (currentResult == false) continue;
-			}
-			if (CHECK_INSIDE_BOUNDARY_FLAG)
-			{
-				currentResult &= filters.CheckInsideBoundaryDescendGradient(originalFrameOnHost, width, allValidObjects[i]);
-				if (currentResult == false) continue;
-			}
-			if (CHECK_STANDARD_DEVIATION_FLAG)
-			{
-				currentResult &= filters.CheckStandardDeviation(originalFrameOnHost, width, allValidObjects[i]);
-				if (currentResult == false) continue;
-			}
-			if (currentResult == true)
-				allValidObjects[i].top = -1;
-		}
 		// put all valid result to resultSegment
-		// To-Do
+		result->targetCount = lastResultCount >= 5 ? 5 : lastResultCount;
+
+		for (auto i = 0; i < result->targetCount; ++i)
+		{
+			TargetPosition pos;
+			pos.topLeftX = allValidObjects[i].left;
+			pos.topleftY = allValidObjects[i].top;
+			pos.bottomRightX = allValidObjects[i].right;
+			pos.bottomRightY = allValidObjects[i].bottom;
+			result->targets[i] = pos;
+		}
 	}
 }
 
