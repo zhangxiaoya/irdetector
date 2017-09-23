@@ -215,14 +215,14 @@ int main(int argc, char* argv[])
 		// Destroy Network
 		DestroyNetWork();
 
-//				Validation validation;
-//				validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
-//				validation.VailidationAll();
+		// Validation validation;
+		// validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
+		// validation.VailidationAll();
 
-//				DetectorValidation visualEffectValidator;
-//				visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
-//				visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_2.bin");
-//				visualEffectValidator.VailidationAll();
+		// DetectorValidation visualEffectValidator;
+		// visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
+		// visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_2.bin");
+		// visualEffectValidator.VailidationAll();
 	}
 
 	// Destroy detector
