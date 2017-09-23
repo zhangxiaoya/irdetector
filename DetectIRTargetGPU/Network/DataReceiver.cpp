@@ -92,7 +92,7 @@ bool InitNetworks()
 
 	if (InitSocketForDataServer() == false) return false;
 
-	if (InitSocketForResultServer() == false) return false;
+//	if (InitSocketForResultServer() == false) return false;
 
 	// definition of receive data buffer
 	ReveiceDataBufferlen = WIDTH * HEIGHT * BYTESIZE / 4;
@@ -125,9 +125,11 @@ bool SendResultToRemoteServer(ResultSegment& result)
 {
 	std::cout << "Sending result to remote server \n";
 
-	auto sendStatus = sendto(RemoteResultServerSocket, reinterpret_cast<char*>(&result), sizeof(ResultSegment), 0, reinterpret_cast<sockaddr *>(&RemoteResultServerSocketAddress), RemoteResultServerSocketAddressLen);
+//	auto sendStatus = sendto(RemoteResultServerSocket, reinterpret_cast<char*>(&result), sizeof(ResultSegment), 0, reinterpret_cast<sockaddr *>(&RemoteResultServerSocketAddress), RemoteResultServerSocketAddressLen);
+	auto sendStatus = sendto(RemoteDataServerSocket, reinterpret_cast<char*>(&result), sizeof(ResultSegment), 0, reinterpret_cast<sockaddr *>(&RemoteDataServerSocketAddress), RemoteDataServerSocketAddressLen);
 	if(sendStatus == SOCKET_ERROR)
 	{
+		std::cout << WSAGetLastError() << std::endl;
 		return false;
 	}
 	return true;

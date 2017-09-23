@@ -96,24 +96,24 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItem), "whole");
 
 	// Check result buffer is full or not, if full automatic unlock mutex
-//	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
-//	while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
-//	{
-//		std::cout << "Producer is waiting for an empty slot...\n";
-//		resultBuffer->buffer_not_full.wait(writerLock);
-//	}
-//
-//	// Copy data received from network to ring buffer and update ring buffer header pointer
-//	memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItem, ResultItemSize);
-//	resultBuffer->write_position++;
-//
-//	// Reset data header pointer when to the end of buffer
-//	if (resultBuffer->write_position == BufferSize)
-//		resultBuffer->write_position = 0;
-//
-//	// Notify Detect thread
-//	resultBuffer->buffer_not_empty.notify_all();
-//	writerLock.unlock();
+	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
+	while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
+	{
+		std::cout << "Producer is waiting for an empty slot...\n";
+		resultBuffer->buffer_not_full.wait(writerLock);
+	}
+
+	// Copy data received from network to ring buffer and update ring buffer header pointer
+	memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItem, ResultItemSize);
+	resultBuffer->write_position++;
+
+	// Reset data header pointer when to the end of buffer
+	if (resultBuffer->write_position == BufferSize)
+		resultBuffer->write_position = 0;
+
+	// Notify Detect thread
+	resultBuffer->buffer_not_empty.notify_all();
+	writerLock.unlock();
 	return true;
 }
 
@@ -208,9 +208,11 @@ int main(int argc, char* argv[])
 
 		std::thread InputDataThread(InputDataTask);
 		std::thread DetectorThread(DetectTask);
+		std::thread OutputDataThread(OutputDataTask);
 
 		InputDataThread.join();
 		DetectorThread.join();
+		OutputDataThread.join();
 
 		// Destroy Network
 		DestroyNetWork();
