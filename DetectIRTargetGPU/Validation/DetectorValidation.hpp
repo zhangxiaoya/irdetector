@@ -74,11 +74,13 @@ inline void DetectorValidation::VailidationAll()
 	logPrinter.PrintLogs("Test the visual effect of detect result ... ", Info);
 	char iterationText[200];
 
+	ResultSegment result;
+
 	for(auto i = 0;i<frameCount;++i)
 	{
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);
 
-		CheckPerf(detector->DetectTargets(dataPoint[i]), "whole");
+		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
 	}
 }
