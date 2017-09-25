@@ -203,10 +203,10 @@ inline bool BinaryFileReader::InitSpaceOnHost()
 	// frame data of each frame is on pinned memory
 	for (auto i = 0; i < frameCount; ++i)
 	{
-		auto cuda_error = cudaMallocHost((void**)&dataMatrix[i], width * height);
+		auto cuda_error = cudaMallocHost(reinterpret_cast<void**>(&dataMatrix[i]), width * height * ByteSize);
 		if (cuda_error != cudaSuccess)
 		{
-			logPrinter.PrintLogs("Init space on host failed! Starting roll back ...", LogLevel::Error);
+			logPrinter.PrintLogs("Init space on host failed! Starting roll back ...", Error);
 
 			for (auto j = i - 1; j >= 0; j--)
 				cudaFreeHost(dataMatrix[j]);
