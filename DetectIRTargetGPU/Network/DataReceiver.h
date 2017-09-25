@@ -10,7 +10,7 @@ bool SendResultToRemoteServer(ResultSegment& result);
 
 bool DestroyNetWork();
 
-// Declare of all vriable used in network
+// Socket环境全局变量声明
 extern int HostPortForRemoteDataServer;
 
 extern const unsigned int WIDTH;

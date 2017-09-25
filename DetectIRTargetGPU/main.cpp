@@ -10,23 +10,21 @@
 #include "Models/RingBufferStruct.hpp"
 #include "Models/ResultBufferStruct.hpp"
 
-// Definition of all const varibales
+// 图像信息全局变量声明与定义
 extern const unsigned int WIDTH = 320;   // 图像宽度
 extern const unsigned int HEIGHT = 256;  // 图像高度
 extern const unsigned int BYTESIZE = 2;  // 每个像素字节数
 
-static const int BufferSize = 1000;                              // 线程同步缓冲区大小
 static const int FrameSize = WIDTH * HEIGHT * BYTESIZE;        // 每个图像帧的大小
-
 unsigned char FrameData[FrameSize];                            // 每一帧图像临时缓冲
 unsigned char FrameDataInprocessing[FrameSize] = {0};          // 每一帧图像临时缓冲
 ResultSegment ResultItem;                                      // 每一帧图像检测结果
 static const int ResultItemSize = sizeof(ResultSegment);       // 每一帧图像检测结果大小
 
-// Init one detector
 Detector* detector = new Detector();                  // 初始化检测器
 
-// Definition of a ring buffer
+// 缓冲区全局变量声明与定义
+static const int BufferSize = 1000;                   // 线程同步缓冲区大小
 RingBufferStruct Buffer(FrameSize, BufferSize);       // 数据接收线程环形缓冲区初始化
 ResultBufferStruct ResultBuffer(BufferSize);          // 结果发送线程环形缓冲区初始化
 
@@ -69,7 +67,7 @@ bool InputDataToBuffer(RingBufferStruct* buffer)
 /****************************************************************************************/
 bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 {
-	// Check buffer is empty or not, if empty automatic unlock mutex
+	// 并发读取图像数据
 	std::unique_lock<std::mutex> readLock(buffer->bufferMutex);
 	while (buffer->write_position == buffer->read_position)
 	{
@@ -93,9 +91,10 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 	buffer->buffer_not_full.notify_all();
 	readLock.unlock();
 
+	// 检测目标，并检测性能
 	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItem), "whole");
 
-	// Check result buffer is full or not, if full automatic unlock mutex
+	// 并发存储检测结果到缓冲区
 	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
 	while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
 	{
@@ -114,6 +113,8 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 	// Notify Detect thread
 	resultBuffer->buffer_not_empty.notify_all();
 	writerLock.unlock();
+
+	// 返回一次线程执行状态
 	return true;
 }
 
