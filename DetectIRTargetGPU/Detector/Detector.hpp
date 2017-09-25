@@ -49,6 +49,7 @@ private:
 	void RemoveInValidObjects();
 
 	void RemoveInvalidObjectAfterMerge();
+
 	void FalseAlarmFilter();
 
 protected:
@@ -68,6 +69,7 @@ private:
 	unsigned char* originalFrameOnDevice;
 	unsigned char* dilationResultOnDevice;
 	unsigned char* discretizationResultOnHost;
+	unsigned char* tempFrame;
 
 	int* labelsOnHost;
 	int* labelsOnDevice;
@@ -107,6 +109,7 @@ inline Detector::Detector(int _width = 320, int _height = 256)
 	  originalFrameOnDevice(nullptr),
 	  dilationResultOnDevice(nullptr),
 	  discretizationResultOnHost(nullptr),
+	  tempFrame(nullptr),
 	  labelsOnHost(nullptr),
 	  labelsOnDevice(nullptr),
 	  referenceOfLabelsOnDevice(nullptr),
@@ -144,20 +147,28 @@ inline bool Detector::ReleaseSpace()
 			this->originalFrameOnHost = nullptr;
 		}
 	}
-	if(this->labelsOnHost != nullptr)
+	if (this->labelsOnHost != nullptr)
 	{
 		CheckCUDAReturnStatus(cudaFreeHost(this->labelsOnHost), status);
-		if(status == true)
+		if (status == true)
 		{
 			this->labelsOnHost = nullptr;
 		}
 	}
-	if (this -> discretizationResultOnHost != nullptr)
+	if (this->discretizationResultOnHost != nullptr)
 	{
 		CheckCUDAReturnStatus(cudaFreeHost(this->discretizationResultOnHost), status);
-		if(status == true)
+		if (status == true)
 		{
 			this->discretizationResultOnHost = nullptr;
+		}
+	}
+	if (this->tempFrame != nullptr)
+	{
+		CheckCUDAReturnStatus(cudaFreeHost(this->tempFrame), status);
+		if (status == true)
+		{
+			this->tempFrame = nullptr;
 		}
 	}
 	if (this->originalFrameOnDevice != nullptr)
@@ -176,23 +187,23 @@ inline bool Detector::ReleaseSpace()
 			this->dilationResultOnDevice == nullptr;
 		}
 	}
-	if(this->labelsOnDevice != nullptr)
+	if (this->labelsOnDevice != nullptr)
 	{
 		CheckCUDAReturnStatus(cudaFree(this->labelsOnDevice), status);
-		if(status == true)
+		if (status == true)
 		{
 			this->labelsOnDevice = nullptr;
 		}
 	}
-	if(this->referenceOfLabelsOnDevice != nullptr)
+	if (this->referenceOfLabelsOnDevice != nullptr)
 	{
 		CheckCUDAReturnStatus(cudaFree(this->referenceOfLabelsOnDevice), status);
-		if(status == true)
+		if (status == true)
 		{
 			this->referenceOfLabelsOnDevice = nullptr;
 		}
 	}
-	if(this->modificationFlagOnDevice != nullptr)
+	if (this->modificationFlagOnDevice != nullptr)
 	{
 		CheckCUDAReturnStatus(cudaFree(this->modificationFlagOnDevice), status);
 		if (status == true)
@@ -201,26 +212,26 @@ inline bool Detector::ReleaseSpace()
 		}
 	}
 
-	if(this->allObjects != nullptr)
+	if (this->allObjects != nullptr)
 	{
 		delete[] allObjects;
 	}
-	if(this->allObjectRects != nullptr)
+	if (this->allObjectRects != nullptr)
 	{
 		delete[] allObjectRects;
 	}
-	if(this->allValidObjects != nullptr)
+	if (this->allValidObjects != nullptr)
 	{
 		delete[] allValidObjects;
 	}
 
-	if(status == true)
+	if (status == true)
 	{
-		logPrinter.PrintLogs("Release space success!", LogLevel::Info);
+		logPrinter.PrintLogs("Release space success!", Info);
 	}
 	else
 	{
-		logPrinter.PrintLogs("Release space failed!", LogLevel::Error);
+		logPrinter.PrintLogs("Release space failed!", Error);
 	}
 	return status;
 }
@@ -228,13 +239,14 @@ inline bool Detector::ReleaseSpace()
 inline bool Detector::InitSpace()
 {
 	logPrinter.PrintLogs("Release space before re-init space ...", Info);
-	if(ReleaseSpace() == false)
+	if (ReleaseSpace() == false)
 		return false;
 
 	isInitSpaceReady = true;
 	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->originalFrameOnHost), sizeof(unsigned char) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->labelsOnHost), sizeof(int) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->discretizationResultOnHost), sizeof(unsigned char) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->tempFrame), sizeof(unsigned char) * width * height), isInitSpaceReady);
 
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->originalFrameOnDevice), sizeof(unsigned char) * width * height),isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->dilationResultOnDevice), sizeof(unsigned char) * width * height), isInitSpaceReady);
@@ -252,14 +264,20 @@ inline void Detector::CopyFrameData(unsigned char* frame)
 {
 	this->isFrameDataReady = true;
 
-	memcpy(this->originalFrameOnHost, frame, sizeof(unsigned char) * width * height);
+	memset(this->tempFrame, 0, sizeof(unsigned char) * width * height);
+	for (auto i = 0; i < width * height * 2; i += 2)
+	{
+		tempFrame[i / 2] = frame[i + 1];
+	}
+
+	memcpy(this->originalFrameOnHost, tempFrame, sizeof(unsigned char) * width * height);
 	memset(this->allObjects, -1, sizeof(FourLimits) * width * height);
 	memset(this->allObjectRects, 0, sizeof(ObjectRect) * width * height);
 
 	CheckCUDAReturnStatus(cudaMemcpy(this->originalFrameOnDevice, this->originalFrameOnHost, sizeof(unsigned char) * width * height, cudaMemcpyHostToDevice), isFrameDataReady);
-	if(isInitSpaceReady == false)
+	if (isInitSpaceReady == false)
 	{
-		logPrinter.PrintLogs("Copy current frame data failed!", LogLevel::Error);
+		logPrinter.PrintLogs("Copy current frame data failed!", Error);
 	}
 }
 
@@ -389,7 +407,7 @@ inline void Detector::RemoveObjectWithLowContrast() const
 {
 	for (auto i = 0; i < validObjectsCount; ++i)
 	{
-		if(allValidObjects[i].top == -1)
+		if (allValidObjects[i].top == -1)
 			continue;
 
 		unsigned char averageValue = 0;
@@ -476,7 +494,7 @@ inline void Detector::FalseAlarmFilter()
 	this->insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * validObjectsCount));
 	lastResultCount = 0;
 
-	for(auto i =0; i < validObjectsCount; ++i)
+	for (auto i = 0; i < validObjectsCount; ++i)
 	{
 		auto score = 0;
 		filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, allValidObjects[i], width);
@@ -528,7 +546,7 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 {
 	CopyFrameData(frame);
 
-	if(isFrameDataReady == true)
+	if (isFrameDataReady == true)
 	{
 		// dilation on gpu
 		DilationFilter(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, radius);
@@ -549,10 +567,10 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 		// remove invalid objects
 		RemoveInValidObjects();
 		// convert all obejct to rect
-//		ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
+		//		ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
 
 		// show result
-//		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+		//		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
 
 		// Merge all objects
 		MergeObjects();

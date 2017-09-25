@@ -6,17 +6,17 @@
 #pragma comment(lib, "ws2_32.lib")
 
 // Definition of all variables used in network
-int HostPortForRemoteDataServer = 8889;
-int HostPortForRemoteResultServer = 8888;
-SOCKET RemoteDataServerSocket = 0;
-SOCKET RemoteResultServerSocket = 0;
-sockaddr_in RemoteDataServerSocketAddress;
-sockaddr_in RemoteResultServerSocketAddress;
-int RemoteDataServerSocketAddressLen = 0;
-int RemoteResultServerSocketAddressLen = 0;
+int HostPortForRemoteDataServer = 8889;        // 接收数据端口
+int HostPortForRemoteResultServer = 8888;      // ToDo
+SOCKET RemoteDataServerSocket = 0;             // 接收数据SOCKET
+SOCKET RemoteResultServerSocket = 0;           // ToDo
+sockaddr_in RemoteDataServerSocketAddress;     // 接收数据Socket地址
+sockaddr_in RemoteResultServerSocketAddress;   // ToDo
+int RemoteDataServerSocketAddressLen = 0;      // 接收数据Socket地址长度
+int RemoteResultServerSocketAddressLen = 0;    // ToDo
 
-int ReveiceDataBufferlen = 0;
-unsigned char* ReceiveDataBuffer;
+int ReveiceDataBufferlen = 0;                  // 接收数据缓冲区大小
+unsigned char* ReceiveDataBuffer;              // 接收
 
 bool InitNetworkEnvironment()
 {
@@ -95,7 +95,7 @@ bool InitNetworks()
 //	if (InitSocketForResultServer() == false) return false;
 
 	// definition of receive data buffer
-	ReveiceDataBufferlen = WIDTH * HEIGHT * BYTESIZE / 4;
+	ReveiceDataBufferlen = WIDTH * HEIGHT * BYTESIZE / 4 + 2;
 	ReceiveDataBuffer = new unsigned char[ReveiceDataBufferlen];
 
 	return true;
@@ -104,18 +104,41 @@ bool InitNetworks()
 bool GetOneFrameFromNetwork(unsigned char* frameData)
 {
 	std::cout << "Receive one frame data from rempote device \n";
+	unsigned char frameIndex;
+	bool subIndex[4] = {false};
 	for (auto i = 0; i < 4; ++i)
 	{
 		auto ret = recvfrom(RemoteDataServerSocket, reinterpret_cast<char*>(ReceiveDataBuffer), ReveiceDataBufferlen, 0, reinterpret_cast<sockaddr *>(&RemoteDataServerSocketAddress), &RemoteDataServerSocketAddressLen);
 		if (ret > 10)
 		{
-			memcpy(frameData + i * ReveiceDataBufferlen, ReceiveDataBuffer, sizeof(unsigned char) * ReveiceDataBufferlen);
+			if (i == 0)
+				frameIndex = ReceiveDataBuffer[0];
+			else
+			{
+				if(frameIndex == ReceiveDataBuffer[0])
+				{
+					if (subIndex[static_cast<int>(ReceiveDataBuffer[1])] == false)
+						subIndex[static_cast<int>(ReceiveDataBuffer[1])] == true;
+					else
+						std::cout << "Invalid data order" << std::endl;
+				}
+				else
+				{
+					std::cout << "Invalid data order" << std::endl;
+				}
+			}
+			memcpy(frameData + i * ReveiceDataBufferlen, ReceiveDataBuffer+ 2, sizeof(unsigned char) * ReveiceDataBufferlen);
 			std::cout << "Data segment " << i + 1 << "\n";
 		}
 		else if(ret == 10)
 		{
 			std::cout << "Finish receive data from client!\n";
 			return false;
+		}
+		else
+		{
+			printf("send error:%d\n", WSAGetLastError());
+			std::cout << "Error" << std::endl;;
 		}
 	}
 	return true;

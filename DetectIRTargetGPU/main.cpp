@@ -13,7 +13,7 @@
 // Definition of all const varibales
 extern const unsigned int WIDTH = 320;
 extern const unsigned int HEIGHT = 256;
-extern const unsigned int BYTESIZE = 1;
+extern const unsigned int BYTESIZE = 2;
 
 static const int BufferSize = 2;
 static const int FrameSize = WIDTH * HEIGHT * BYTESIZE;
@@ -208,11 +208,11 @@ int main(int argc, char* argv[])
 
 		std::thread InputDataThread(InputDataTask);
 		std::thread DetectorThread(DetectTask);
-		std::thread OutputDataThread(OutputDataTask);
+//		std::thread OutputDataThread(OutputDataTask);
 
 		InputDataThread.join();
 		DetectorThread.join();
-		OutputDataThread.join();
+//		OutputDataThread.join();
 
 		// Destroy Network
 		DestroyNetWork();
