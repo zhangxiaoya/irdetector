@@ -610,7 +610,7 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 
 inline void Detector::SetAllParameters()
 {
-	CHECK_STANDARD_DEVIATION_FLAG = true;
+	CHECK_STANDARD_DEVIATION_FLAG = false;
 	CHECK_SURROUNDING_BOUNDARY_FLAG = false;
 	CHECK_INSIDE_BOUNDARY_FLAG = false;
 	CHECK_COVERAGE_FLAG = false;
