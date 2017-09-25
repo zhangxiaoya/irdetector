@@ -148,91 +148,124 @@ bool OutputData(ResultBufferStruct* buffer)
 	return true;
 }
 
+/****************************************************************************************/
+/*                                  Input Data Task                                     */
+/****************************************************************************************/
 void InputDataTask()
 {
-	// Receiving data from network
+	// 循环接收数据（线程优先级太高）
 	while (true)
 	{
-		if(InputDataToBuffer(&Buffer) == false)
-			break;
-//		Sleep(1);
+		if(InputDataToBuffer(&Buffer) == false) break;
+		Sleep(1);
 	}
 }
 
+/****************************************************************************************/
+/*                                      Detect Task                                     */
+/****************************************************************************************/
 void DetectTask()
 {
-	// Detecting target
+	// 循环读取图像，检测目标
 	while (true)
 	{
-		if (DetectTarget(&Buffer, &ResultBuffer) == false)
-			break;
+		if (DetectTarget(&Buffer, &ResultBuffer) == false) break;
 	}
 }
 
+/****************************************************************************************/
+/*                               Output Result Task                                     */
+/****************************************************************************************/
 void OutputDataTask()
 {
-	// Send data to remote server
+	// 循环发送检测结果
 	while (true)
 	{
-		if (OutputData(&ResultBuffer) == false)
-			break;
+		if (OutputData(&ResultBuffer) == false) break;
 	}
 }
 
+/****************************************************************************************/
+/*                               Initial Data Buffer                                    */
+/****************************************************************************************/
 void InitBuffer(RingBufferStruct* buffer)
 {
 	buffer->write_position = 0;
 	buffer->read_position = 0;
 }
 
+/****************************************************************************************/
+/*                               Initial Result Buffer                                  */
+/****************************************************************************************/
 void InitResultBuffer(ResultBufferStruct* buffer)
 {
 	buffer->read_position = 0;
 	buffer->write_position = 0;
 }
 
+void RunOnNetwork()
+{
+	// 初始化Socket网络环境
+	InitNetworks();
+
+	// 初始化检测子局部存储和检测参数
+	detector->InitSpace();
+	detector->SetAllParameters();
+
+	// 初始化数据缓冲和结果缓冲
+	InitBuffer(&Buffer);
+	InitResultBuffer(&ResultBuffer);
+
+	// 创建三个线程：读取数据线程、计算结果、返回结果
+	std::thread InputDataThread(InputDataTask);
+	std::thread DetectorThread(DetectTask);
+	std::thread OutputDataThread(OutputDataTask);
+
+	// 三个线程开始运行
+	InputDataThread.join();
+	DetectorThread.join();
+	OutputDataThread.join();
+
+	// 销毁网络
+	DestroyNetWork();
+}
+
+void TestUsingBinaryFile()
+{
+	DetectorValidation visualEffectValidator;
+	visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
+//	visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1.bin");
+	visualEffectValidator.VailidationAll();
+}
+
+void TestPerformance()
+{
+	/* 下面是CUDA核函数测试程序和单机文本文件测试，开发阶段不要删除，方便调试 */
+	Validation validation;
+	validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
+	validation.VailidationAll();
+}
+
+/****************************************************************************************/
+/*                                     Main Function                                    */
+/****************************************************************************************/
 int main(int argc, char* argv[])
 {
-	// Init CUDA device
+	// 初始化CUDA设备
 	auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-		// Init Network socket
-		InitNetworks();
+		RunOnNetwork();
 
-		// Init Detector Space
-		detector->InitSpace();
-		detector->SetAllParameters();
+//		TestPerformance();
 
-		// Init ring buffer
-		InitBuffer(&Buffer);
-		InitResultBuffer(&ResultBuffer);
-
-		std::thread InputDataThread(InputDataTask);
-		std::thread DetectorThread(DetectTask);
-		std::thread OutputDataThread(OutputDataTask);
-
-		InputDataThread.join();
-		DetectorThread.join();
-		OutputDataThread.join();
-
-		// Destroy Network
-		DestroyNetWork();
-
-		// Validation validation;
-		// validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
-		// validation.VailidationAll();
-
-		// DetectorValidation visualEffectValidator;
-		// visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
-		// visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_2.bin");
-		// visualEffectValidator.VailidationAll();
+//		TestUsingBinaryFile();
 	}
 
-	// Destroy detector
+	// 销毁检测子
 	delete detector;
 
-	// Release Cuda device
+	// 释放CUDA设备
 	CUDAInit::cudaDeviceRelease();
 
 	system("Pause");
