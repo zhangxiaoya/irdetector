@@ -77,7 +77,7 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 	std::ifstream fin;
 	OpenBinaryFile(fin);
 
-//	SplitBinaryFileOperator splitOperator(WIDTH, HEIGHT);
+//	SplitBinaryFileOperator splitOperator(width, height);
 
 	if (fin.is_open())
 	{
@@ -116,8 +116,9 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 					ConstitudePixel(highPart, lowPart, perPixel);
 
 					// but we only need only low part of one pixel (temparory)
-					originalPerFramePixelArray[pixelIndex] = perPixel;
-					dataMatrix[frameIndex][pixelIndex] = lowPart;
+//					originalPerFramePixelArray[pixelIndex] = perPixel;
+					dataMatrix[frameIndex][pixelIndex++] = highPart;
+					dataMatrix[frameIndex][pixelIndex++] = lowPart;
 
 //					if (splitOperator.IsReady() && !splitOperator.IsFinished())
 //						splitOperator.Split(highPart, lowPart);
@@ -127,7 +128,6 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 					highPart = fin.get();
 					lowPart = fin.get();
 					byteIndex += 2;
-					pixelIndex++;
 				}
 
 				sprintf_s(iterationText, 200, "Current frame index is %04d", frameIndex);
