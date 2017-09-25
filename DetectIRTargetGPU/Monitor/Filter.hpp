@@ -30,6 +30,10 @@ public:
 	void SetConcavePartitionOfOriginalImage(int value);
 	void SetConvexPartitionOfDiscretizedImage(int value);
 	void SetConcavePartitionOfDiscretizedImage(int value);
+	unsigned char GetCenterValue() const
+	{
+		return this->centerValueOfOriginalImage;
+	}
 
 private:
 	bool CheckPeakValueAndAverageValue(unsigned char* frameOnHost, int width, int height, const FourLimits& object, unsigned char centerValueOfCurrentRect, int convexPartition, int concavePartition) const;

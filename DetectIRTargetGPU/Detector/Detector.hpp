@@ -539,7 +539,7 @@ inline void Detector::FalseAlarmFilter()
 		else
 		{
 			this->insideObjects[lastResultCount].object = allValidObjects[i];
-			this->insideObjects[lastResultCount].score = score;
+			this->insideObjects[lastResultCount].score = score + static_cast<int>(filters.GetCenterValue());
 			lastResultCount++;
 		}
 	}
