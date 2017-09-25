@@ -416,6 +416,12 @@ inline void Detector::RemoveObjectWithLowContrast() const
 		auto objectWidth = allValidObjects[i].right - allValidObjects[i].left + 1;
 		auto objectHeight = allValidObjects[i].bottom - allValidObjects[i].top + 1;
 
+		if (objectHeight < 2 || objectWidth < 2 || objectHeight > 20 || objectWidth > 20)
+		{
+			allValidObjects[i].top = -1;
+			continue;
+		}
+
 		auto surroundBoxWidth = 3 * objectWidth;
 		auto surroundBoxHeight = 3 * objectHeight;
 
@@ -567,10 +573,10 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 		// remove invalid objects
 		RemoveInValidObjects();
 		// convert all obejct to rect
-		//		ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
+//				ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
 
 		// show result
-		//		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+//				ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
 
 		// Merge all objects
 		MergeObjects();
