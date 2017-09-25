@@ -133,7 +133,9 @@ bool OutputData(ResultBufferStruct* buffer)
 		buffer->buffer_not_empty.wait(lock);
 	}
 
-	SendResultToRemoteServer(buffer->item_buffer[buffer->read_position]);
+	memcpy(&ResultItem, buffer->item_buffer + buffer->read_position * ResultItemSize, ResultItemSize);
+	SendResultToRemoteServer(ResultItem);
+//	SendResultToRemoteServer(buffer->item_buffer[buffer->read_position]);
 
 	buffer->read_position++;
 
