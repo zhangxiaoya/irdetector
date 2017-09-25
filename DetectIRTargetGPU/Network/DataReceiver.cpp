@@ -19,6 +19,8 @@ int RemoteResultServerSocketAddressLen = 0;        // 发送结果Socket地址�
 int ReveiceDataBufferlen = 0;                      // 接收数据缓冲区大小
 unsigned char* ReceiveDataBuffer;                  // 接收
 
+const int packageCount = 4;
+
 /************************************************************************/
 /*                            Network Initial                           */
 /************************************************************************/
@@ -110,7 +112,7 @@ bool InitNetworks()
 	if (InitSocketForResultServer() == false) return false;
 
 	// 定义缓冲区长度
-	ReveiceDataBufferlen = WIDTH * HEIGHT * BYTESIZE + 2 * 4;
+	ReveiceDataBufferlen = WIDTH * HEIGHT * BYTESIZE + 2 * packageCount;
 	// 申请缓冲区
 	ReceiveDataBuffer = new unsigned char[ReveiceDataBufferlen];
 
@@ -125,23 +127,43 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 	// 打印开始接收数据消息
 	std::cout << "Receiving one frame data from remote device ...\n";
 
+//	unsigned char frame[320 * 256 * 2];
+//	auto receivedStatus = recvfrom(
+//		RemoteDataServerSocket,
+//		reinterpret_cast<char*>(frame),
+//		320*256*2,
+//		0,
+//		reinterpret_cast<sockaddr *>(&RemoteDataServerSocketAddress),
+//		&RemoteDataServerSocketAddressLen);
+//
+//	if(receivedStatus != SOCKET_ERROR)
+//	{
+//		memcpy(frameData, frame, 320 * 256 * 2);
+//		return true;
+//	}
+//	else
+//	{
+//		std::cout << WSAGetLastError() << std::endl;
+//		return false;
+//	}
+
 	// 记录当前帧的帧号
 	unsigned char frameIndex = 0;
 	// 记录每一帧每一段的是否已经接收
-	bool subIndex[4] = {false};
+	bool subIndex[packageCount] = {false};
 
 	// 每段数据长度
-	auto quarterBufferSize = ReveiceDataBufferlen / 4;
+	auto quarterBufferSize = ReveiceDataBufferlen / packageCount;
 
-	// 循环接收四次
-	for (auto i = 0; i < 4; ++i)
+	// 循环接收多次（分包数量）
+	for (auto i = 0; i < packageCount; ++i)
 	{
-		auto partBuffer = ReceiveDataBuffer + i * (quarterBufferSize + 2);
+		auto partBuffer = ReceiveDataBuffer + i * quarterBufferSize;
 		// 接收一次数据
 		auto receivedStatus = recvfrom(
 			RemoteDataServerSocket,
 			reinterpret_cast<char*>(partBuffer),
-			quarterBufferSize + 2,
+			quarterBufferSize,
 			0,
 			reinterpret_cast<sockaddr *>(&RemoteDataServerSocketAddress),
 			&RemoteDataServerSocketAddressLen);
@@ -168,17 +190,18 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 				}
 				else // 如果帧号不一致，输出错误信息
 				{
-					std::cout << "Invalid frame order： "
-						<< "Expected frame index is " << static_cast<int>(frameIndex)
-						<< " , but actualy index is " << static_cast<int>(ReceiveDataBuffer[0]) << std::endl;
+//					std::cout << "Invalid frame order： "
+//						<< "Expected frame index is " << static_cast<int>(frameIndex)
+//						<< " , but actualy index is " << static_cast<int>(ReceiveDataBuffer[0]) << std::endl;
 					std::cout << "Resetting .....>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 					frameIndex = static_cast<unsigned char>(partBuffer[0]);
-					subIndex[0] = subIndex[1] = subIndex[2] = subIndex[3] = false;
+					for (auto idx = 0; idx < packageCount; ++idx)
+						subIndex[idx] = false;
 					i = 0;
 				}
 			}
 			// 将除去帧号和段号的数据部分复制到图像帧数据对应的位置
-			memcpy(frameData + i * quarterBufferSize, partBuffer + 2, sizeof(unsigned char) * quarterBufferSize);
+			memcpy(frameData + i * (quarterBufferSize-2), partBuffer + 2, sizeof(unsigned char) * (quarterBufferSize-2));
 			// 并输出当前接收到的帧号和段号
 			std::cout << "Frame index is " << static_cast<int>(frameIndex) << ", and segment index is " << i + 1 << "\n";
 		}
