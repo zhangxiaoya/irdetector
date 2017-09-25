@@ -11,24 +11,24 @@
 #include "Models/ResultBufferStruct.hpp"
 
 // Definition of all const varibales
-extern const unsigned int WIDTH = 320;
-extern const unsigned int HEIGHT = 256;
-extern const unsigned int BYTESIZE = 2;
+extern const unsigned int WIDTH = 320;   // 图像宽度
+extern const unsigned int HEIGHT = 256;  // 图像高度
+extern const unsigned int BYTESIZE = 2;  // 每个像素字节数
 
-static const int BufferSize = 2;
-static const int FrameSize = WIDTH * HEIGHT * BYTESIZE;
+static const int BufferSize = 1000;                              // 线程同步缓冲区大小
+static const int FrameSize = WIDTH * HEIGHT * BYTESIZE;        // 每个图像帧的大小
 
-unsigned char FrameData[FrameSize];
-unsigned char FrameDataInprocessing[FrameSize] = {0};
-ResultSegment ResultItem;
-static const int ResultItemSize = sizeof(ResultSegment);
+unsigned char FrameData[FrameSize];                            // 每一帧图像临时缓冲
+unsigned char FrameDataInprocessing[FrameSize] = {0};          // 每一帧图像临时缓冲
+ResultSegment ResultItem;                                      // 每一帧图像检测结果
+static const int ResultItemSize = sizeof(ResultSegment);       // 每一帧图像检测结果大小
 
 // Init one detector
-Detector* detector = new Detector();
+Detector* detector = new Detector();                  // 初始化检测器
 
 // Definition of a ring buffer
-RingBufferStruct Buffer(FrameSize, BufferSize);
-ResultBufferStruct ResultBuffer(BufferSize);
+RingBufferStruct Buffer(FrameSize, BufferSize);       // 数据接收线程环形缓冲区初始化
+ResultBufferStruct ResultBuffer(BufferSize);          // 结果发送线程环形缓冲区初始化
 
 /****************************************************************************************/
 /*                                Input Data Operation                                  */
@@ -39,7 +39,7 @@ bool InputDataToBuffer(RingBufferStruct* buffer)
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while ((buffer->write_position + 1) % BufferSize == buffer->read_position)
 	{
-		std::cout << "Producer is waiting for an empty slot...\n";
+		std::cout << "Image Data Producer is waiting for an empty slot...\n";
 		buffer->buffer_not_full.wait(lock);
 	}
 
@@ -79,7 +79,7 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 			return false;
 		}
 
-		std::cout << "Consumer is waiting for items...\n";
+		std::cout << "Detector Consumer is waiting for items...\n";
 		buffer->buffer_not_empty.wait(readLock);
 	}
 
@@ -99,7 +99,7 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
 	while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
 	{
-		std::cout << "Producer is waiting for an empty slot...\n";
+		std::cout << "Result Send Producer is waiting for an empty slot...\n";
 		resultBuffer->buffer_not_full.wait(writerLock);
 	}
 
@@ -128,7 +128,7 @@ bool OutputData(ResultBufferStruct* buffer)
 		if (buffer->finish_flag == true)
 			return false;
 
-		std::cout << "Send result thread is waiting for result items...\n";
+		std::cout << "Result send thread is waiting for result items...\n";
 		buffer->buffer_not_empty.wait(lock);
 	}
 
@@ -152,7 +152,7 @@ void InputDataTask()
 	{
 		if(InputDataToBuffer(&Buffer) == false)
 			break;
-		Sleep(1);
+//		Sleep(1);
 	}
 }
 
@@ -188,7 +188,6 @@ void InitResultBuffer(ResultBufferStruct* buffer)
 	buffer->write_position = 0;
 }
 
-
 int main(int argc, char* argv[])
 {
 	// Init CUDA device
@@ -208,11 +207,11 @@ int main(int argc, char* argv[])
 
 		std::thread InputDataThread(InputDataTask);
 		std::thread DetectorThread(DetectTask);
-//		std::thread OutputDataThread(OutputDataTask);
+		std::thread OutputDataThread(OutputDataTask);
 
 		InputDataThread.join();
 		DetectorThread.join();
-//		OutputDataThread.join();
+		OutputDataThread.join();
 
 		// Destroy Network
 		DestroyNetWork();
