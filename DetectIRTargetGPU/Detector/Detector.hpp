@@ -588,7 +588,7 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 		RemoveInvalidObjectAfterMerge();
 
 		// Copy frame header
-		memcpy(result->header, originalFrameOnHost + 2, 16);
+		memcpy(result->header, frame, 16);
 
 		// Filter all candiates
 		FalseAlarmFilter();
