@@ -6,7 +6,7 @@
 #pragma comment(lib, "ws2_32.lib")
 
 // Definition of all variables used in network
-int HostPortForRemoteDataServer = 8889;            // 接收数据端口
+int HostPortForRemoteDataServer = 18889;            // 接收数据端口
 int HostPortForRemoteResultServer = 8889;          // 发送结果端口
 char RemoteResultServerHostIP[] = "192.168.2.111"; // 发送结果主机地址
 SOCKET RemoteDataServerSocket = 0;                 // 接收数据SOCKET
@@ -15,6 +15,8 @@ sockaddr_in RemoteDataServerSocketAddress;		   // 接收数据Socket地址
 sockaddr_in RemoteResultServerSocketAddress;	   // 发送结果Socket地址
 int RemoteDataServerSocketAddressLen = 0;          // 接收数据Socket地址长度
 int RemoteResultServerSocketAddressLen = 0;        // 发送结果Socket地址长度
+
+auto SocketLen = 500 * 1024 * 1024;                // Socket缓冲区大小
 
 int ReveiceDataBufferlen = 0;                      // 接收数据缓冲区大小
 unsigned char* ReceiveDataBuffer;                  // 接收
@@ -55,6 +57,10 @@ bool InitSocketForDataServer()
 	RemoteDataServerSocketAddress.sin_family = AF_INET; // 协议族
 	RemoteDataServerSocketAddress.sin_port = htons(HostPortForRemoteDataServer); // 端口号
 	RemoteDataServerSocketAddress.sin_addr.S_un.S_addr = htonl(INADDR_ANY); // 网络地址
+
+	//设置socket缓冲区大小
+	setsockopt(RemoteDataServerSocket, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<const char*>(&SocketLen), sizeof(SocketLen));
+
 
     // Socket地址长度
 	RemoteDataServerSocketAddressLen = sizeof(RemoteDataServerSocketAddress);
@@ -125,7 +131,7 @@ bool InitNetworks()
 bool GetOneFrameFromNetwork(unsigned char* frameData)
 {
 	// 打印开始接收数据消息
-	std::cout << "Receiving one frame data from remote device ...\n";
+	//std::cout << "Receiving one frame data from remote device ...\n";
 
 //	unsigned char frame[320 * 256 * 2];
 //	auto receivedStatus = recvfrom(
@@ -154,12 +160,13 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 
 	// 每段数据长度
 	auto quarterBufferSize = ReveiceDataBufferlen / packageCount;
-
+	unsigned char partBuffer[40962] = { 0 };
 	// 循环接收多次（分包数量）
 	for (auto i = 0; i < packageCount; ++i)
 	{
-		auto partBuffer = ReceiveDataBuffer + i * quarterBufferSize;
+	//	auto partBuffer = ReceiveDataBuffer + i * quarterBufferSize;
 		// 接收一次数据
+		memset(partBuffer, 0, sizeof(partBuffer));
 		auto receivedStatus = recvfrom(
 			RemoteDataServerSocket,
 			reinterpret_cast<char*>(partBuffer),
@@ -180,6 +187,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 				if (frameIndex == static_cast<unsigned char>(partBuffer[0]))
 				{
 					// 如果帧号一致，检测数据段是不是已经接收过了，如果没有接收过，修改对应的标志
+					auto test = partBuffer[1];
 					if (subIndex[static_cast<int>(partBuffer[1])] == false)
 						subIndex[static_cast<int>(partBuffer[1])] == true;
 					else // 如果已经接收到了，输出错误信息
@@ -190,9 +198,9 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 				}
 				else // 如果帧号不一致，输出错误信息
 				{
-//					std::cout << "Invalid frame order： "
-//						<< "Expected frame index is " << static_cast<int>(frameIndex)
-//						<< " , but actualy index is " << static_cast<int>(ReceiveDataBuffer[0]) << std::endl;
+					std::cout << "Invalid frame order： "
+						<< "Expected frame index is " << static_cast<int>(frameIndex)
+						<< " , but actualy index is " << static_cast<int>(ReceiveDataBuffer[0]) << std::endl;
 					std::cout << "Resetting .....>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 					frameIndex = static_cast<unsigned char>(partBuffer[0]);
 					for (auto idx = 0; idx < packageCount; ++idx)
@@ -203,9 +211,9 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 			// 将除去帧号和段号的数据部分复制到图像帧数据对应的位置
 			memcpy(frameData + i * (quarterBufferSize-2), partBuffer + 2, sizeof(unsigned char) * (quarterBufferSize-2));
 			// 并输出当前接收到的帧号和段号
-			std::cout << "Frame index is " << static_cast<int>(frameIndex) << ", and segment index is " << i + 1 << "\n";
+
 		}
-		else if (receivedStatus == 10) // 长度未10的任意数据表示发送结束，输出提示信息，并返回false
+		else if (receivedStatus == 10) // 长度为10的任意数据表示发送结束，输出提示信息，并返回false
 		{
 			std::cout << "Finish receive data from client!\n";
 			return false;
@@ -216,6 +224,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 			return false;
 		}
 	}
+	std::cout << "Frame index is " << static_cast<int>(frameIndex) << std::endl;
 	return true;
 }
 
@@ -226,6 +235,9 @@ bool SendResultToRemoteServer(ResultSegment& result)
 {
 	// 打印日志消息
 	std::cout << "Sending result to remote server \n";
+
+	//////信号量 wait
+
 
 	// 发送结果数据到远端服务器
 	auto sendStatus = sendto(

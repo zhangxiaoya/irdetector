@@ -267,7 +267,11 @@ inline void Detector::CopyFrameData(unsigned char* frame)
 	memset(this->tempFrame, 0, sizeof(unsigned char) * width * height);
 	for (auto i = 0; i < width * height * 2; i += 2)
 	{
-		tempFrame[i / 2] = frame[i + 1];
+		short highPart = static_cast<short>(frame[i]);
+		auto lowPart = frame[i + 1];
+		short pixel = (highPart << 8) | lowPart;
+		pixel >>= 1;
+		tempFrame[i / 2] = static_cast<unsigned char>(pixel);
 	}
 
 	memcpy(this->originalFrameOnHost, tempFrame, sizeof(unsigned char) * width * height);
@@ -539,7 +543,7 @@ inline void Detector::FalseAlarmFilter()
 		else
 		{
 			this->insideObjects[lastResultCount].object = allValidObjects[i];
-			this->insideObjects[lastResultCount].score = score + static_cast<int>(filters.GetCenterValue());
+			this->insideObjects[lastResultCount].score = static_cast<int>(filters.GetCenterValue());
 			lastResultCount++;
 		}
 	}
@@ -573,10 +577,10 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 		// remove invalid objects
 		RemoveInValidObjects();
 		// convert all obejct to rect
-//				ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
+				ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
 
 		// show result
-//				ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
 
 		// Merge all objects
 		MergeObjects();
@@ -591,10 +595,13 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 		memcpy(result->header, frame, 16);
 
 		// Filter all candiates
+
+
+
 		FalseAlarmFilter();
 
 		// put all valid result to resultSegment
-		result->targetCount = lastResultCount >= 5 ? 5 : lastResultCount;
+		result->targetCount = lastResultCount >= 1 ? 1 : lastResultCount;
 
 		for (auto i = 0; i < result->targetCount; ++i)
 		{

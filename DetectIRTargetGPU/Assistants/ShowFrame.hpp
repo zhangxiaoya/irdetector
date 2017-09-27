@@ -83,11 +83,11 @@ inline void ShowFrame::DrawRectangles(unsigned char* frame, ObjectRect* allRects
 		{
 			continue;
 		}
-		rectangle(img, cv::Point(allRects[i].lt.x, allRects[i].lt.y), cv::Point(allRects[i].rb.x + 1, allRects[i].rb.y + 1), cv::Scalar(255, 255, 0));
+		rectangle(img, cv::Point(allRects[i].lt.x, allRects[i].lt.y), cv::Point(allRects[i].rb.x + 1, allRects[i].rb.y + 1), cv::Scalar(255, 0, 0));
 	}
 
 	cv::imshow("after draw", img);
-	cv::waitKey(0);
+	cv::waitKey(1);
 }
 
 inline void ShowFrame::DrawRectangles(unsigned char* frame, ResultSegment* allRects, int width, int height)

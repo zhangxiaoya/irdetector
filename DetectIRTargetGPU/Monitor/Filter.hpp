@@ -32,7 +32,7 @@ public:
 	void SetConcavePartitionOfDiscretizedImage(int value);
 	unsigned char GetCenterValue() const
 	{
-		return this->centerValueOfOriginalImage;
+		return this->centerValueOfPreprocessedImage;
 	}
 
 private:
