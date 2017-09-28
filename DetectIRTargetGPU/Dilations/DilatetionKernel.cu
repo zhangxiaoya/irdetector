@@ -4,7 +4,7 @@
 #include <cmath>
 #include "../Checkers/CheckCUDAReturnStatus.h"
 
-typedef unsigned char(*pointFunction_t)(unsigned char, unsigned char);
+typedef unsigned short(*pointFunction_t)(unsigned short, unsigned short);
 
 __device__ unsigned char UCMinOnDevice(unsigned char a, unsigned char b)
 {
