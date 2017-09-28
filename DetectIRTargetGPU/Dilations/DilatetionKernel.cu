@@ -16,6 +16,16 @@ __device__ unsigned char UCMaxOnDevice(unsigned char a, unsigned char b)
 	return (a > b) ? a : b;
 }
 
+__device__ unsigned short USMinOnDevice(unsigned short a, unsigned short b)
+{
+	return (a < b) ? a : b;
+}
+
+__device__ unsigned short USMaxOnDevice(unsigned short a, unsigned short b)
+{
+	return (a > b) ? a : b;
+}
+
 __device__ void FilterStep2Kernel(unsigned char* srcFrameOnDevice, unsigned char* dstFrameOnDevice, int width, int height, int tileWidth, int tileHeight, const int radius, const pointFunction_t pPointOperation)
 {
 	extern __shared__ unsigned char smem[];
@@ -95,7 +105,7 @@ void DilationFilter(unsigned char* srcFrameOnDevice, unsigned char* dstFrameOnDe
 {
 	auto status = true;
 	unsigned char* firstStepResultOnDevice;
-	CheckCUDAReturnStatus(cudaMalloc((void**)&firstStepResultOnDevice, width * height * sizeof(unsigned char)), status);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&firstStepResultOnDevice), width * height * sizeof(unsigned char)), status);
 
 	auto tileWidthOfStep1 = 256;
 	auto tileHeightOfStep1 = 1;
