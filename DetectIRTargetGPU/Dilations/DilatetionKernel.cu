@@ -105,21 +105,37 @@ __device__ void FilterStep1Kernel(unsigned short* srcFrameOnDevice,
 	dstFrameOnDevice[y * width + x] = val;
 }
 
-__global__ void DilationFilterStep1(unsigned char* srcFrameOnDevice, unsigned char* dstFrameOnDevice, int width, int height, int tileWidh, int tileHeight, const int radius)
+__global__ void DilationFilterStep1(unsigned short* srcFrameOnDevice,
+                                    unsigned short* dstFrameOnDevice,
+                                    int width,
+                                    int height,
+                                    int tileWidh,
+                                    int tileHeight,
+                                    const int radius)
 {
-	FilterStep1Kernel(srcFrameOnDevice, dstFrameOnDevice, width, height, tileWidh, tileHeight, radius, UCMaxOnDevice);
+	FilterStep1Kernel(srcFrameOnDevice, dstFrameOnDevice, width, height, tileWidh, tileHeight, radius, USMaxOnDevice);
 }
 
-__global__ void DilationFilterStep2(unsigned char* srcFrameOnDevice, unsigned char* dstFrameOnDevice, int width, int height, int tileWidth, int tileHeight, const int radius)
+__global__ void DilationFilterStep2(unsigned short* srcFrameOnDevice,
+                                    unsigned short* dstFrameOnDevice,
+                                    int width,
+                                    int height,
+                                    int tileWidth,
+                                    int tileHeight,
+                                    const int radius)
 {
-	FilterStep2Kernel(srcFrameOnDevice, dstFrameOnDevice, width, height, tileWidth, tileHeight, radius, UCMaxOnDevice);
+	FilterStep2Kernel(srcFrameOnDevice, dstFrameOnDevice, width, height, tileWidth, tileHeight, radius, USMaxOnDevice);
 }
 
-void DilationFilter(unsigned char* srcFrameOnDevice, unsigned char* dstFrameOnDevice, int width, int height, int radius)
+void DilationFilter(unsigned short* srcFrameOnDevice,
+                    unsigned short* dstFrameOnDevice,
+                    int width,
+                    int height,
+                    int radius)
 {
 	auto status = true;
-	unsigned char* firstStepResultOnDevice;
-	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&firstStepResultOnDevice), width * height * sizeof(unsigned char)), status);
+	unsigned short* firstStepResultOnDevice;
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&firstStepResultOnDevice), width * height * sizeof(unsigned short)), status);
 
 	auto tileWidthOfStep1 = 256;
 	auto tileHeightOfStep1 = 1;
