@@ -67,9 +67,16 @@ __device__ void FilterStep2Kernel(unsigned short* srcFrameOnDevice,
 	dstFrameOnDevice[y * width + x] = val;
 }
 
-__device__ void FilterStep1Kernel(unsigned char* srcFrameOnDevice, unsigned char* dstFrameOnDevice, int width, int height, int tileWidth, int tileHeight, const int radius, const pointFunction_t pPointOperation)
+__device__ void FilterStep1Kernel(unsigned short* srcFrameOnDevice,
+                                  unsigned short* dstFrameOnDevice,
+                                  int width,
+                                  int height,
+                                  int tileWidth,
+                                  int tileHeight,
+                                  const int radius,
+                                  const pointFunction_t pPointOperation)
 {
-	extern __shared__ unsigned char smem[];
+	extern __shared__ unsigned short smem[];
 	int tx = threadIdx.x;
 	int ty = threadIdx.y;
 	int bx = blockIdx.x;
