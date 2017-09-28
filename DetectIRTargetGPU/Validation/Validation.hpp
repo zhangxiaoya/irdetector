@@ -67,14 +67,14 @@ protected:
 private:
 	BinaryFileReader* fileReader;
 
-	unsigned char* originalFrameOnHost;
-	unsigned char* originalFrameOnDeivce;
-	unsigned char* resultOfDilationOnHostUseCPU;
-	unsigned char* resultOfDilationOnHostUseGPU;
-	unsigned char* resultOfDilationOnDevice;
-	unsigned char* resultOfLevelDiscretizationOnHostUseCPU;
-	unsigned char* resultOfLevelDiscretizationOnDevice;
-	unsigned char* resultOfLevelDiscretizationOnHostUseGPU;
+	unsigned short* originalFrameOnHost;
+	unsigned short* originalFrameOnDeivce;
+	unsigned short* resultOfDilationOnHostUseCPU;
+	unsigned short* resultOfDilationOnHostUseGPU;
+	unsigned short* resultOfDilationOnDevice;
+	unsigned short* resultOfLevelDiscretizationOnHostUseCPU;
+	unsigned short* resultOfLevelDiscretizationOnDevice;
+	unsigned short* resultOfLevelDiscretizationOnHostUseGPU;
 	int* resultOfCCLOnDevice;
 	int* resultOfCCLOnHostUseCPU;
 	int* resultOfCCLOnHostUseGPU;
@@ -190,7 +190,7 @@ inline bool Validation::DilationValidation() const
 	CheckPerf(DilationFilter(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1), "Dilation on GPU");
 	cudaMemcpy(resultOfDilationOnHostUseGPU, resultOfDilationOnDevice, width * height, cudaMemcpyDeviceToHost);
 
-	return CheckDiff::Check<unsigned char>(resultOfDilationOnHostUseCPU, resultOfDilationOnHostUseGPU, width, height);
+	return CheckDiff::Check<unsigned short>(resultOfDilationOnHostUseCPU, resultOfDilationOnHostUseGPU, width, height);
 }
 
 inline bool Validation::LevelDiscretizationValidation() const
