@@ -129,8 +129,8 @@ bool InitNetworks()
 /************************************************************************/
 bool GetOneFrameFromNetwork(unsigned char* frameData)
 {
-	// 打印开始接收数据消息
-	//std::cout << "Receiving one frame data from remote device ...\n";
+//	 打印开始接收数据消息
+	std::cout << "Receiving one frame data from remote device ...\n";
 
 //	unsigned char frame[320 * 256 * 2];
 //	auto receivedStatus = recvfrom(
@@ -159,7 +159,8 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 
 	// 每段数据长度
 	auto quarterBufferSize = ReveiceDataBufferlen / packageCount;
-//	unsigned char partBuffer[40962] = { 0 };
+	auto segmentIndex = 0;
+
 	// 循环接收多次（分包数量）
 	for (auto i = 0; i < packageCount; ++i)
 	{
@@ -192,6 +193,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 					{
 						std::cout << "Invalid data order, duplicated segment!" << std::endl;
 						std::cout << "Segment " << static_cast<int>(partBuffer[1]) << " had received more than once!" << std::endl;
+						i--; // 多接收一个数据段
 					}
 				}
 				else // 如果帧号不一致，输出错误信息
@@ -206,6 +208,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 					i = 0;
 				}
 			}
+			segmentIndex = static_cast<int>(partBuffer[1]);
 			// 将除去帧号和段号的数据部分复制到图像帧数据对应的位置
 			memcpy(frameData + i * (quarterBufferSize-2), partBuffer + 2, sizeof(unsigned char) * (quarterBufferSize-2));
 			// 并输出当前接收到的帧号和段号
@@ -216,7 +219,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 			std::cout << "Finish receive data from client!\n";
 			return false;
 		}
-		else // 如果基不是是数据部分，也不是数据结束符，输出错误代码
+		else // 如果既不是数据部分，也不是数据结束符，输出错误代码
 		{
 			printf("Received data error:%d\n", WSAGetLastError());
 			return false;

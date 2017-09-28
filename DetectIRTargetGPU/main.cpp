@@ -24,7 +24,7 @@ static const int ResultItemSize = sizeof(ResultSegment);       // 每一帧图像检测
 Detector* detector = new Detector();                  // 初始化检测器
 
 // 缓冲区全局变量声明与定义
-static const int BufferSize = 1000;                   // 线程同步缓冲区大小
+static const int BufferSize = 10;                   // 线程同步缓冲区大小
 RingBufferStruct Buffer(FrameSize, BufferSize);       // 数据接收线程环形缓冲区初始化
 ResultBufferStruct ResultBuffer(BufferSize);          // 结果发送线程环形缓冲区初始化
 
@@ -51,6 +51,9 @@ bool InputDataToBuffer(RingBufferStruct* buffer)
 	// Copy data received from network to ring buffer and update ring buffer header pointer
 	memcpy(buffer->item_buffer + buffer->write_position * FrameSize, FrameData, FrameSize * sizeof(unsigned char));
 	buffer->write_position++;
+
+	auto frameIndex = reinterpret_cast<int*>(FrameData + 2);
+	std::cout<<" ====================================================================>" << *frameIndex << std::endl;
 
 	// Reset data header pointer when to the end of buffer
 	if (buffer->write_position == BufferSize)

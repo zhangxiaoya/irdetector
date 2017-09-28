@@ -86,7 +86,7 @@ inline void ShowFrame::DrawRectangles(unsigned char* frame, ObjectRect* allRects
 		rectangle(img, cv::Point(allRects[i].lt.x, allRects[i].lt.y), cv::Point(allRects[i].rb.x + 1, allRects[i].rb.y + 1), cv::Scalar(255, 0, 0));
 	}
 
-	cv::imshow("after draw", img);
+	cv::imshow("all candiates draw", img);
 	cv::waitKey(1);
 }
 
