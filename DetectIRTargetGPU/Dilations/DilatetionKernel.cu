@@ -26,9 +26,16 @@ __device__ unsigned short USMaxOnDevice(unsigned short a, unsigned short b)
 	return (a > b) ? a : b;
 }
 
-__device__ void FilterStep2Kernel(unsigned char* srcFrameOnDevice, unsigned char* dstFrameOnDevice, int width, int height, int tileWidth, int tileHeight, const int radius, const pointFunction_t pPointOperation)
+__device__ void FilterStep2Kernel(unsigned short* srcFrameOnDevice,
+                                  unsigned short* dstFrameOnDevice,
+                                  int width,
+                                  int height,
+                                  int tileWidth,
+                                  int tileHeight,
+                                  const int radius,
+                                  const pointFunction_t pPointOperation)
 {
-	extern __shared__ unsigned char smem[];
+	extern __shared__ unsigned short smem[];
 
 	int tx = threadIdx.x;
 	int ty = threadIdx.y;
