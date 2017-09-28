@@ -92,7 +92,7 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 	readLock.unlock();
 
 	// 检测目标，并检测性能
-	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItem), "whole");
+	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItem), "Total process");
 
 	// 并发存储检测结果到缓冲区
 	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
@@ -219,12 +219,12 @@ void RunOnNetwork()
 	// 创建三个线程：读取数据线程、计算结果、返回结果
 	std::thread InputDataThread(InputDataTask);
 	std::thread DetectorThread(DetectTask);
-//	std::thread OutputDataThread(OutputDataTask);
+	std::thread OutputDataThread(OutputDataTask);
 
 	// 三个线程开始运行
 	InputDataThread.join();
 	DetectorThread.join();
-//	OutputDataThread.join();
+	OutputDataThread.join();
 
 	// 销毁网络
 	DestroyNetWork();

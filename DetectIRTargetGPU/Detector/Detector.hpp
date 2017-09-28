@@ -576,11 +576,12 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 
 		// remove invalid objects
 		RemoveInValidObjects();
+
 		// convert all obejct to rect
-				ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
+		ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
 
 		// show result
-	ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
 
 		// Merge all objects
 		MergeObjects();
@@ -595,9 +596,6 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 		memcpy(result->header, frame, 16);
 
 		// Filter all candiates
-
-
-
 		FalseAlarmFilter();
 
 		// put all valid result to resultSegment
@@ -612,6 +610,8 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 			pos.bottomRightY = insideObjects[i].object.bottom;
 			result->targets[i] = pos;
 		}
+
+
 	}
 }
 
