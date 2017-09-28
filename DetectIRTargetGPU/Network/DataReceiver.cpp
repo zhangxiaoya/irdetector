@@ -6,7 +6,7 @@
 #pragma comment(lib, "ws2_32.lib")
 
 // Definition of all variables used in network
-int HostPortForRemoteDataServer = 18889;            // 接收数据端口
+int HostPortForRemoteDataServer = 8889;            // 接收数据端口
 int HostPortForRemoteResultServer = 8889;          // 发送结果端口
 char RemoteResultServerHostIP[] = "192.168.2.111"; // 发送结果主机地址
 SOCKET RemoteDataServerSocket = 0;                 // 接收数据SOCKET
@@ -60,7 +60,6 @@ bool InitSocketForDataServer()
 
 	//设置socket缓冲区大小
 	setsockopt(RemoteDataServerSocket, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<const char*>(&SocketLen), sizeof(SocketLen));
-
 
     // Socket地址长度
 	RemoteDataServerSocketAddressLen = sizeof(RemoteDataServerSocketAddress);
@@ -160,11 +159,11 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 
 	// 每段数据长度
 	auto quarterBufferSize = ReveiceDataBufferlen / packageCount;
-	unsigned char partBuffer[40962] = { 0 };
+//	unsigned char partBuffer[40962] = { 0 };
 	// 循环接收多次（分包数量）
 	for (auto i = 0; i < packageCount; ++i)
 	{
-	//	auto partBuffer = ReceiveDataBuffer + i * quarterBufferSize;
+	    auto partBuffer = ReceiveDataBuffer + i * quarterBufferSize;
 		// 接收一次数据
 		memset(partBuffer, 0, sizeof(partBuffer));
 		auto receivedStatus = recvfrom(
@@ -187,7 +186,6 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 				if (frameIndex == static_cast<unsigned char>(partBuffer[0]))
 				{
 					// 如果帧号一致，检测数据段是不是已经接收过了，如果没有接收过，修改对应的标志
-					auto test = partBuffer[1];
 					if (subIndex[static_cast<int>(partBuffer[1])] == false)
 						subIndex[static_cast<int>(partBuffer[1])] == true;
 					else // 如果已经接收到了，输出错误信息
