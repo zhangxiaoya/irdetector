@@ -18,8 +18,8 @@ extern const unsigned int HEIGHT = 256;  // 图像高度
 extern const unsigned int BYTESIZE = 2;  // 每个像素字节数
 
 static const int FrameSize = WIDTH * HEIGHT * BYTESIZE;        // 每个图像帧的大小
-unsigned char FrameData[FrameSize];                            // 每一帧图像临时缓冲
-unsigned char FrameDataInprocessing[FrameSize] = {0};          // 每一帧图像临时缓冲
+unsigned short FrameData[FrameSize];                            // 每一帧图像临时缓冲
+unsigned short FrameDataInprocessing[FrameSize] = {0};          // 每一帧图像临时缓冲
 ResultSegment ResultItem;                                      // 每一帧图像检测结果
 static const int ResultItemSize = sizeof(ResultSegment);       // 每一帧图像检测结果大小
 

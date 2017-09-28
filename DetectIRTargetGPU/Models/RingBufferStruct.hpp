@@ -11,7 +11,7 @@ struct RingBufferStruct
 		  bufferSize(buffer_size),
 		  frameSize(frame_size)
 	{
-		item_buffer = new unsigned char[bufferSize * frameSize];
+		item_buffer = new unsigned short[bufferSize * frameSize];
 	}
 
 	~RingBufferStruct()
@@ -20,7 +20,7 @@ struct RingBufferStruct
 	}
 
 	bool finish_flag;
-	unsigned char* item_buffer;                      // 环形缓冲
+	unsigned short* item_buffer;                     // 环形缓冲
 	size_t read_position;
 	size_t write_position;
 	std::mutex bufferMutex;
