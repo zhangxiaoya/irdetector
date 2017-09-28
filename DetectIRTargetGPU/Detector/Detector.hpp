@@ -577,11 +577,23 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 		// remove invalid objects
 		RemoveInValidObjects();
 
-		// convert all obejct to rect
-//		ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
+		auto frameIndex = reinterpret_cast<unsigned*>(frame);
 
-		// show result
-//		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+		auto temp = static_cast<double>((static_cast<double>(*frameIndex) / 1250)) + static_cast<double>(25);
+		if (temp >= 360.0)
+			temp -= 360.0;
+		if (temp < 0)
+			temp += 360.0;
+
+		std::cout <<"---------------------------------------------------->"<< temp << std::endl;
+		if(temp > 4.0 && temp < 6.0)
+		{
+			// convert all obejct to rect
+			ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
+
+			// show result
+			ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+		}
 
 		// Merge all objects
 		MergeObjects();
