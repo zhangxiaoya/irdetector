@@ -10,6 +10,8 @@
 #include "Models/RingBufferStruct.hpp"
 #include "Models/ResultBufferStruct.hpp"
 
+const bool IsSendResultToServer = false; // 是否发送结果到服务端
+
 // 图像信息全局变量声明与定义
 extern const unsigned int WIDTH = 320;   // 图像宽度
 extern const unsigned int HEIGHT = 256;  // 图像高度
@@ -24,7 +26,7 @@ static const int ResultItemSize = sizeof(ResultSegment);       // 每一帧图像检测
 Detector* detector = new Detector();                  // 初始化检测器
 
 // 缓冲区全局变量声明与定义
-static const int BufferSize = 10;                   // 线程同步缓冲区大小
+static const int BufferSize = 10;                     // 线程同步缓冲区大小
 RingBufferStruct Buffer(FrameSize, BufferSize);       // 数据接收线程环形缓冲区初始化
 ResultBufferStruct ResultBuffer(BufferSize);          // 结果发送线程环形缓冲区初始化
 
@@ -97,25 +99,28 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 	// 检测目标，并检测性能
 	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItem), "Total process");
 
-	// 并发存储检测结果到缓冲区
-	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
-	while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
+	if(IsSendResultToServer)
 	{
-		std::cout << "Result Send Producer is waiting for an empty slot...\n";
-		resultBuffer->buffer_not_full.wait(writerLock);
+		// 并发存储检测结果到缓冲区
+		std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
+		while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
+		{
+			std::cout << "Result Send Producer is waiting for an empty slot...\n";
+			resultBuffer->buffer_not_full.wait(writerLock);
+		}
+
+		// Copy data received from network to ring buffer and update ring buffer header pointer
+		memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItem, ResultItemSize);
+		resultBuffer->write_position++;
+
+		// Reset data header pointer when to the end of buffer
+		if (resultBuffer->write_position == BufferSize)
+			resultBuffer->write_position = 0;
+
+		// Notify Detect thread
+		resultBuffer->buffer_not_empty.notify_all();
+		writerLock.unlock();
 	}
-
-	// Copy data received from network to ring buffer and update ring buffer header pointer
-	memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItem, ResultItemSize);
-	resultBuffer->write_position++;
-
-	// Reset data header pointer when to the end of buffer
-	if (resultBuffer->write_position == BufferSize)
-		resultBuffer->write_position = 0;
-
-	// Notify Detect thread
-	resultBuffer->buffer_not_empty.notify_all();
-	writerLock.unlock();
 
 	// 返回一次线程执行状态
 	return true;
@@ -222,12 +227,12 @@ void RunOnNetwork()
 	// 创建三个线程：读取数据线程、计算结果、返回结果
 	std::thread InputDataThread(InputDataTask);
 	std::thread DetectorThread(DetectTask);
-	std::thread OutputDataThread(OutputDataTask);
+//	std::thread OutputDataThread(OutputDataTask);
 
 	// 三个线程开始运行
 	InputDataThread.join();
 	DetectorThread.join();
-	OutputDataThread.join();
+//	OutputDataThread.join();
 
 	// 销毁网络
 	DestroyNetWork();
