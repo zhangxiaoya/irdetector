@@ -263,9 +263,9 @@ int main(int argc, char* argv[])
 	auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-		RunOnNetwork();
+//		RunOnNetwork();
 
-//		TestPerformance();
+		TestPerformance();
 
 //		TestUsingBinaryFile();
 	}

@@ -104,15 +104,15 @@ inline void Validation::InitValidationData(std::string validationFileName)
 
 inline void Validation::ResetResultsToZero() const
 {
-	memset(resultOfDilationOnHostUseCPU, 0, width * height * sizeof(unsigned char));
-	memset(resultOfDilationOnHostUseGPU, 0, width * height * sizeof(unsigned char));
-	memset(resultOfLevelDiscretizationOnHostUseCPU, 0, width * height * sizeof(unsigned char));
-	memset(resultOfLevelDiscretizationOnHostUseGPU, 0, width * height * sizeof(unsigned char));
+	memset(resultOfDilationOnHostUseCPU, 0, width * height * sizeof(unsigned short));
+	memset(resultOfDilationOnHostUseGPU, 0, width * height * sizeof(unsigned short));
+	memset(resultOfLevelDiscretizationOnHostUseCPU, 0, width * height * sizeof(unsigned short));
+	memset(resultOfLevelDiscretizationOnHostUseGPU, 0, width * height * sizeof(unsigned short));
 	memset(resultOfCCLOnHostUseCPU, 0, width * height * sizeof(int));
 	memset(resultOfCCLOnHostUseGPU, 0, width * height * sizeof(int));
 
-	cudaMemcpy(resultOfDilationOnDevice, resultOfDilationOnHostUseGPU, sizeof(unsigned char)*width * height, cudaMemcpyHostToDevice);
-	cudaMemcpy(resultOfLevelDiscretizationOnDevice, resultOfLevelDiscretizationOnHostUseGPU, sizeof(unsigned char)*width * height, cudaMemcpyHostToDevice);
+	cudaMemcpy(resultOfDilationOnDevice, resultOfDilationOnHostUseGPU, sizeof(unsigned short)*width * height, cudaMemcpyHostToDevice);
+	cudaMemcpy(resultOfLevelDiscretizationOnDevice, resultOfLevelDiscretizationOnHostUseGPU, sizeof(unsigned short)*width * height, cudaMemcpyHostToDevice);
 	cudaMemcpy(resultOfCCLOnDevice, resultOfCCLOnHostUseGPU, sizeof(int) * width * height, cudaMemcpyHostToDevice);
 }
 
@@ -158,14 +158,14 @@ inline void Validation::VailidationAll()
 		ResetResultsToZero();
 
 		originalFrameOnHost = dataPoint[i];
-		cudaMemcpy(originalFrameOnDeivce, originalFrameOnHost, sizeof(unsigned char) *width * height, cudaMemcpyHostToDevice);
+		cudaMemcpy(originalFrameOnDeivce, originalFrameOnHost, sizeof(unsigned short) *width * height, cudaMemcpyHostToDevice);
 
 		checkResult = DilationValidation();
 		if(checkResult == false)
 			break;
 
-		memcpy(resultOfLevelDiscretizationOnHostUseCPU, resultOfDilationOnHostUseCPU, sizeof(unsigned char) * width * height);
-		cudaMemcpy(resultOfLevelDiscretizationOnDevice, resultOfDilationOnDevice, sizeof(unsigned char) * width * height, cudaMemcpyDeviceToDevice);
+		memcpy(resultOfLevelDiscretizationOnHostUseCPU, resultOfDilationOnHostUseCPU, sizeof(unsigned short) * width * height);
+		cudaMemcpy(resultOfLevelDiscretizationOnDevice, resultOfDilationOnDevice, sizeof(unsigned short) * width * height, cudaMemcpyDeviceToDevice);
 
 		checkResult = LevelDiscretizationValidation();
 		if(checkResult == false)
@@ -220,20 +220,20 @@ inline void Validation::InitSpace()
 {
 	isInitSpaceReady = true;
 
-	CheckCUDAReturnStatus(cudaMalloc((void**)&this->originalFrameOnDeivce, sizeof(unsigned char) * width * height), isInitSpaceReady);
-	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfDilationOnDevice, sizeof(unsigned char) * width * height), isInitSpaceReady);
-	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfLevelDiscretizationOnDevice, sizeof(unsigned char) * height * width), isInitSpaceReady);
-	CheckCUDAReturnStatus(cudaMalloc((void**)&this->resultOfCCLOnDevice, sizeof(int) * height * width), isInitSpaceReady);
-	CheckCUDAReturnStatus(cudaMalloc((void**)&this->referenceOfCCLOnDevice, sizeof(int) * height * width), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->originalFrameOnDeivce), sizeof(unsigned short) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->resultOfDilationOnDevice), sizeof(unsigned short) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->resultOfLevelDiscretizationOnDevice), sizeof(unsigned short) * height * width), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->resultOfCCLOnDevice), sizeof(int) * height * width), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->referenceOfCCLOnDevice), sizeof(int) * height * width), isInitSpaceReady);
 
-	CheckCUDAReturnStatus(cudaMalloc((void**)&this->modificationFlagOnDevice, sizeof(bool)), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->modificationFlagOnDevice), sizeof(bool)), isInitSpaceReady);
 
-	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfDilationOnHostUseCPU,sizeof(unsigned char) * width * height), isInitSpaceReady);
-	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfDilationOnHostUseGPU,sizeof(unsigned char) * width * height), isInitSpaceReady);
-	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfLevelDiscretizationOnHostUseCPU, sizeof(unsigned char) *width * height), isInitSpaceReady);
-	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfLevelDiscretizationOnHostUseGPU, sizeof(unsigned char) *width * height), isInitSpaceReady);
-	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfCCLOnHostUseCPU, sizeof(int) * width * height), isInitSpaceReady);
-	CheckCUDAReturnStatus(cudaMallocHost((void**)&this->resultOfCCLOnHostUseGPU, sizeof(int) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->resultOfDilationOnHostUseCPU),sizeof(unsigned short) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->resultOfDilationOnHostUseGPU),sizeof(unsigned short) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->resultOfLevelDiscretizationOnHostUseCPU), sizeof(unsigned short) *width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->resultOfLevelDiscretizationOnHostUseGPU), sizeof(unsigned short) *width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->resultOfCCLOnHostUseCPU), sizeof(int) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->resultOfCCLOnHostUseGPU), sizeof(int) * width * height), isInitSpaceReady);
 }
 
 inline void Validation::DestroySpace() const
