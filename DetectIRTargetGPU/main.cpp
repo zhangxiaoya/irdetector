@@ -17,9 +17,10 @@ extern const unsigned int WIDTH = 320;   // 图像宽度
 extern const unsigned int HEIGHT = 256;  // 图像高度
 extern const unsigned int BYTESIZE = 2;  // 每个像素字节数
 
-static const int FrameSize = WIDTH * HEIGHT * BYTESIZE;        // 每个图像帧的大小
-unsigned short FrameData[FrameSize];                            // 每一帧图像临时缓冲
-unsigned short FrameDataInprocessing[FrameSize] = {0};          // 每一帧图像临时缓冲
+static const int FrameDataSize = WIDTH * HEIGHT * BYTESIZE;        // 每个图像帧数据大小
+static const int ImageSize = WIDTH * HEIGHT;                       // 每一帧图像像素大小
+unsigned char FrameData[FrameDataSize];                            // 每一帧图像临时缓冲
+unsigned short FrameDataInprocessing[ImageSize] = {0};             // 每一帧图像临时缓冲
 ResultSegment ResultItem;                                      // 每一帧图像检测结果
 static const int ResultItemSize = sizeof(ResultSegment);       // 每一帧图像检测结果大小
 
@@ -27,7 +28,7 @@ Detector* detector = new Detector();                  // 初始化检测器
 
 // 缓冲区全局变量声明与定义
 static const int BufferSize = 10;                     // 线程同步缓冲区大小
-RingBufferStruct Buffer(FrameSize, BufferSize);       // 数据接收线程环形缓冲区初始化
+RingBufferStruct Buffer(FrameDataSize, BufferSize);   // 数据接收线程环形缓冲区初始化
 ResultBufferStruct ResultBuffer(BufferSize);          // 结果发送线程环形缓冲区初始化
 
 /****************************************************************************************/
@@ -51,7 +52,7 @@ bool InputDataToBuffer(RingBufferStruct* buffer)
 	}
 
 	// Copy data received from network to ring buffer and update ring buffer header pointer
-	memcpy(buffer->item_buffer + buffer->write_position * FrameSize, FrameData, FrameSize * sizeof(unsigned char));
+	memcpy(buffer->item_buffer + buffer->write_position * FrameDataSize, FrameData, FrameDataSize);
 	buffer->write_position++;
 
 	auto frameIndex = reinterpret_cast<int*>(FrameData + 2);
@@ -86,7 +87,7 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 		buffer->buffer_not_empty.wait(readLock);
 	}
 
-	memcpy(FrameDataInprocessing, buffer->item_buffer + buffer->read_position * FrameSize, FrameSize);
+	memcpy(FrameDataInprocessing, buffer->item_buffer + buffer->read_position * FrameDataSize, FrameDataSize);
 
 	buffer->read_position++;
 
@@ -165,7 +166,6 @@ void InputDataTask()
 	while (true)
 	{
 		if(InputDataToBuffer(&Buffer) == false) break;
-		//Sleep(1);/////???????????????????????????????????????????
 	}
 }
 
