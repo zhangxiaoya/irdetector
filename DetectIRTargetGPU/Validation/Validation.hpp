@@ -111,9 +111,10 @@ inline void Validation::ResetResultsToZero() const
 	memset(resultOfCCLOnHostUseCPU, 0, width * height * sizeof(int));
 	memset(resultOfCCLOnHostUseGPU, 0, width * height * sizeof(int));
 
-	cudaMemcpy(resultOfDilationOnDevice, resultOfDilationOnHostUseGPU, sizeof(unsigned short)*width * height, cudaMemcpyHostToDevice);
-	cudaMemcpy(resultOfLevelDiscretizationOnDevice, resultOfLevelDiscretizationOnHostUseGPU, sizeof(unsigned short)*width * height, cudaMemcpyHostToDevice);
-	cudaMemcpy(resultOfCCLOnDevice, resultOfCCLOnHostUseGPU, sizeof(int) * width * height, cudaMemcpyHostToDevice);
+	auto memcpyStatus = true;
+	CheckCUDAReturnStatus(cudaMemcpy(resultOfDilationOnDevice, resultOfDilationOnHostUseGPU, sizeof(unsigned short)*width * height, cudaMemcpyHostToDevice), memcpyStatus);
+	CheckCUDAReturnStatus(cudaMemcpy(resultOfLevelDiscretizationOnDevice, resultOfLevelDiscretizationOnHostUseGPU, sizeof(unsigned short)*width * height, cudaMemcpyHostToDevice), memcpyStatus);
+	CheckCUDAReturnStatus(cudaMemcpy(resultOfCCLOnDevice, resultOfCCLOnHostUseGPU, sizeof(int) * width * height, cudaMemcpyHostToDevice), memcpyStatus);
 }
 
 inline bool Validation::CheckFileReader() const
@@ -148,6 +149,8 @@ inline void Validation::VailidationAll()
 
 	logPrinter.PrintLogs("Test the accuracy for this test file ... ", Info);
 	auto checkResult = false;
+	auto insideProcessSatus = true;
+
 	char iterationText[200];
 
 	for(auto i = 0;i<frameCount;++i)
@@ -158,7 +161,7 @@ inline void Validation::VailidationAll()
 		ResetResultsToZero();
 
 		originalFrameOnHost = dataPoint[i];
-		cudaMemcpy(originalFrameOnDeivce, originalFrameOnHost, sizeof(unsigned short) *width * height, cudaMemcpyHostToDevice);
+		CheckCUDAReturnStatus(cudaMemcpy(originalFrameOnDeivce, originalFrameOnHost, sizeof(unsigned short) *width * height, cudaMemcpyHostToDevice), insideProcessSatus);
 
 		checkResult = DilationValidation();
 		if(checkResult == false)
@@ -186,9 +189,10 @@ inline bool Validation::DilationValidation() const
 	logPrinter.PrintLogs("Dilation on CPU!", Info);
 	DilationOnCPU::DilationCPU(originalFrameOnHost, resultOfDilationOnHostUseCPU, width, height, 1);
 
+	auto insideStatus = true;
 	logPrinter.PrintLogs("Dialtion On GPU", Info);
 	CheckPerf(DilationFilter(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1), "Dilation on GPU");
-	cudaMemcpy(resultOfDilationOnHostUseGPU, resultOfDilationOnDevice, width * height, cudaMemcpyDeviceToHost);
+	CheckCUDAReturnStatus(cudaMemcpy(resultOfDilationOnHostUseGPU, resultOfDilationOnDevice, width * height * sizeof(unsigned short), cudaMemcpyDeviceToHost), insideStatus);
 
 	return CheckDiff::Check<unsigned short>(resultOfDilationOnHostUseCPU, resultOfDilationOnHostUseGPU, width, height);
 }
@@ -200,7 +204,7 @@ inline bool Validation::LevelDiscretizationValidation() const
 
 	logPrinter.PrintLogs("Level Discretization On GPU", Info);
 	CheckPerf(LevelDiscretizationOnGPU(resultOfLevelDiscretizationOnDevice, width, height, 15),"Discretization On GPU");
-	cudaMemcpy(resultOfLevelDiscretizationOnHostUseGPU, resultOfLevelDiscretizationOnDevice, width * height, cudaMemcpyDeviceToHost);
+	cudaMemcpy(resultOfLevelDiscretizationOnHostUseGPU, resultOfLevelDiscretizationOnDevice, sizeof(unsigned short) * width * height, cudaMemcpyDeviceToHost);
 
 	return CheckDiff::Check<unsigned short>(resultOfLevelDiscretizationOnHostUseCPU, resultOfLevelDiscretizationOnHostUseGPU, width, height);
 }

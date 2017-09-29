@@ -6,16 +6,6 @@
 
 typedef unsigned short(*pointFunction_t)(unsigned short, unsigned short);
 
-__device__ unsigned char UCMinOnDevice(unsigned char a, unsigned char b)
-{
-	return (a < b) ? a : b;
-}
-
-__device__ unsigned char UCMaxOnDevice(unsigned char a, unsigned char b)
-{
-	return (a > b) ? a : b;
-}
-
 __device__ unsigned short USMinOnDevice(unsigned short a, unsigned short b)
 {
 	return (a < b) ? a : b;
