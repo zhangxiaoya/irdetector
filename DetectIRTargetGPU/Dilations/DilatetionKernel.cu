@@ -185,8 +185,10 @@ __global__ void NaiveDilationKernel(unsigned short* srcFrameOnDevice, unsigned s
 
 void NaiveDilation(unsigned short* srcFrameOnDevice, unsigned short* dstFrameOnDevice, int width, int height, int radius)
 {
+	auto status = true;
 	dim3 block(32, 32);
 	dim3 grid(ceil(static_cast<float>(width) / block.x), ceil(static_cast<float>(height) / block.y));
 	NaiveDilationKernel<<<grid, block >>>(srcFrameOnDevice, dstFrameOnDevice, width, height, radius);
+	CheckCUDAReturnStatus(cudaDeviceSynchronize(), status);
 	auto cudaerr = cudaDeviceSynchronize();
 }
