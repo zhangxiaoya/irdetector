@@ -187,7 +187,7 @@ inline bool Validation::DilationValidation() const
 	DilationOnCPU::DilationCPU(originalFrameOnHost, resultOfDilationOnHostUseCPU, width, height, 1);
 
 	logPrinter.PrintLogs("Dialtion On GPU", Info);
-	DilationFilter(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1);
+	CheckPerf(DilationFilter(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1), "Dilation on GPU");
 	cudaMemcpy(resultOfDilationOnHostUseGPU, resultOfDilationOnDevice, width * height, cudaMemcpyDeviceToHost);
 
 	return CheckDiff::Check<unsigned char>(resultOfDilationOnHostUseCPU, resultOfDilationOnHostUseGPU, width, height);
@@ -199,7 +199,7 @@ inline bool Validation::LevelDiscretizationValidation() const
 	LevelDiscretizationOnCPU::LevelDiscretization(resultOfLevelDiscretizationOnHostUseCPU, width, height, 15);
 
 	logPrinter.PrintLogs("Level Discretization On GPU", Info);
-	LevelDiscretizationOnGPU(resultOfLevelDiscretizationOnDevice, width, height, 15);
+	CheckPerf(LevelDiscretizationOnGPU(resultOfLevelDiscretizationOnDevice, width, height, 15),"Discretization On GPU");
 	cudaMemcpy(resultOfLevelDiscretizationOnHostUseGPU, resultOfLevelDiscretizationOnDevice, width * height, cudaMemcpyDeviceToHost);
 
 	return CheckDiff::Check<unsigned char>(resultOfLevelDiscretizationOnHostUseCPU, resultOfLevelDiscretizationOnHostUseGPU, width, height);
