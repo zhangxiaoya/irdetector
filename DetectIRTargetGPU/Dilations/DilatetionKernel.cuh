@@ -3,4 +3,6 @@
 
 void DilationFilter(unsigned short* srcFrameOnDevice, unsigned short* dstFrameOnDevice, int width, int height, int radius);
 
+void NaiveDilation(unsigned short* srcFrameOnDevice, unsigned short* dstFrameOnDevice, int width, int height, int radius);
+
 #endif

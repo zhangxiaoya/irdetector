@@ -72,7 +72,7 @@ inline void DilationOnCPU::DilationCPU(unsigned short* srcFrameOnHost, unsigned 
 			int startCol = IMAX(0, c - radius);
 			int endCol = IMIN(width - 1, c + radius);
 
-			auto value = std::numeric_limits<unsigned char>::min();
+			auto value = std::numeric_limits<unsigned short>::min();
 
 			for (auto windowCol = startCol; windowCol <= endCol; windowCol++)
 			{
@@ -89,7 +89,7 @@ inline void DilationOnCPU::DilationCPU(unsigned short* srcFrameOnHost, unsigned 
 			int startRow = IMAX(0, r - radius);
 			int endRow = IMIN(height - 1, r + radius);
 
-			auto value = std::numeric_limits<unsigned char>::min();
+			auto value = std::numeric_limits<unsigned short>::min();
 
 			for (auto windowRow = startRow; windowRow <= endRow; windowRow++)
 			{

@@ -16,6 +16,16 @@ __device__ unsigned short USMaxOnDevice(unsigned short a, unsigned short b)
 	return (a > b) ? a : b;
 }
 
+__device__ inline int IMinOnDevice(int a, int b)
+{
+	return a > b ? b : a;
+}
+
+__device__ inline int IMaxOnDevice(int a, int b)
+{
+	return a > b ? a : b;
+}
+
 __device__ void FilterStep2Kernel(unsigned short* srcFrameOnDevice,
                                   unsigned short* dstFrameOnDevice,
                                   int width,
@@ -145,4 +155,38 @@ void DilationFilter(unsigned short* srcFrameOnDevice,
 	CheckCUDAReturnStatus(cudaDeviceSynchronize(), status);
 
 	CheckCUDAReturnStatus(cudaFree(firstStepResultOnDevice), status);
+}
+
+__global__ void NaiveDilationKernel(unsigned short* srcFrameOnDevice, unsigned short* dstFrameOnDevice, int width, int height, int radius)
+{
+	int colCount = blockIdx.x * blockDim.x + threadIdx.x;
+	int rowCount = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if (rowCount >= height || colCount >= width)
+	{
+		return;
+	}
+	unsigned int startRow = IMaxOnDevice(rowCount - radius, 0);
+	unsigned int endRow = IMinOnDevice(height - 1, rowCount + radius);
+	unsigned int startCol = IMaxOnDevice(colCount - radius, 0);
+	unsigned int endCol = IMinOnDevice(width - 1, colCount + radius);
+
+	unsigned short maxValue = 0;
+
+	for (int r = startRow; r <= endRow; r++)
+	{
+		for (int c = startCol; c <= endCol; c++)
+		{
+			maxValue = USMaxOnDevice(maxValue, srcFrameOnDevice[r * width + c]);
+		}
+	}
+	dstFrameOnDevice[rowCount * width + colCount] = maxValue;
+}
+
+void NaiveDilation(unsigned short* srcFrameOnDevice, unsigned short* dstFrameOnDevice, int width, int height, int radius)
+{
+	dim3 block(32, 32);
+	dim3 grid(ceil(static_cast<float>(width) / block.x), ceil(static_cast<float>(height) / block.y));
+	NaiveDilationKernel<<<grid, block >>>(srcFrameOnDevice, dstFrameOnDevice, width, height, radius);
+	auto cudaerr = cudaDeviceSynchronize();
 }

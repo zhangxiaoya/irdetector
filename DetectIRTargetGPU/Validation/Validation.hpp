@@ -191,7 +191,9 @@ inline bool Validation::DilationValidation() const
 
 	auto insideStatus = true;
 	logPrinter.PrintLogs("Dialtion On GPU", Info);
-	CheckPerf(DilationFilter(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1), "Dilation on GPU");
+
+	NaiveDilation(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1);
+//	DilationFilter(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1);
 	CheckCUDAReturnStatus(cudaMemcpy(resultOfDilationOnHostUseGPU, resultOfDilationOnDevice, width * height * sizeof(unsigned short), cudaMemcpyDeviceToHost), insideStatus);
 
 	return CheckDiff::Check<unsigned short>(resultOfDilationOnHostUseCPU, resultOfDilationOnHostUseGPU, width, height);
