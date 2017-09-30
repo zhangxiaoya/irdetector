@@ -246,11 +246,15 @@ void TestUsingBinaryFile()
 	visualEffectValidator.VailidationAll();
 }
 
+/****************************************************************************************/
+/*                          Test Algrithm Core Performance                              */
+/****************************************************************************************/
 void TestPerformance()
 {
-	/* 下面是CUDA核函数测试程序和单机文本文件测试，开发阶段不要删除，方便调试 */
+	auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin";
+
 	Validation validation;
-	validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
+	validation.InitValidationData(validation_file_name);
 	validation.VailidationAll();
 }
 
@@ -263,9 +267,9 @@ int main(int argc, char* argv[])
 	auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-		RunOnNetwork();
+//		RunOnNetwork();
 
-//		TestPerformance();
+		TestPerformance();
 
 //		TestUsingBinaryFile();
 	}
@@ -276,6 +280,7 @@ int main(int argc, char* argv[])
 	// 释放CUDA设备
 	CUDAInit::cudaDeviceRelease();
 
+	// 系统暂停
 	system("Pause");
 	return 0;
 }

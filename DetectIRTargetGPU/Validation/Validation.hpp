@@ -163,17 +163,20 @@ inline void Validation::VailidationAll()
 		originalFrameOnHost = dataPoint[i];
 		CheckCUDAReturnStatus(cudaMemcpy(originalFrameOnDeivce, originalFrameOnHost, sizeof(unsigned short) *width * height, cudaMemcpyHostToDevice), insideProcessSatus);
 
+		// Check Dilation on GPU
 		checkResult = DilationValidation();
 		if(checkResult == false)
 			break;
 
 		memcpy(resultOfLevelDiscretizationOnHostUseCPU, resultOfDilationOnHostUseCPU, sizeof(unsigned short) * width * height);
-		cudaMemcpy(resultOfLevelDiscretizationOnDevice, resultOfDilationOnDevice, sizeof(unsigned short) * width * height, cudaMemcpyDeviceToDevice);
+		CheckCUDAReturnStatus(cudaMemcpy(resultOfLevelDiscretizationOnDevice, resultOfDilationOnDevice, sizeof(unsigned short) * width * height, cudaMemcpyDeviceToDevice), insideProcessSatus);
 
+		// Check Discretization on GPU
 		checkResult = LevelDiscretizationValidation();
 		if(checkResult == false)
 			break;
 
+		// Check CCL On GPU
 		checkResult = CCLValidation();
 		if (checkResult == false)
 			break;
@@ -182,17 +185,22 @@ inline void Validation::VailidationAll()
 	{
 		logPrinter.PrintLogs("All test cases passed!", Info);
 	}
+	else
+	{
+		logPrinter.PrintLogs("One or many test cases failed!", Waring);
+	}
 }
 
 inline bool Validation::DilationValidation() const
 {
+	auto dilationRadius = 1;
+
 	logPrinter.PrintLogs("Dilation on CPU!", Info);
-	DilationOnCPU::DilationCPU(originalFrameOnHost, resultOfDilationOnHostUseCPU, width, height, 1);
+	DilationOnCPU::DilationCPU(originalFrameOnHost, resultOfDilationOnHostUseCPU, width, height, dilationRadius);
 
 	auto insideStatus = true;
 	logPrinter.PrintLogs("Dialtion On GPU", Info);
-	CheckPerf(NaiveDilation(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1), "Naive Dilation On GPU");
-//	DilationFilter(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, 1);
+	CheckPerf(NaiveDilation(originalFrameOnDeivce, resultOfDilationOnDevice, width, height, dilationRadius), "Naive Dilation On GPU");
 	CheckCUDAReturnStatus(cudaMemcpy(resultOfDilationOnHostUseGPU, resultOfDilationOnDevice, width * height * sizeof(unsigned short), cudaMemcpyDeviceToHost), insideStatus);
 
 	return CheckDiff::Check<unsigned short>(resultOfDilationOnHostUseCPU, resultOfDilationOnHostUseGPU, width, height);
@@ -200,12 +208,15 @@ inline bool Validation::DilationValidation() const
 
 inline bool Validation::LevelDiscretizationValidation() const
 {
-	logPrinter.PrintLogs("Level Discretization On CPU", Info);
-	LevelDiscretizationOnCPU::LevelDiscretization(resultOfLevelDiscretizationOnHostUseCPU, width, height, 15);
+	auto discretization_scale = 15;
 
+	logPrinter.PrintLogs("Level Discretization On CPU", Info);
+	LevelDiscretizationOnCPU::LevelDiscretization(resultOfLevelDiscretizationOnHostUseCPU, width, height, discretization_scale);
+
+	auto insideStatus = true;
 	logPrinter.PrintLogs("Level Discretization On GPU", Info);
-	CheckPerf(LevelDiscretizationOnGPU(resultOfLevelDiscretizationOnDevice, width, height, 15), "Discretization On GPU");
-	cudaMemcpy(resultOfLevelDiscretizationOnHostUseGPU, resultOfLevelDiscretizationOnDevice, sizeof(unsigned short) * width * height, cudaMemcpyDeviceToHost);
+	CheckPerf(LevelDiscretizationOnGPU(resultOfLevelDiscretizationOnDevice, width, height, discretization_scale), "Discretization On GPU");
+	CheckCUDAReturnStatus(cudaMemcpy(resultOfLevelDiscretizationOnHostUseGPU, resultOfLevelDiscretizationOnDevice, sizeof(unsigned short) * width * height, cudaMemcpyDeviceToHost), insideStatus);
 
 	return CheckDiff::Check<unsigned short>(resultOfLevelDiscretizationOnHostUseCPU, resultOfLevelDiscretizationOnHostUseGPU, width, height);
 }
@@ -215,9 +226,10 @@ inline bool Validation::CCLValidation() const
 	logPrinter.PrintLogs("CCL On CPU", Info);
 	MeshCCLOnCPU::ccl(resultOfLevelDiscretizationOnHostUseCPU, resultOfCCLOnHostUseCPU, width, height, 4, 0);
 
+	auto insideStatus = true;
 	logPrinter.PrintLogs("CCL On GPU", Info);
 	CheckPerf(MeshCCL(resultOfLevelDiscretizationOnHostUseGPU, resultOfCCLOnDevice, referenceOfCCLOnDevice, modificationFlagOnDevice, width, height), "CCL On GPU");
-	cudaMemcpy(resultOfCCLOnHostUseGPU, resultOfCCLOnDevice, sizeof(int) * width * height, cudaMemcpyDeviceToHost);
+	CheckCUDAReturnStatus(cudaMemcpy(resultOfCCLOnHostUseGPU, resultOfCCLOnDevice, sizeof(int) * width * height, cudaMemcpyDeviceToHost), insideStatus);
 	return CheckDiff::Check<int>(resultOfCCLOnHostUseCPU, resultOfCCLOnHostUseGPU, width, height);
 }
 
