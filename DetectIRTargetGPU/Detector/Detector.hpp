@@ -559,7 +559,8 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 	if (isFrameDataReady == true)
 	{
 		// dilation on gpu
-		DilationFilter(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, radius);
+//		DilationFilter(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, radius);
+		NaiveDilation(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, radius);
 
 		// level disretization on gpu
 		LevelDiscretizationOnGPU(this->dilationResultOnDevice, width, height, discretizationScale);

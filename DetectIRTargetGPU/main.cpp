@@ -10,7 +10,7 @@
 #include "Models/RingBufferStruct.hpp"
 #include "Models/ResultBufferStruct.hpp"
 
-const bool IsSendResultToServer = false; // 是否发送结果到服务端
+const bool IsSendResultToServer = true; // 是否发送结果到服务端
 
 // 图像信息全局变量声明与定义
 extern const unsigned int WIDTH = 320;   // 图像宽度
@@ -227,12 +227,12 @@ void RunOnNetwork()
 	// 创建三个线程：读取数据线程、计算结果、返回结果
 	std::thread InputDataThread(InputDataTask);
 	std::thread DetectorThread(DetectTask);
-//	std::thread OutputDataThread(OutputDataTask);
+	std::thread OutputDataThread(OutputDataTask);
 
 	// 三个线程开始运行
 	InputDataThread.join();
 	DetectorThread.join();
-//	OutputDataThread.join();
+	OutputDataThread.join();
 
 	// 销毁网络
 	DestroyNetWork();
@@ -263,9 +263,9 @@ int main(int argc, char* argv[])
 	auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-//		RunOnNetwork();
+		RunOnNetwork();
 
-		TestPerformance();
+//		TestPerformance();
 
 //		TestUsingBinaryFile();
 	}
