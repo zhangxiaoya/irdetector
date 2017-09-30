@@ -172,13 +172,13 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="DataReaderFromeFiles\BinaryFileReader.hpp" />
     <ClInclude Include="Dilations\DilatetionKernel.cuh" />
     <ClInclude Include="Dilations\DilatetionOnCPU.hpp" />
-    <ClInclude Include="Headers\FourLimitsWithScore.hpp" />
     <ClInclude Include="Headers\GlobalMainHeaders.h" />
     <ClInclude Include="Init\Init.hpp" />
     <ClInclude Include="LevelDiscretization\LevelDiscretizationKernel.cuh" />
     <ClInclude Include="LevelDiscretization\LevelDiscretizationOnCPU.hpp" />
     <ClInclude Include="LogPrinter\LogPrinter.hpp" />
     <ClInclude Include="Models\FourLimits.h" />
+    <ClInclude Include="Models\FourLimitsWithScore.hpp" />
     <ClInclude Include="Models\LogLevel.hpp" />
     <ClInclude Include="Models\ObjectRect.h" />
     <ClInclude Include="Models\Point.h" />

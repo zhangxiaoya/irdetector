@@ -13,7 +13,7 @@
 #include "../Common/Util.h"
 #include "../Monitor/Filter.hpp"
 #include "../Models/ResultSegment.hpp"
-#include "../Headers/FourLimitsWithScore.hpp"
+#include "../Models/FourLimitsWithScore.hpp"
 
 inline bool CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b)
 {
@@ -543,7 +543,7 @@ inline void Detector::FalseAlarmFilter()
 		else
 		{
 			this->insideObjects[lastResultCount].object = allValidObjects[i];
-			this->insideObjects[lastResultCount].score = static_cast<int>(filters.GetCenterValue());
+			this->insideObjects[lastResultCount].score = score + static_cast<int>(filters.GetCenterValue());
 			lastResultCount++;
 		}
 	}

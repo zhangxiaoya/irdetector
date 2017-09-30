@@ -120,9 +120,6 @@
     <ClInclude Include="Models\ResultBufferStruct.hpp">
       <Filter>Models</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\FourLimitsWithScore.hpp">
-      <Filter>Models</Filter>
-    </ClInclude>
     <ClInclude Include="Validation\CorrectnessValidation.hpp">
       <Filter>Validation</Filter>
     </ClInclude>
@@ -137,6 +134,9 @@
     </ClInclude>
     <ClInclude Include="Validation\Validation.h">
       <Filter>Validation</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\FourLimitsWithScore.hpp">
+      <Filter>Models</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
