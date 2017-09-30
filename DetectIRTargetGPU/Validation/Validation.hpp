@@ -58,7 +58,7 @@ protected:
 
 	bool CCLValidation() const;
 
-	void InitSpace();
+	bool InitSpace();
 
 	void DestroySpace() const;
 
@@ -221,7 +221,7 @@ inline bool Validation::CCLValidation() const
 	return CheckDiff::Check<int>(resultOfCCLOnHostUseCPU, resultOfCCLOnHostUseGPU, width, height);
 }
 
-inline void Validation::InitSpace()
+inline bool Validation::InitSpace()
 {
 	isInitSpaceReady = true;
 
@@ -239,6 +239,8 @@ inline void Validation::InitSpace()
 	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->resultOfLevelDiscretizationOnHostUseGPU), sizeof(unsigned short) *width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->resultOfCCLOnHostUseCPU), sizeof(int) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->resultOfCCLOnHostUseGPU), sizeof(int) * width * height), isInitSpaceReady);
+
+	return isInitSpaceReady;
 }
 
 inline void Validation::DestroySpace() const
