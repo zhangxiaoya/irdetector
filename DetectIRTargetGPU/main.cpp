@@ -9,6 +9,7 @@
 #include <thread>
 #include "Models/RingBufferStruct.hpp"
 #include "Models/ResultBufferStruct.hpp"
+#include "Validation/Validation.h"
 
 const bool IsSendResultToServer = true; // 是否发送结果到服务端
 
@@ -238,28 +239,6 @@ void RunOnNetwork()
 	DestroyNetWork();
 }
 
-void CheckPerformance()
-{
-	auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin";
-//	auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1.bin";
-
-	PerformanceValidation validator;
-	validator.InitDataReader(validation_file_name);
-	validator.VailidationAll();
-}
-
-/****************************************************************************************/
-/*                          Test Algrithm Core Performance                              */
-/****************************************************************************************/
-void CheckConrrectness()
-{
-	auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin";
-
-	CorrectnessValidation validator;
-	validator.InitValidationData(validation_file_name);
-	validator.VailidationAll();
-}
-
 /****************************************************************************************/
 /*                                     Main Function                                    */
 /****************************************************************************************/
@@ -269,9 +248,9 @@ int main(int argc, char* argv[])
 	auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-		RunOnNetwork();
+//		RunOnNetwork();
 
-//		CheckConrrectness();
+		CheckConrrectness();
 
 //		CheckPerformance();
 	}

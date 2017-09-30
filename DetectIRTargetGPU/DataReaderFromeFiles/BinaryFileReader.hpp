@@ -1,8 +1,8 @@
 #ifndef __BINARY_FILE_READER__
 #define __BINARY_FILE_READER__
 
-#include "Headers/GlobalMainHeaders.h"
-#include "Common/SplitBinaryFile.hpp"
+#include "../Headers/GlobalMainHeaders.h"
+#include "../Common/SplitBinaryFile.hpp"
 #include <fstream>
 #include <cuda_runtime_api.h>
 

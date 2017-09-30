@@ -159,6 +159,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Models\ResultSegment.hpp" />
     <ClCompile Include="Network\NetworkTransfer.cpp" />
+    <ClCompile Include="Validation\Validation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Assistants\ShowFrame.hpp" />
@@ -189,6 +190,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Segmentation\segementationHelper.h" />
     <ClInclude Include="Validation\PerformanceValidation.hpp" />
     <ClInclude Include="Validation\CorrectnessValidation.hpp" />
+    <ClInclude Include="Validation\Validation.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CCL\MeshCCLKernelD.cu" />

@@ -135,6 +135,9 @@
     <ClInclude Include="Segmentation\segementationHelper.h">
       <Filter>Segmentation</Filter>
     </ClInclude>
+    <ClInclude Include="Validation\Validation.h">
+      <Filter>Validation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -149,6 +152,9 @@
     </ClCompile>
     <ClCompile Include="Network\NetworkTransfer.cpp">
       <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Validation\Validation.cpp">
+      <Filter>Validation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
