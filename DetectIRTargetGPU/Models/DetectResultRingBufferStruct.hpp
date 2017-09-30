@@ -2,9 +2,9 @@
 #include <condition_variable>
 #include "ResultSegment.hpp"
 
-struct ResultBufferStruct
+struct DetectResultRingBufferStruct
 {
-	explicit ResultBufferStruct(int buffer_size = 10)
+	explicit DetectResultRingBufferStruct(int buffer_size = 10)
 		: finish_flag(false),
 		  item_buffer(nullptr),
 		  read_position(0),
@@ -16,7 +16,7 @@ struct ResultBufferStruct
 		item_buffer = new ResultSegment[bufferSize * resultItemSize];
 	}
 
-	~ResultBufferStruct()
+	~DetectResultRingBufferStruct()
 	{
 		delete[] item_buffer;
 	}

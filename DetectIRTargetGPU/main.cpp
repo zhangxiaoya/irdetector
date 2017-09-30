@@ -7,8 +7,8 @@
 #include <iostream>
 #include <mutex>
 #include <thread>
-#include "Models/RingBufferStruct.hpp"
-#include "Models/ResultBufferStruct.hpp"
+#include "Models/FrameDataRingBufferStruct.hpp"
+#include "Models/DetectResultRingBufferStruct.hpp"
 #include "Validation/Validation.h"
 
 const bool IsSendResultToServer = true; // 是否发送结果到服务端
@@ -29,13 +29,13 @@ Detector* detector = new Detector();                  // 初始化检测器
 
 // 缓冲区全局变量声明与定义
 static const int BufferSize = 10;                     // 线程同步缓冲区大小
-RingBufferStruct Buffer(FrameDataSize, BufferSize);   // 数据接收线程环形缓冲区初始化
-ResultBufferStruct ResultBuffer(BufferSize);          // 结果发送线程环形缓冲区初始化
+FrameDataRingBufferStruct Buffer(FrameDataSize, BufferSize);   // 数据接收线程环形缓冲区初始化
+DetectResultRingBufferStruct ResultBuffer(BufferSize);          // 结果发送线程环形缓冲区初始化
 
 /****************************************************************************************/
 /*                                Input Data Operation                                  */
 /****************************************************************************************/
-bool InputDataToBuffer(RingBufferStruct* buffer)
+bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 {
 	// Check buffer is full or not, if full automatic unlock mutex
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
@@ -72,7 +72,7 @@ bool InputDataToBuffer(RingBufferStruct* buffer)
 /****************************************************************************************/
 /*                              Detect target Operation                                 */
 /****************************************************************************************/
-bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
+bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruct* resultBuffer)
 {
 	// 并发读取图像数据
 	std::unique_lock<std::mutex> readLock(buffer->bufferMutex);
@@ -131,7 +131,7 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 /****************************************************************************************/
 /*                               Send Result Operation                                  */
 /****************************************************************************************/
-bool OutputData(ResultBufferStruct* buffer)
+bool OutputData(DetectResultRingBufferStruct* buffer)
 {
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while (buffer->write_position == buffer->read_position)
@@ -197,7 +197,7 @@ void OutputDataTask()
 /****************************************************************************************/
 /*                               Initial Data Buffer                                    */
 /****************************************************************************************/
-void InitBuffer(RingBufferStruct* buffer)
+void InitBuffer(FrameDataRingBufferStruct* buffer)
 {
 	buffer->write_position = 0;
 	buffer->read_position = 0;
@@ -206,7 +206,7 @@ void InitBuffer(RingBufferStruct* buffer)
 /****************************************************************************************/
 /*                               Initial Result Buffer                                  */
 /****************************************************************************************/
-void InitResultBuffer(ResultBufferStruct* buffer)
+void InitResultBuffer(DetectResultRingBufferStruct* buffer)
 {
 	buffer->read_position = 0;
 	buffer->write_position = 0;
@@ -248,9 +248,9 @@ int main(int argc, char* argv[])
 	auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-//		RunOnNetwork();
+		RunOnNetwork();
 
-		CheckConrrectness();
+//		CheckConrrectness();
 
 //		CheckPerformance();
 	}

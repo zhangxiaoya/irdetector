@@ -114,12 +114,6 @@
     <ClInclude Include="Monitor\Filter.hpp">
       <Filter>Monitor</Filter>
     </ClInclude>
-    <ClInclude Include="Models\RingBufferStruct.hpp">
-      <Filter>Models</Filter>
-    </ClInclude>
-    <ClInclude Include="Models\ResultBufferStruct.hpp">
-      <Filter>Models</Filter>
-    </ClInclude>
     <ClInclude Include="Validation\CorrectnessValidation.hpp">
       <Filter>Validation</Filter>
     </ClInclude>
@@ -136,6 +130,12 @@
       <Filter>Validation</Filter>
     </ClInclude>
     <ClInclude Include="Models\FourLimitsWithScore.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\FrameDataRingBufferStruct.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\DetectResultRingBufferStruct.hpp">
       <Filter>Models</Filter>
     </ClInclude>
   </ItemGroup>
