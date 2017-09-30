@@ -78,9 +78,6 @@
     <ClInclude Include="Checkers\CheckDiff.hpp">
       <Filter>Checkers</Filter>
     </ClInclude>
-    <ClInclude Include="Segmentation\segementationHelper.cuh">
-      <Filter>Segmentation</Filter>
-    </ClInclude>
     <ClInclude Include="Assistants\ShowFrame.hpp">
       <Filter>Assistants</Filter>
     </ClInclude>
@@ -117,9 +114,6 @@
     <ClInclude Include="Monitor\Filter.hpp">
       <Filter>Monitor</Filter>
     </ClInclude>
-    <ClInclude Include="Network\DataReceiver.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="Models\RingBufferStruct.hpp">
       <Filter>Models</Filter>
     </ClInclude>
@@ -135,6 +129,12 @@
     <ClInclude Include="Validation\PerformanceValidation.hpp">
       <Filter>Validation</Filter>
     </ClInclude>
+    <ClInclude Include="Network\NetworkTransfer.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Segmentation\segementationHelper.h">
+      <Filter>Segmentation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -144,11 +144,11 @@
     <ClCompile Include="Detector\Detector.hpp">
       <Filter>Detector</Filter>
     </ClCompile>
-    <ClCompile Include="Network\DataReceiver.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="Models\ResultSegment.hpp">
       <Filter>Models</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\NetworkTransfer.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -158,11 +158,11 @@
     <CudaCompile Include="LevelDiscretization\LevelDiscretizationKernel.cu">
       <Filter>LevelDiscretization</Filter>
     </CudaCompile>
-    <CudaCompile Include="Segmentation\segementationHelper.cu">
-      <Filter>Segmentation</Filter>
-    </CudaCompile>
     <CudaCompile Include="CCL\MeshCCLKernelD.cu">
       <Filter>CCL</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Segmentation\segementationHelper.cpp">
+      <Filter>Segmentation</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

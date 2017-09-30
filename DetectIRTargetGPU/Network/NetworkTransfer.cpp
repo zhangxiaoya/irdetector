@@ -1,4 +1,4 @@
-﻿#include "DataReceiver.h"
+﻿#include "NetworkTransfer.h"
 #include <iostream>
 #include "../Monitor/Filter.hpp"
 #include "../Models/ResultSegment.hpp"

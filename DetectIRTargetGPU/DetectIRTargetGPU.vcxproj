@@ -158,7 +158,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClCompile Include="Detector\Detector.hpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Models\ResultSegment.hpp" />
-    <ClCompile Include="Network\DataReceiver.cpp" />
+    <ClCompile Include="Network\NetworkTransfer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Assistants\ShowFrame.hpp" />
@@ -185,8 +185,8 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Models\RingBufferStruct.hpp" />
     <ClInclude Include="Monitor\Filter.hpp" />
     <ClInclude Include="Monitor\Monitor.hpp" />
-    <ClInclude Include="Network\DataReceiver.h" />
-    <ClInclude Include="Segmentation\segementationHelper.cuh" />
+    <ClInclude Include="Network\NetworkTransfer.h" />
+    <ClInclude Include="Segmentation\segementationHelper.h" />
     <ClInclude Include="Validation\PerformanceValidation.hpp" />
     <ClInclude Include="Validation\CorrectnessValidation.hpp" />
   </ItemGroup>
@@ -194,7 +194,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile Include="CCL\MeshCCLKernelD.cu" />
     <CudaCompile Include="Dilations\DilatetionKernel.cu" />
     <CudaCompile Include="LevelDiscretization\LevelDiscretizationKernel.cu" />
-    <CudaCompile Include="Segmentation\segementationHelper.cu" />
+    <CudaCompile Include="Segmentation\segementationHelper.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

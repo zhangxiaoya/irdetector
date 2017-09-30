@@ -1,7 +1,7 @@
 #include "Validation/CorrectnessValidation.hpp"
 #include "Init/Init.hpp"
 #include "Validation/PerformanceValidation.hpp"
-#include "Network/DataReceiver.h"
+#include "Network/NetworkTransfer.h"
 
 #include <windows.h>
 #include <iostream>
