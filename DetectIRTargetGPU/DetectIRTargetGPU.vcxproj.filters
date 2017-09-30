@@ -102,9 +102,6 @@
     <ClInclude Include="Monitor\Monitor.hpp">
       <Filter>Monitor</Filter>
     </ClInclude>
-    <ClInclude Include="Validation\Validation.hpp">
-      <Filter>Validation</Filter>
-    </ClInclude>
     <ClInclude Include="Init\Init.hpp">
       <Filter>Init</Filter>
     </ClInclude>
@@ -116,9 +113,6 @@
     </ClInclude>
     <ClInclude Include="Dilations\DilatetionKernel.cuh">
       <Filter>Dilations</Filter>
-    </ClInclude>
-    <ClInclude Include="Validation\DetectorValidation.hpp">
-      <Filter>Validation</Filter>
     </ClInclude>
     <ClInclude Include="Monitor\Filter.hpp">
       <Filter>Monitor</Filter>
@@ -134,6 +128,12 @@
     </ClInclude>
     <ClInclude Include="Headers\FourLimitsWithScore.hpp">
       <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Validation\CorrectnessValidation.hpp">
+      <Filter>Validation</Filter>
+    </ClInclude>
+    <ClInclude Include="Validation\PerformanceValidation.hpp">
+      <Filter>Validation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

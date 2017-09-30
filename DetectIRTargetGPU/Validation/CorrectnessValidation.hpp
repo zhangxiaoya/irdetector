@@ -12,10 +12,10 @@
 #include "../CCL/MeshCCLKernelD.cuh"
 #include "../Checkers/CheckPerf.h"
 
-class Validation
+class CorrectnessValidation
 {
 public:
-	explicit Validation(BinaryFileReader* file_reader = nullptr)
+	explicit CorrectnessValidation(BinaryFileReader* file_reader = nullptr)
 		: fileReader(file_reader),
 		  originalFrameOnHost(nullptr),
 		  originalFrameOnDeivce(nullptr),
@@ -36,7 +36,7 @@ public:
 	{
 	}
 
-	~Validation()
+	~CorrectnessValidation()
 	{
 		delete fileReader;
 		DestroySpace();
@@ -89,7 +89,7 @@ private:
 	LogPrinter logPrinter;
 };
 
-inline void Validation::InitValidationData(std::string validationFileName)
+inline void CorrectnessValidation::InitValidationData(std::string validationFileName)
 {
 	if(fileReader != nullptr)
 	{
@@ -102,7 +102,7 @@ inline void Validation::InitValidationData(std::string validationFileName)
 	this->InitSpace();
 }
 
-inline void Validation::ResetResultsToZero() const
+inline void CorrectnessValidation::ResetResultsToZero() const
 {
 	memset(resultOfDilationOnHostUseCPU, 0, width * height * sizeof(unsigned short));
 	memset(resultOfDilationOnHostUseGPU, 0, width * height * sizeof(unsigned short));
@@ -117,7 +117,7 @@ inline void Validation::ResetResultsToZero() const
 	CheckCUDAReturnStatus(cudaMemcpy(resultOfCCLOnDevice, resultOfCCLOnHostUseGPU, sizeof(int) * width * height, cudaMemcpyHostToDevice), memcpyStatus);
 }
 
-inline bool Validation::CheckFileReader() const
+inline bool CorrectnessValidation::CheckFileReader() const
 {
 	if(fileReader == nullptr)
 	{
@@ -128,7 +128,7 @@ inline bool Validation::CheckFileReader() const
 	return false;
 }
 
-inline bool Validation::CheckInitSpace() const
+inline bool CorrectnessValidation::CheckInitSpace() const
 {
 	if (isInitSpaceReady == false)
 	{
@@ -139,7 +139,7 @@ inline bool Validation::CheckInitSpace() const
 	return false;
 }
 
-inline void Validation::VailidationAll()
+inline void CorrectnessValidation::VailidationAll()
 {
 	if (CheckFileReader()) return;
 	if (CheckInitSpace()) return;
@@ -191,7 +191,7 @@ inline void Validation::VailidationAll()
 	}
 }
 
-inline bool Validation::DilationValidation() const
+inline bool CorrectnessValidation::DilationValidation() const
 {
 	auto dilationRadius = 1;
 
@@ -206,7 +206,7 @@ inline bool Validation::DilationValidation() const
 	return CheckDiff::Check<unsigned short>(resultOfDilationOnHostUseCPU, resultOfDilationOnHostUseGPU, width, height);
 }
 
-inline bool Validation::LevelDiscretizationValidation() const
+inline bool CorrectnessValidation::LevelDiscretizationValidation() const
 {
 	auto discretization_scale = 15;
 
@@ -221,7 +221,7 @@ inline bool Validation::LevelDiscretizationValidation() const
 	return CheckDiff::Check<unsigned short>(resultOfLevelDiscretizationOnHostUseCPU, resultOfLevelDiscretizationOnHostUseGPU, width, height);
 }
 
-inline bool Validation::CCLValidation() const
+inline bool CorrectnessValidation::CCLValidation() const
 {
 	logPrinter.PrintLogs("CCL On CPU", Info);
 	MeshCCLOnCPU::ccl(resultOfLevelDiscretizationOnHostUseCPU, resultOfCCLOnHostUseCPU, width, height, 4, 0);
@@ -233,7 +233,7 @@ inline bool Validation::CCLValidation() const
 	return CheckDiff::Check<int>(resultOfCCLOnHostUseCPU, resultOfCCLOnHostUseGPU, width, height);
 }
 
-inline bool Validation::InitSpace()
+inline bool CorrectnessValidation::InitSpace()
 {
 	isInitSpaceReady = true;
 
@@ -255,7 +255,7 @@ inline bool Validation::InitSpace()
 	return isInitSpaceReady;
 }
 
-inline void Validation::DestroySpace() const
+inline void CorrectnessValidation::DestroySpace() const
 {
 	bool status;
 

@@ -578,23 +578,23 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 		// remove invalid objects
 		RemoveInValidObjects();
 
-		auto frameIndex = reinterpret_cast<unsigned*>(frame);
+//		auto frameIndex = reinterpret_cast<unsigned*>(frame);
+//
+//		auto temp = static_cast<double>((static_cast<double>(*frameIndex) / 1250)) + static_cast<double>(25);
+//		if (temp >= 360.0)
+//			temp -= 360.0;
+//		if (temp < 0)
+//			temp += 360.0;
 
-		auto temp = static_cast<double>((static_cast<double>(*frameIndex) / 1250)) + static_cast<double>(25);
-		if (temp >= 360.0)
-			temp -= 360.0;
-		if (temp < 0)
-			temp += 360.0;
-
-		std::cout <<"---------------------------------------------------->"<< temp << std::endl;
-		if(temp > 4.0 && temp < 6.0)
-		{
-			// convert all obejct to rect
-			ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
-
-			// show result
-//			ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
-		}
+//		std::cout <<"---------------------------------------------------->"<< temp << std::endl;
+//		if(temp > 4.0 && temp < 6.0)
+//		{
+//			// convert all obejct to rect
+//			ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
+//
+//			// show result
+////			ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+//		}
 
 		// Merge all objects
 		MergeObjects();
@@ -628,17 +628,17 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 
 inline void Detector::SetAllParameters()
 {
-	CHECK_STANDARD_DEVIATION_FLAG = false;
+	CHECK_STANDARD_DEVIATION_FLAG = true;
 	CHECK_SURROUNDING_BOUNDARY_FLAG = false;
 	CHECK_INSIDE_BOUNDARY_FLAG = false;
 	CHECK_COVERAGE_FLAG = false;
 
 	CHECK_ORIGIN_FLAG = true;
-	filters.SetConvexPartitionOfOriginalImage(20);
+	filters.SetConvexPartitionOfOriginalImage(20 * 256);
 	filters.SetConcavePartitionOfOriginalImage(1);
 
 	CHECK_DECRETIZATED_FLAG = true;
-	filters.SetConvexPartitionOfDiscretizedImage(20);
+	filters.SetConvexPartitionOfDiscretizedImage(20 * 256);
 	filters.SetConcavePartitionOfDiscretizedImage(1);
 }
 #endif

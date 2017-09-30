@@ -1,6 +1,6 @@
-#include "Validation/Validation.hpp"
+#include "Validation/CorrectnessValidation.hpp"
 #include "Init/Init.hpp"
-#include "Validation/DetectorValidation.hpp"
+#include "Validation/PerformanceValidation.hpp"
 #include "Network/DataReceiver.h"
 
 #include <windows.h>
@@ -238,12 +238,14 @@ void RunOnNetwork()
 	DestroyNetWork();
 }
 
-void TestUsingBinaryFile()
+void CheckPerformance()
 {
-	DetectorValidation visualEffectValidator;
-	visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
-//	visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1.bin");
-	visualEffectValidator.VailidationAll();
+	auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin";
+//	auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1.bin";
+
+	PerformanceValidation validator;
+	validator.InitDataReader(validation_file_name);
+	validator.VailidationAll();
 }
 
 /****************************************************************************************/
@@ -253,9 +255,9 @@ void CheckConrrectness()
 {
 	auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin";
 
-	Validation validation;
-	validation.InitValidationData(validation_file_name);
-	validation.VailidationAll();
+	CorrectnessValidation validator;
+	validator.InitValidationData(validation_file_name);
+	validator.VailidationAll();
 }
 
 /****************************************************************************************/
@@ -271,7 +273,7 @@ int main(int argc, char* argv[])
 
 //		CheckConrrectness();
 
-		TestUsingBinaryFile();
+		CheckPerformance();
 	}
 
 	// Ïú»Ù¼ì²â×Ó

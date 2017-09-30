@@ -7,10 +7,10 @@
 #include "../Checkers/CheckPerf.h"
 #include "../Detector/Detector.hpp"
 
-class DetectorValidation
+class PerformanceValidation
 {
 public:
-	explicit DetectorValidation(BinaryFileReader* file_reader = nullptr)
+	explicit PerformanceValidation(BinaryFileReader* file_reader = nullptr)
 		: fileReader(file_reader),
 		  detector(nullptr),
 		  width(320),
@@ -18,7 +18,7 @@ public:
 	{
 	}
 
-	~DetectorValidation()
+	~PerformanceValidation()
 	{
 		delete fileReader;
 	}
@@ -39,7 +39,7 @@ private:
 	LogPrinter logPrinter;
 };
 
-inline void DetectorValidation::InitDataReader(std::string validationFileName)
+inline void PerformanceValidation::InitDataReader(std::string validationFileName)
 {
 	if(fileReader != nullptr)
 	{
@@ -50,7 +50,7 @@ inline void DetectorValidation::InitDataReader(std::string validationFileName)
 	fileReader->ReadBinaryFileToHostMemory();
 }
 
-inline bool DetectorValidation::CheckFileReader() const
+inline bool PerformanceValidation::CheckFileReader() const
 {
 	if(fileReader == nullptr)
 	{
@@ -61,7 +61,7 @@ inline bool DetectorValidation::CheckFileReader() const
 	return false;
 }
 
-inline void DetectorValidation::VailidationAll()
+inline void PerformanceValidation::VailidationAll()
 {
 	if (CheckFileReader()) return;
 

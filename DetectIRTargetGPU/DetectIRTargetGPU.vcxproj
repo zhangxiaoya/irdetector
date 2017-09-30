@@ -187,8 +187,8 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Monitor\Monitor.hpp" />
     <ClInclude Include="Network\DataReceiver.h" />
     <ClInclude Include="Segmentation\segementationHelper.cuh" />
-    <ClInclude Include="Validation\DetectorValidation.hpp" />
-    <ClInclude Include="Validation\Validation.hpp" />
+    <ClInclude Include="Validation\PerformanceValidation.hpp" />
+    <ClInclude Include="Validation\CorrectnessValidation.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CCL\MeshCCLKernelD.cu" />
