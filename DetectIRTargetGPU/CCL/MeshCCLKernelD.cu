@@ -30,7 +30,7 @@ __global__ void InitCCLOnDevice(int labelsOnDevice[], int reference[], int width
 	labelsOnDevice[id] = reference[id] = id;
 }
 
-__global__ void Scanning(unsigned char* frameOnDevice, int* labelsOnDevice, int* reference, bool* markFlag, int N, int width, int height, unsigned char threshold)
+__global__ void Scanning(unsigned short* frameOnDevice, int* labelsOnDevice, int* reference, bool* markFlag, int N, int width, int height, unsigned short threshold)
 {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -62,7 +62,7 @@ __global__ void Scanning(unsigned char* frameOnDevice, int* labelsOnDevice, int*
 	}
 }
 
-__global__ void scanning8(unsigned char frame[], int labelList[], int reference[], bool* markFlag, int N, int width, int height, unsigned char threshold)
+__global__ void scanning8(unsigned short* frame, int labelList[], int reference[], bool* markFlag, int N, int width, int height, unsigned short threshold)
 {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -144,7 +144,7 @@ __global__ void labeling(int labelList[], int reference[], int width, int height
 }
 
 
-void MeshCCL(unsigned char* frameOnDevice, int* labelsOnDevice, int* referenceOfLabelsOnDevice, bool* modificationFlagOnDevice, int width, int height)
+void MeshCCL(unsigned short* frameOnDevice, int* labelsOnDevice, int* referenceOfLabelsOnDevice, bool* modificationFlagOnDevice, int width, int height)
 {
 	auto degreeOfConnectivity = 4;
 	unsigned char threshold = 0;

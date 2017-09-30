@@ -13,6 +13,12 @@
 #include "../Common/Util.h"
 #include "../Monitor/Filter.hpp"
 #include "../Models/ResultSegment.hpp"
+#include "../Headers/FourLimitsWithScore.hpp"
+
+inline bool CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b)
+{
+	return a.score > b.score;
+}
 
 class Detector
 {
@@ -23,12 +29,12 @@ public:
 
 	bool InitSpace();
 
-	void DetectTargets(unsigned char* frame, ResultSegment* result);
+	void DetectTargets(unsigned short* frame, ResultSegment* result);
 
 	void SetAllParameters();
 
 private:
-	void CopyFrameData(unsigned char* frame);
+	void CopyFrameData(unsigned short* frame);
 
 	static void GetAllObjects(int* labelsOnHost, FourLimits* allObjects, int width, int height);
 
@@ -44,6 +50,8 @@ private:
 
 	void RemoveInvalidObjectAfterMerge();
 
+	void FalseAlarmFilter();
+
 protected:
 	bool ReleaseSpace();
 
@@ -57,10 +65,11 @@ private:
 	bool isInitSpaceReady;
 	bool isFrameDataReady;
 
-	unsigned char* originalFrameOnHost;
-	unsigned char* originalFrameOnDevice;
-	unsigned char* dilationResultOnDevice;
-	unsigned char* discretizationResultOnHost;
+	unsigned short* originalFrameOnHost;
+	unsigned short* originalFrameOnDevice;
+	unsigned short* dilationResultOnDevice;
+	unsigned short* discretizationResultOnHost;
+	unsigned short* tempFrame;
 
 	int* labelsOnHost;
 	int* labelsOnDevice;
@@ -71,8 +80,10 @@ private:
 	FourLimits* allObjects;
 	FourLimits* allValidObjects;
 	ObjectRect* allObjectRects;
+	FourLimitsWithScore* insideObjects;
 
 	int validObjectsCount;
+	int lastResultCount;
 
 	int TARGET_WIDTH_MAX_LIMIT;
 	int TARGET_HEIGHT_MAX_LIMIT;
@@ -98,6 +109,7 @@ inline Detector::Detector(int _width = 320, int _height = 256)
 	  originalFrameOnDevice(nullptr),
 	  dilationResultOnDevice(nullptr),
 	  discretizationResultOnHost(nullptr),
+	  tempFrame(nullptr),
 	  labelsOnHost(nullptr),
 	  labelsOnDevice(nullptr),
 	  referenceOfLabelsOnDevice(nullptr),
@@ -105,7 +117,9 @@ inline Detector::Detector(int _width = 320, int _height = 256)
 	  allObjects(nullptr),
 	  allValidObjects(nullptr),
 	  allObjectRects(nullptr),
+	  insideObjects(nullptr),
 	  validObjectsCount(0),
+	  lastResultCount(0),
 	  TARGET_WIDTH_MAX_LIMIT(20),
 	  TARGET_HEIGHT_MAX_LIMIT(20),
 	  CHECK_ORIGIN_FLAG(false),
@@ -133,20 +147,28 @@ inline bool Detector::ReleaseSpace()
 			this->originalFrameOnHost = nullptr;
 		}
 	}
-	if(this->labelsOnHost != nullptr)
+	if (this->labelsOnHost != nullptr)
 	{
 		CheckCUDAReturnStatus(cudaFreeHost(this->labelsOnHost), status);
-		if(status == true)
+		if (status == true)
 		{
 			this->labelsOnHost = nullptr;
 		}
 	}
-	if (this -> discretizationResultOnHost != nullptr)
+	if (this->discretizationResultOnHost != nullptr)
 	{
 		CheckCUDAReturnStatus(cudaFreeHost(this->discretizationResultOnHost), status);
-		if(status == true)
+		if (status == true)
 		{
 			this->discretizationResultOnHost = nullptr;
+		}
+	}
+	if (this->tempFrame != nullptr)
+	{
+		CheckCUDAReturnStatus(cudaFreeHost(this->tempFrame), status);
+		if (status == true)
+		{
+			this->tempFrame = nullptr;
 		}
 	}
 	if (this->originalFrameOnDevice != nullptr)
@@ -165,23 +187,23 @@ inline bool Detector::ReleaseSpace()
 			this->dilationResultOnDevice == nullptr;
 		}
 	}
-	if(this->labelsOnDevice != nullptr)
+	if (this->labelsOnDevice != nullptr)
 	{
 		CheckCUDAReturnStatus(cudaFree(this->labelsOnDevice), status);
-		if(status == true)
+		if (status == true)
 		{
 			this->labelsOnDevice = nullptr;
 		}
 	}
-	if(this->referenceOfLabelsOnDevice != nullptr)
+	if (this->referenceOfLabelsOnDevice != nullptr)
 	{
 		CheckCUDAReturnStatus(cudaFree(this->referenceOfLabelsOnDevice), status);
-		if(status == true)
+		if (status == true)
 		{
 			this->referenceOfLabelsOnDevice = nullptr;
 		}
 	}
-	if(this->modificationFlagOnDevice != nullptr)
+	if (this->modificationFlagOnDevice != nullptr)
 	{
 		CheckCUDAReturnStatus(cudaFree(this->modificationFlagOnDevice), status);
 		if (status == true)
@@ -190,26 +212,26 @@ inline bool Detector::ReleaseSpace()
 		}
 	}
 
-	if(this->allObjects != nullptr)
+	if (this->allObjects != nullptr)
 	{
 		delete[] allObjects;
 	}
-	if(this->allObjectRects != nullptr)
+	if (this->allObjectRects != nullptr)
 	{
 		delete[] allObjectRects;
 	}
-	if(this->allValidObjects != nullptr)
+	if (this->allValidObjects != nullptr)
 	{
 		delete[] allValidObjects;
 	}
 
-	if(status == true)
+	if (status == true)
 	{
-		logPrinter.PrintLogs("Release space success!", LogLevel::Info);
+		logPrinter.PrintLogs("Release space success!", Info);
 	}
 	else
 	{
-		logPrinter.PrintLogs("Release space failed!", LogLevel::Error);
+		logPrinter.PrintLogs("Release space failed!", Error);
 	}
 	return status;
 }
@@ -217,16 +239,17 @@ inline bool Detector::ReleaseSpace()
 inline bool Detector::InitSpace()
 {
 	logPrinter.PrintLogs("Release space before re-init space ...", Info);
-	if(ReleaseSpace() == false)
+	if (ReleaseSpace() == false)
 		return false;
 
 	isInitSpaceReady = true;
-	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->originalFrameOnHost), sizeof(unsigned char) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->originalFrameOnHost), sizeof(unsigned short) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->labelsOnHost), sizeof(int) * width * height), isInitSpaceReady);
-	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->discretizationResultOnHost), sizeof(unsigned char) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->discretizationResultOnHost), sizeof(unsigned short) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMallocHost(reinterpret_cast<void**>(&this->tempFrame), sizeof(unsigned short) * width * height), isInitSpaceReady);
 
-	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->originalFrameOnDevice), sizeof(unsigned char) * width * height),isInitSpaceReady);
-	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->dilationResultOnDevice), sizeof(unsigned char) * width * height), isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->originalFrameOnDevice), sizeof(unsigned short) * width * height),isInitSpaceReady);
+	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->dilationResultOnDevice), sizeof(unsigned short) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->labelsOnDevice), sizeof(int) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->referenceOfLabelsOnDevice), sizeof(int) * width * height), isInitSpaceReady);
 	CheckCUDAReturnStatus(cudaMalloc(reinterpret_cast<void**>(&this->modificationFlagOnDevice), sizeof(bool)),isInitSpaceReady);
@@ -237,18 +260,28 @@ inline bool Detector::InitSpace()
 	return isInitSpaceReady;
 }
 
-inline void Detector::CopyFrameData(unsigned char* frame)
+inline void Detector::CopyFrameData(unsigned short* frame)
 {
 	this->isFrameDataReady = true;
 
-	memcpy(this->originalFrameOnHost, frame, sizeof(unsigned char) * width * height);
+//	memset(this->tempFrame, 0, sizeof(unsigned short) * width * height);
+//	for (auto i = 0; i < width * height * 2; i += 2)
+//	{
+//		short highPart = static_cast<short>(frame[i]);
+//		auto lowPart = frame[i + 1];
+//		short pixel = (highPart << 8) | lowPart;
+//		pixel >>= 1;
+//		tempFrame[i / 2] = static_cast<unsigned char>(pixel);
+//	}
+
+	memcpy(this->originalFrameOnHost, frame, sizeof(unsigned short) * width * height);
 	memset(this->allObjects, -1, sizeof(FourLimits) * width * height);
 	memset(this->allObjectRects, 0, sizeof(ObjectRect) * width * height);
 
-	CheckCUDAReturnStatus(cudaMemcpy(this->originalFrameOnDevice, this->originalFrameOnHost, sizeof(unsigned char) * width * height, cudaMemcpyHostToDevice), isFrameDataReady);
-	if(isInitSpaceReady == false)
+	CheckCUDAReturnStatus(cudaMemcpy(this->originalFrameOnDevice, this->originalFrameOnHost, sizeof(unsigned short) * width * height, cudaMemcpyHostToDevice), isFrameDataReady);
+	if (isInitSpaceReady == false)
 	{
-		logPrinter.PrintLogs("Copy current frame data failed!", LogLevel::Error);
+		logPrinter.PrintLogs("Copy current frame data failed!", Error);
 	}
 }
 
@@ -378,14 +411,20 @@ inline void Detector::RemoveObjectWithLowContrast() const
 {
 	for (auto i = 0; i < validObjectsCount; ++i)
 	{
-		if(allValidObjects[i].top == -1)
+		if (allValidObjects[i].top == -1)
 			continue;
 
-		unsigned char averageValue = 0;
-		unsigned char centerValue = 0;
+		unsigned short averageValue = 0;
+		unsigned short centerValue = 0;
 
 		auto objectWidth = allValidObjects[i].right - allValidObjects[i].left + 1;
 		auto objectHeight = allValidObjects[i].bottom - allValidObjects[i].top + 1;
+
+		if (objectHeight < 2 || objectWidth < 2 || objectHeight > 20 || objectWidth > 20)
+		{
+			allValidObjects[i].top = -1;
+			continue;
+		}
 
 		auto surroundBoxWidth = 3 * objectWidth;
 		auto surroundBoxHeight = 3 * objectHeight;
@@ -460,14 +499,68 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 	validObjectsCount = newValidaObjectCount;
 }
 
-inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
+inline void Detector::FalseAlarmFilter()
+{
+	this->insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * validObjectsCount));
+	lastResultCount = 0;
+
+	for (auto i = 0; i < validObjectsCount; ++i)
+	{
+		auto score = 0;
+		filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, allValidObjects[i], width);
+
+		auto currentResult = (CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, width, height, allValidObjects[i]))
+			|| (CHECK_DECRETIZATED_FLAG && filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, width, height, allValidObjects[i]));
+		if (currentResult == false) continue;
+		score++;
+
+		if (CHECK_SURROUNDING_BOUNDARY_FLAG)
+		{
+			currentResult &= filters.CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(discretizationResultOnHost, width, height, allValidObjects[i]);
+			if (currentResult == false) continue;
+			score++;
+		}
+		if (CHECK_COVERAGE_FLAG)
+		{
+			currentResult &= filters.CheckCoverageOfPreprocessedFrame(discretizationResultOnHost, width, allValidObjects[i]);
+			if (currentResult == false) continue;
+			score++;
+		}
+		if (CHECK_INSIDE_BOUNDARY_FLAG)
+		{
+			currentResult &= filters.CheckInsideBoundaryDescendGradient(originalFrameOnHost, width, allValidObjects[i]);
+			if (currentResult == false) continue;
+			score++;
+		}
+		if (CHECK_STANDARD_DEVIATION_FLAG)
+		{
+			currentResult &= filters.CheckStandardDeviation(originalFrameOnHost, width, allValidObjects[i]);
+			if (currentResult == false) continue;
+			score++;
+		}
+		if (currentResult != true)
+			allValidObjects[i].top = -1;
+		else
+		{
+			this->insideObjects[lastResultCount].object = allValidObjects[i];
+			this->insideObjects[lastResultCount].score = static_cast<int>(filters.GetCenterValue());
+			lastResultCount++;
+		}
+	}
+
+	if (lastResultCount >= 5)
+		std::sort(this->insideObjects, this->insideObjects + lastResultCount, CompareResult);
+}
+
+inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result)
 {
 	CopyFrameData(frame);
 
-	if(isFrameDataReady == true)
+	if (isFrameDataReady == true)
 	{
 		// dilation on gpu
-		DilationFilter(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, radius);
+//		DilationFilter(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, radius);
+		NaiveDilation(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, radius);
 
 		// level disretization on gpu
 		LevelDiscretizationOnGPU(this->dilationResultOnDevice, width, height, discretizationScale);
@@ -477,18 +570,31 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 
 		// copy labels from device to host
 		cudaMemcpy(this->labelsOnHost, this->labelsOnDevice, sizeof(int) * width * height, cudaMemcpyDeviceToHost);
-		cudaMemcpy(this->discretizationResultOnHost, this->dilationResultOnDevice, sizeof(unsigned char) * width * height, cudaMemcpyDeviceToHost);
+		cudaMemcpy(this->discretizationResultOnHost, this->dilationResultOnDevice, sizeof(unsigned short) * width * height, cudaMemcpyDeviceToHost);
 
 		// get all object
 		GetAllObjects(labelsOnHost, allObjects, width, height);
 
 		// remove invalid objects
 		RemoveInValidObjects();
-		// convert all obejct to rect
-//		ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
 
-		// show result
-//		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+		auto frameIndex = reinterpret_cast<unsigned*>(frame);
+
+		auto temp = static_cast<double>((static_cast<double>(*frameIndex) / 1250)) + static_cast<double>(25);
+		if (temp >= 360.0)
+			temp -= 360.0;
+		if (temp < 0)
+			temp += 360.0;
+
+		std::cout <<"---------------------------------------------------->"<< temp << std::endl;
+		if(temp > 4.0 && temp < 6.0)
+		{
+			// convert all obejct to rect
+			ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
+
+			// show result
+//			ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+		}
 
 		// Merge all objects
 		MergeObjects();
@@ -500,59 +606,39 @@ inline void Detector::DetectTargets(unsigned char* frame, ResultSegment* result)
 		RemoveInvalidObjectAfterMerge();
 
 		// Copy frame header
-		memcpy(result->header, originalFrameOnHost + 2, 16);
+		memcpy(result->header, frame, 16);
 
 		// Filter all candiates
-		for(auto i =0; i < validObjectsCount; ++i)
-		{
-			filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, allValidObjects[i], width);
+		FalseAlarmFilter();
 
-			auto currentResult = (CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, width, height, allValidObjects[i]))
-				|| (CHECK_DECRETIZATED_FLAG && filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, width, height, allValidObjects[i]));
-			if (currentResult == false)
-				continue;
-
-			if (CHECK_SURROUNDING_BOUNDARY_FLAG)
-			{
-				currentResult &= filters.CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(discretizationResultOnHost, width, height, allValidObjects[i]);
-				if (currentResult == false) continue;
-			}
-			if (CHECK_COVERAGE_FLAG)
-			{
-				currentResult &= filters.CheckCoverageOfPreprocessedFrame(discretizationResultOnHost, width, allValidObjects[i]);
-				if (currentResult == false) continue;
-			}
-			if (CHECK_INSIDE_BOUNDARY_FLAG)
-			{
-				currentResult &= filters.CheckInsideBoundaryDescendGradient(originalFrameOnHost, width, allValidObjects[i]);
-				if (currentResult == false) continue;
-			}
-			if (CHECK_STANDARD_DEVIATION_FLAG)
-			{
-				currentResult &= filters.CheckStandardDeviation(originalFrameOnHost, width, allValidObjects[i]);
-				if (currentResult == false) continue;
-			}
-			if (currentResult == true)
-				allValidObjects[i].top = -1;
-		}
 		// put all valid result to resultSegment
-		// To-Do
+		result->targetCount = lastResultCount >= 1 ? 1 : lastResultCount;
+
+		for (auto i = 0; i < result->targetCount; ++i)
+		{
+			TargetPosition pos;
+			pos.topLeftX = insideObjects[i].object.left;
+			pos.topleftY = insideObjects[i].object.top;
+			pos.bottomRightX = insideObjects[i].object.right;
+			pos.bottomRightY = insideObjects[i].object.bottom;
+			result->targets[i] = pos;
+		}
 	}
 }
 
 inline void Detector::SetAllParameters()
 {
 	CHECK_STANDARD_DEVIATION_FLAG = false;
-	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
-	CHECK_INSIDE_BOUNDARY_FLAG = true;
+	CHECK_SURROUNDING_BOUNDARY_FLAG = false;
+	CHECK_INSIDE_BOUNDARY_FLAG = false;
 	CHECK_COVERAGE_FLAG = false;
 
 	CHECK_ORIGIN_FLAG = true;
-	filters.SetConvexPartitionOfOriginalImage(10);
+	filters.SetConvexPartitionOfOriginalImage(20);
 	filters.SetConcavePartitionOfOriginalImage(1);
 
-	CHECK_DECRETIZATED_FLAG = false;
-	filters.SetConvexPartitionOfDiscretizedImage(5);
+	CHECK_DECRETIZATED_FLAG = true;
+	filters.SetConvexPartitionOfDiscretizedImage(20);
 	filters.SetConcavePartitionOfDiscretizedImage(1);
 }
 #endif

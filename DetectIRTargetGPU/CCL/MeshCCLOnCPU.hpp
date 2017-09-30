@@ -6,7 +6,7 @@ class Helper
 public:
 	static void InitCCL(int labelList[], int reference[], int N);
 
-	static unsigned char Diff(unsigned char a, unsigned char b);
+	static unsigned short Diff(unsigned short a, unsigned short b);
 
 	static int IMin(int a, int b);
 };
@@ -19,7 +19,7 @@ inline void Helper::InitCCL(int labelList[], int reference[], int N)
 	}
 }
 
-inline unsigned char Helper::Diff(unsigned char a, unsigned char b)
+inline unsigned short Helper::Diff(unsigned short a, unsigned short b)
 {
 	return abs(a - b);
 }
@@ -32,12 +32,12 @@ inline int Helper::IMin(int a, int b)
 class MeshCCLOnCPU
 {
 public:
-	static void ccl(unsigned char* image, int* labelList, int width, int height, int degree_of_connectivity, unsigned char threshold);
+	static void ccl(unsigned short* image, int* labelList, int width, int height, int degree_of_connectivity, unsigned short threshold);
 
 private:
-	static inline bool scanning(unsigned char* frameData, int* labelList, int* reference, bool& modificationFlag, int N, int widht, unsigned char threshold);
+	static inline bool scanning(unsigned short* frameData, int* labelList, int* reference, bool& modificationFlag, int N, int widht, unsigned short threshold);
 
-	static inline bool scanning8(unsigned char* frameData, int* labelList, int* reference, bool& modificationFlag, int N, int width, unsigned char threshold);
+	static inline bool scanning8(unsigned short* frameData, int* labelList, int* reference, bool& modificationFlag, int N, int width, unsigned short threshold);
 
 	static inline void analysis(int* labelList, int* reference, int N);
 
@@ -45,7 +45,7 @@ private:
 };
 
 
-inline void MeshCCLOnCPU::ccl(unsigned char* image, int* labelList, int width, int height, int degreeOfConnectivity, unsigned char threshold)
+inline void MeshCCLOnCPU::ccl(unsigned short* image, int* labelList, int width, int height, int degreeOfConnectivity, unsigned short threshold)
 {
 	if (image == nullptr || labelList == nullptr)
 		return;
@@ -82,7 +82,7 @@ inline void MeshCCLOnCPU::ccl(unsigned char* image, int* labelList, int width, i
 	delete[] reference;
 }
 
-inline bool MeshCCLOnCPU::scanning(unsigned char* frameData, int* labelList, int* reference, bool& modificationFlag, int N, int width, unsigned char threshold)
+inline bool MeshCCLOnCPU::scanning(unsigned short* frameData, int* labelList, int* reference, bool& modificationFlag, int N, int width, unsigned short threshold)
 {
 	for (auto id = 0; id < N; id++)
 	{
@@ -111,7 +111,7 @@ inline bool MeshCCLOnCPU::scanning(unsigned char* frameData, int* labelList, int
 	return modificationFlag;
 }
 
-inline bool MeshCCLOnCPU::scanning8(unsigned char* frameData, int* labelList, int* reference, bool& modificationFlag, int N, int width, unsigned char threshold)
+inline bool MeshCCLOnCPU::scanning8(unsigned short* frameData, int* labelList, int* reference, bool& modificationFlag, int N, int width, unsigned short threshold)
 {
 	for (auto id = 0; id < N; id++)
 	{

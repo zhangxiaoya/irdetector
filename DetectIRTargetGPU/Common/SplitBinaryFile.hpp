@@ -32,7 +32,7 @@ inline SplitBinaryFileOperator::SplitBinaryFileOperator(int width, int height, i
 	  readyStatus(false),
 	  finshStatus(false)
 {
-	fout.open("C:\\D\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin", std::ofstream::out | std::ofstream::binary);
+	fout.open("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin", std::ofstream::out | std::ofstream::binary);
 	if (!fout.is_open())
 	{
 		std::cout << "Open Splited binary file failed" << std::endl;

@@ -10,15 +10,15 @@ bool SendResultToRemoteServer(ResultSegment& result);
 
 bool DestroyNetWork();
 
-// Declare of all vriable used in network
-extern int HostPort;
+// Socket环境全局变量声明
+extern int HostPortForRemoteDataServer;
 
 extern const unsigned int WIDTH;
 extern const unsigned int HEIGHT;
 extern const unsigned int BYTESIZE;
 
 extern int ReveiceDataBufferlen;
-extern SOCKET ServerSocket;
-extern sockaddr_in RemoteAddress;
-extern int RemoteAddressLen;
+extern SOCKET RemoteDataServerSocket;
+extern sockaddr_in RemoteDataServerSocketAddress;
+extern int RemoteDataServerSocketAddressLen;
 extern unsigned char* ReceiveDataBuffer;

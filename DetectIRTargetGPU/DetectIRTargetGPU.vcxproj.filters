@@ -132,6 +132,9 @@
     <ClInclude Include="Models\ResultBufferStruct.hpp">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\FourLimitsWithScore.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

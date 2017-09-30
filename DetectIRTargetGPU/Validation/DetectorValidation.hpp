@@ -75,12 +75,16 @@ inline void DetectorValidation::VailidationAll()
 	char iterationText[200];
 
 	ResultSegment result;
+	detector->SetAllParameters();
 
 	for(auto i = 0;i<frameCount;++i)
 	{
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);
 
-		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
+//		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
+		detector->DetectTargets(dataPoint[i], &result);
+
+		ShowFrame::DrawRectangles(dataPoint[i], &result, width, height);
 	}
 }

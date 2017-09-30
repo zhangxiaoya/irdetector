@@ -3,7 +3,7 @@
 #include <device_launch_parameters.h>
 #include "../Checkers/CheckCUDAReturnStatus.h"
 
-__global__ void LevelDiscretizationKernel(unsigned char* frameOnDevice, int width, int height, unsigned char scale)
+__global__ void LevelDiscretizationKernel(unsigned short* frameOnDevice, int width, int height, unsigned short scale)
 {
 	int x = blockDim.x * blockIdx.x + threadIdx.x;
 	int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -14,7 +14,7 @@ __global__ void LevelDiscretizationKernel(unsigned char* frameOnDevice, int widt
 	frameOnDevice[currentIdx] = (frameOnDevice[currentIdx] / scale) * scale;
 }
 
-void LevelDiscretizationOnGPU(unsigned char* frameOnDevice, int width, int height, int discretizationScale)
+void LevelDiscretizationOnGPU(unsigned short* frameOnDevice, int width, int height, int discretizationScale)
 {
 	auto status = true;
 	dim3 block(32, 32);

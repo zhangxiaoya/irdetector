@@ -29,7 +29,7 @@ public:
 
 	unsigned int GetFrameCount() const;
 
-	unsigned char** GetDataPoint() const;
+	unsigned short** GetDataPoint() const;
 
 protected:
 	void OpenBinaryFile(std::ifstream& fin) const;
@@ -38,13 +38,13 @@ protected:
 
 	bool InitSpaceOnHost();
 
-	static void ConstitudePixel(unsigned char highPart, unsigned char lowPart, uint16_t& perPixel);
+	static void ConstitudePixel(unsigned char highPart, unsigned char lowPart, unsigned short& perPixel);
 
 	void ChangeRows(unsigned& row, unsigned& col) const;
 
 private:
 	unsigned int frameCount;
-	unsigned char** dataMatrix;
+	unsigned short** dataMatrix;
 
 	std::string binaryFileName;
 
@@ -77,7 +77,7 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 	std::ifstream fin;
 	OpenBinaryFile(fin);
 
-//	SplitBinaryFileOperator splitOperator(WIDTH, HEIGHT);
+//	SplitBinaryFileOperator splitOperator(width, height);
 
 	if (fin.is_open())
 	{
@@ -88,7 +88,7 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 		auto init_space_on_host = InitSpaceOnHost();
 		if (init_space_on_host)
 		{
-			auto originalPerFramePixelArray = new uint16_t[width * height];
+			auto originalPerFramePixelArray = new unsigned short[width * height];
 			auto iterationText = new char[200];
 
 			// init some variables
@@ -98,8 +98,8 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 			auto frameIndex = 0;       // current frame index
 			auto pixelIndex = 0;       // current pixel index
 
-			uint8_t highPart = fin.get();
-			uint8_t lowPart = fin.get();
+			unsigned char highPart = fin.get();
+			unsigned char lowPart = fin.get();
 
 			// main loop to read and load binary file per frame
 			while (true)
@@ -112,12 +112,12 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 				while (byteIndex - 2 < width * height * ByteSize)
 				{
 					// take 16-bit space per pixel
-					uint16_t perPixel;
+					unsigned short perPixel;
 					ConstitudePixel(highPart, lowPart, perPixel);
 
 					// but we only need only low part of one pixel (temparory)
-					originalPerFramePixelArray[pixelIndex] = perPixel;
-					dataMatrix[frameIndex][pixelIndex] = lowPart;
+//					originalPerFramePixelArray[pixelIndex] = perPixel;
+					dataMatrix[frameIndex][pixelIndex++] = perPixel;
 
 //					if (splitOperator.IsReady() && !splitOperator.IsFinished())
 //						splitOperator.Split(highPart, lowPart);
@@ -127,7 +127,6 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 					highPart = fin.get();
 					lowPart = fin.get();
 					byteIndex += 2;
-					pixelIndex++;
 				}
 
 				sprintf_s(iterationText, 200, "Current frame index is %04d", frameIndex);
@@ -172,7 +171,7 @@ inline unsigned BinaryFileReader::GetFrameCount() const
 	return frameCount;
 }
 
-inline unsigned char** BinaryFileReader::GetDataPoint() const
+inline unsigned short** BinaryFileReader::GetDataPoint() const
 {
 	return dataMatrix;
 }
@@ -188,7 +187,7 @@ inline void BinaryFileReader::CalculateFrameCount(std::ifstream& fin)
 	fin.seekg(0, std::ios::end);
 	auto len = fin.tellg();
 
-	frameCount = len * 1.0 / (width * height * 2);
+	frameCount = len * 1.0 / (width * height * ByteSize);
 
 	fin.seekg(0, std::ios::beg);
 	logPrinter.PrintLogs("The image count in this binary file is ", LogLevel::Info, frameCount);
@@ -196,17 +195,17 @@ inline void BinaryFileReader::CalculateFrameCount(std::ifstream& fin)
 
 inline bool BinaryFileReader::InitSpaceOnHost()
 {
-	logPrinter.PrintLogs("Start init space on host ...", LogLevel::Info);
+	logPrinter.PrintLogs("Start init space on host ...", Info);
 	// point array of all frames is on pageable memory
-	dataMatrix = new unsigned char*[frameCount];
+	dataMatrix = new unsigned short*[frameCount];
 
 	// frame data of each frame is on pinned memory
 	for (auto i = 0; i < frameCount; ++i)
 	{
-		auto cuda_error = cudaMallocHost((void**)&dataMatrix[i], width * height);
+		auto cuda_error = cudaMallocHost(reinterpret_cast<void**>(&dataMatrix[i]), width * height * sizeof(unsigned short));
 		if (cuda_error != cudaSuccess)
 		{
-			logPrinter.PrintLogs("Init space on host failed! Starting roll back ...", LogLevel::Error);
+			logPrinter.PrintLogs("Init space on host failed! Starting roll back ...", Error);
 
 			for (auto j = i - 1; j >= 0; j--)
 				cudaFreeHost(dataMatrix[j]);
@@ -216,13 +215,13 @@ inline bool BinaryFileReader::InitSpaceOnHost()
 			return false;
 		}
 	}
-	logPrinter.PrintLogs("Init space on host success!", LogLevel::Info);
+	logPrinter.PrintLogs("Init space on host success!", Info);
 	return true;
 }
 
-inline void BinaryFileReader::ConstitudePixel(unsigned char highPart, unsigned char lowPart, uint16_t& perPixel)
+inline void BinaryFileReader::ConstitudePixel(unsigned char highPart, unsigned char lowPart, unsigned short& perPixel)
 {
-	perPixel = static_cast<uint16_t>(highPart);
+	perPixel = static_cast<unsigned short>(highPart);
 	perPixel = perPixel << 8;
 	perPixel |= lowPart;
 }
