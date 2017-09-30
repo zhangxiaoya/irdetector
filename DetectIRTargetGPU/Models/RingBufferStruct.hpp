@@ -20,7 +20,7 @@ struct RingBufferStruct
 	}
 
 	bool finish_flag;
-	unsigned char* item_buffer;                      // 环形缓冲
+	unsigned char* item_buffer;                     // 环形缓冲
 	size_t read_position;
 	size_t write_position;
 	std::mutex bufferMutex;

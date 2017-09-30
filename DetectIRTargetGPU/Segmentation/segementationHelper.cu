@@ -67,26 +67,26 @@ void do_work(int width, int height, FourLimits* allObjects, ObjectRect* allObjec
 	}
 }
 
-void Segmentation(unsigned char* frameOnHost, int width, int height)
+void Segmentation(unsigned short* frameOnHost, int width, int height)
 {
 	int* labelsOnHost;
 	int* labelsOnDevice;
 	int* referenceOfLablesOnDevice;
 	bool* modificationFlagOnDevice;
-	unsigned char* frameOnDevice;
+	unsigned short* frameOnDevice;
 
-	cudaMallocHost((void**)&labelsOnHost, width * height * sizeof(int));
-	cudaMalloc((void**)&frameOnDevice, width * height * sizeof(unsigned char));
-	cudaMalloc((void**)&labelsOnDevice, sizeof(int) * width * height);
-	cudaMalloc((void**)&referenceOfLablesOnDevice, sizeof(int) * width* height);
-	cudaMalloc((void**)&modificationFlagOnDevice, sizeof(bool));
+	cudaMallocHost(reinterpret_cast<void**>(&labelsOnHost), width * height * sizeof(int));
+	cudaMalloc(reinterpret_cast<void**>(&frameOnDevice), width * height * sizeof(unsigned short));
+	cudaMalloc(reinterpret_cast<void**>(&labelsOnDevice), sizeof(int) * width * height);
+	cudaMalloc(reinterpret_cast<void**>(&referenceOfLablesOnDevice), sizeof(int) * width* height);
+	cudaMalloc(reinterpret_cast<void**>(&modificationFlagOnDevice), sizeof(bool));
 
-	cudaMemcpy(frameOnDevice, frameOnHost, sizeof(unsigned char) * width * height, cudaMemcpyHostToDevice);
+	cudaMemcpy(frameOnDevice, frameOnHost, sizeof(unsigned short) * width * height, cudaMemcpyHostToDevice);
 
-	cv::Mat img;
-	ShowFrame::ToMat<unsigned char>(frameOnHost, width, height, img, CV_8UC1);
+//	cv::Mat img;
+//	ShowFrame::ToMat<unsigned char>(frameOnHost, width, height, img, CV_8UC1);
 
-	ShowFrame::ToTxt<unsigned char>(frameOnHost, "data.txt", width, height);
+//	ShowFrame::ToTxt<unsigned char>(frameOnHost, "data.txt", width, height);
 
 	CheckPerf(MeshCCL(frameOnDevice, labelsOnDevice, referenceOfLablesOnDevice,modificationFlagOnDevice,width, height),"Mesh CCL");
 
@@ -102,7 +102,7 @@ void Segmentation(unsigned char* frameOnHost, int width, int height)
 
 	CheckPerf(do_work(width, height, allObjects, allObjectRects), "To Rect");
 
-	ShowFrame::DrawRectangles(frameOnHost, allObjectRects, width, height);
+//	ShowFrame::DrawRectangles(frameOnHost, allObjectRects, width, height);
 
 	delete[] allObjectRects;
 	delete[] allObjects;
