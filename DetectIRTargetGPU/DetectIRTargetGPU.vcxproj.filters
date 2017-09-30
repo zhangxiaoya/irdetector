@@ -138,6 +138,9 @@
     <ClInclude Include="Models\DetectResultRingBufferStruct.hpp">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Models\ShowResultRingBuffer.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

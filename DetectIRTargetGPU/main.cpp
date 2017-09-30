@@ -10,6 +10,7 @@
 #include "Models/FrameDataRingBufferStruct.hpp"
 #include "Models/DetectResultRingBufferStruct.hpp"
 #include "Validation/Validation.h"
+#include "Models/ShowResultRingBuffer.hpp"
 
 const bool IsSendResultToServer = true; // 是否发送结果到服务端
 
@@ -29,8 +30,9 @@ Detector* detector = new Detector();                  // 初始化检测器
 
 // 缓冲区全局变量声明与定义
 static const int BufferSize = 10;                     // 线程同步缓冲区大小
-FrameDataRingBufferStruct Buffer(FrameDataSize, BufferSize);   // 数据接收线程环形缓冲区初始化
+FrameDataRingBufferStruct Buffer(FrameDataSize, BufferSize);    // 数据接收线程环形缓冲区初始化
 DetectResultRingBufferStruct ResultBuffer(BufferSize);          // 结果发送线程环形缓冲区初始化
+ShowResultRingBufferStruct ShowResultBuffer(BufferSize);        // 显示结果线程环形缓冲区
 
 /****************************************************************************************/
 /*                                Input Data Operation                                  */
@@ -158,6 +160,13 @@ bool OutputData(DetectResultRingBufferStruct* buffer)
 	return true;
 }
 
+bool ShowResult(ShowResultRingBufferStruct* show_result_buffer)
+{
+//To-Do
+	return true;
+}
+
+
 /****************************************************************************************/
 /*                                  Input Data Task                                     */
 /****************************************************************************************/
@@ -195,6 +204,18 @@ void OutputDataTask()
 }
 
 /****************************************************************************************/
+/*                                 Show Result Task                                     */
+/****************************************************************************************/
+void ShowResultTask()
+{
+	// 循环显示检测结果
+	while (true)
+	{
+		if(ShowResult(&ShowResultBuffer) == false) break;
+	}
+}
+
+/****************************************************************************************/
 /*                               Initial Data Buffer                                    */
 /****************************************************************************************/
 void InitBuffer(FrameDataRingBufferStruct* buffer)
@@ -212,6 +233,15 @@ void InitResultBuffer(DetectResultRingBufferStruct* buffer)
 	buffer->write_position = 0;
 }
 
+/****************************************************************************************/
+/*                          Initial Show Result Buffer                                  */
+/****************************************************************************************/
+void InitShowResultBuffer(ShowResultRingBufferStruct* show_result_buffer)
+{
+	show_result_buffer->write_position = 0;
+	show_result_buffer->read_position = 0;
+}
+
 void RunOnNetwork()
 {
 	// 初始化Socket网络环境
@@ -224,11 +254,13 @@ void RunOnNetwork()
 	// 初始化数据缓冲和结果缓冲
 	InitBuffer(&Buffer);
 	InitResultBuffer(&ResultBuffer);
+	InitShowResultBuffer(&ShowResultBuffer);
 
 	// 创建三个线程：读取数据线程、计算结果、返回结果
 	std::thread InputDataThread(InputDataTask);
 	std::thread DetectorThread(DetectTask);
 	std::thread OutputDataThread(OutputDataTask);
+	std::thread ShowResultThread(ShowResultTask);
 
 	// 三个线程开始运行
 	InputDataThread.join();
