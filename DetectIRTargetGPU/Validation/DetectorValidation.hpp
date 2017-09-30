@@ -67,6 +67,7 @@ inline void DetectorValidation::VailidationAll()
 
 	this->detector = new Detector();
 	detector->InitSpace();
+	detector->SetAllParameters();
 
 	auto frameCount = fileReader->GetFrameCount();
 	auto dataPoint = fileReader->GetDataPoint();
@@ -82,8 +83,7 @@ inline void DetectorValidation::VailidationAll()
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);
 
-//		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
-		detector->DetectTargets(dataPoint[i], &result);
+		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
 
 		ShowFrame::DrawRectangles(dataPoint[i], &result, width, height);
 	}

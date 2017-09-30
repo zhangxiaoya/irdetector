@@ -249,7 +249,7 @@ void TestUsingBinaryFile()
 /****************************************************************************************/
 /*                          Test Algrithm Core Performance                              */
 /****************************************************************************************/
-void TestPerformance()
+void CheckConrrectness()
 {
 	auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin";
 
@@ -269,9 +269,9 @@ int main(int argc, char* argv[])
 	{
 //		RunOnNetwork();
 
-		TestPerformance();
+//		CheckConrrectness();
 
-//		TestUsingBinaryFile();
+		TestUsingBinaryFile();
 	}
 
 	// Ïú»Ù¼ì²â×Ó

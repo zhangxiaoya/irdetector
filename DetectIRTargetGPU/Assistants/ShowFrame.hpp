@@ -33,7 +33,7 @@ void ShowFrame::ToMat(T* frame, const int width, const int height, cv::Mat& img,
 	for (auto i = 0; i < width * height; i++)
 	{
 		short pixelValue = frame[i];
-		pixelValue >>= 1;
+		pixelValue >>= 0;
 		char ucPixelValue = static_cast<unsigned char>(pixelValue & 0xFF);
 		tempFrame[i] = static_cast<unsigned char>(ucPixelValue);
 	}
