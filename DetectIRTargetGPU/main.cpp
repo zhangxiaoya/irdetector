@@ -32,7 +32,7 @@ Detector* detector = new Detector();                  // 初始化检测器
 // 缓冲区全局变量声明与定义
 static const int BufferSize = 10;                               // 线程同步缓冲区大小
 FrameDataRingBufferStruct Buffer(FrameDataSize, BufferSize);    // 数据接收线程环形缓冲区初始化
-DetectResultRingBufferStruct ResultBuffer(BufferSize);          // 结果发送线程环形缓冲区初始化
+DetectResultRingBufferStruct ResultBuffer(WIDTH, HEIGHT, BufferSize);          // 结果发送线程环形缓冲区初始化
 ShowResultRingBufferStruct ShowResultBuffer(BufferSize);        // 显示结果线程环形缓冲区
 
 /****************************************************************************************/
@@ -116,6 +116,7 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 
 		// Copy data received from network to ring buffer and update ring buffer header pointer
 		memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItemSendToServer, ResultItemSize);
+		memcpy(resultBuffer->frame_buffer + resultBuffer->write_position * FrameDataSize, &FrameDataInprocessing, FrameDataSize);
 		resultBuffer->write_position++;
 
 		// Reset data header pointer when to the end of buffer
