@@ -593,7 +593,7 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 //			ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
 //
 //			// show result
-////			ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+//			ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
 //		}
 
 		// Merge all objects

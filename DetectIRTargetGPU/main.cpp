@@ -10,7 +10,6 @@
 #include "Models/FrameDataRingBufferStruct.hpp"
 #include "Models/DetectResultRingBufferStruct.hpp"
 #include "Validation/Validation.h"
-#include "Models/ShowResultRingBuffer.hpp"
 
 const bool IsSendResultToServer = true; // 是否发送结果到服务端
 
@@ -34,7 +33,6 @@ Detector* detector = new Detector();                  // 初始化检测器
 static const int BufferSize = 10;                               // 线程同步缓冲区大小
 FrameDataRingBufferStruct Buffer(FrameDataSize, BufferSize);    // 数据接收线程环形缓冲区初始化
 DetectResultRingBufferStruct ResultBuffer(WIDTH, HEIGHT, BufferSize);          // 结果发送线程环形缓冲区初始化
-ShowResultRingBufferStruct ShowResultBuffer(BufferSize);        // 显示结果线程环形缓冲区
 
 cv::Mat CVFrame(HEIGHT, WIDTH, CV_8UC1);
 
@@ -119,7 +117,6 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 
 		// Copy data received from network to ring buffer and update ring buffer header pointer
 		memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItemSendToServer, ResultItemSize);
-		memcpy(resultBuffer->frame_buffer + resultBuffer->write_position * FrameDataSize, &FrameDataInprocessing, FrameDataSize);
 		resultBuffer->write_position++;
 
 		// Reset data header pointer when to the end of buffer
@@ -131,6 +128,12 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 		writerLock.unlock();
 	}
 
+	// 临时显示结果
+	ShowFrame::ToMat(FrameDataInprocessing, WIDTH, HEIGHT, CVFrame);
+	ShowFrame::DrawRectangles(CVFrame, &ResultItemSendToServer);
+	cv::imshow("Result", CVFrame);
+	cv::waitKey(1);
+
 	// 返回一次线程执行状态
 	return true;
 }
@@ -138,7 +141,7 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 /****************************************************************************************/
 /*                               Send Result Operation                                  */
 /****************************************************************************************/
-bool OutputData(DetectResultRingBufferStruct* buffer, ShowResultRingBufferStruct* showResultBuffer)
+bool OutputData(DetectResultRingBufferStruct* buffer)
 {
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while (buffer->write_position == buffer->read_position)
@@ -152,7 +155,6 @@ bool OutputData(DetectResultRingBufferStruct* buffer, ShowResultRingBufferStruct
 
 	memcpy(&ResultItemSendToServer, buffer->item_buffer + buffer->read_position * ResultItemSize, ResultItemSize);
 	SendResultToRemoteServer(ResultItemSendToServer);
-	memcpy(&FrameDataToShow, buffer->frame_buffer + buffer->read_position * FrameDataSize, FrameDataSize);
 //	SendResultToRemoteServer(buffer->item_buffer[buffer->read_position]);
 
 	buffer->read_position++;
@@ -163,66 +165,8 @@ bool OutputData(DetectResultRingBufferStruct* buffer, ShowResultRingBufferStruct
 	buffer->buffer_not_full.notify_all();
 	lock.unlock();
 
-	// 向显示结果数据缓冲区插入数据
-	std::unique_lock<std::mutex> writerLock(showResultBuffer->bufferMutex);
-	while ((showResultBuffer->write_position + 1) % BufferSize == showResultBuffer->read_position)
-	{
-		std::cout << "Send Result thread show last result part is waiting for an empty slot...\n";
-		showResultBuffer->buffer_not_full.wait(writerLock);
-	}
 
-	// Copy data received from network to ring buffer and update ring buffer header pointer
-	memcpy(showResultBuffer->item_buffer + showResultBuffer->write_position * ResultItemSize, &ResultItemSendToServer, ResultItemSize);
-	memcpy(showResultBuffer->frame_buffer + showResultBuffer->write_position * FrameDataSize, &FrameDataToShow, FrameDataSize);
-	showResultBuffer->write_position++;
 
-	// Reset data header pointer when to the end of buffer
-	if (showResultBuffer->write_position == BufferSize)
-		showResultBuffer->write_position = 0;
-
-	// Notify Detect thread
-	showResultBuffer->buffer_not_empty.notify_all();
-	writerLock.unlock();
-
-	return true;
-}
-
-void ShowResultProcess(const ResultSegment& result_segment, unsigned short* frame)
-{
-	cv::Mat tFrame(HEIGHT, WIDTH, CV_8UC1);
-	ShowFrame::ToMat<unsigned short>(frame, WIDTH, HEIGHT, tFrame);
-	cv::imshow("Result", tFrame);
-//	cv::waitKey(1);
-}
-
-bool ShowResult(ShowResultRingBufferStruct* show_result_buffer)
-{
-	std::unique_lock<std::mutex> lock(show_result_buffer->bufferMutex);
-	while (show_result_buffer->write_position == show_result_buffer->read_position)
-	{
-		if (show_result_buffer->finish_flag == true)
-			return false;
-
-		std::cout << "Show result thread is waiting for result items...\n";
-		show_result_buffer->buffer_not_empty.wait(lock);
-	}
-
-	memcpy(&ResultItemToShow, show_result_buffer->item_buffer + show_result_buffer->read_position * ResultItemSize, ResultItemSize);
-	unsigned short resultFrame[WIDTH* HEIGHT * BYTESIZE];
-	memcpy(&resultFrame, show_result_buffer->frame_buffer + show_result_buffer->read_position * FrameDataSize, FrameDataSize);
-	// To-Do
-//	ShowResultProcess(ResultItemToShow, resultFrame);
-	cv::Mat tFrame(HEIGHT, WIDTH, CV_8UC1);
-	ShowFrame::ToMat<unsigned short>(resultFrame, WIDTH, HEIGHT, tFrame);
-	cv::imshow("Result", tFrame);
-
-	show_result_buffer->read_position++;
-
-	if (show_result_buffer->read_position >= BufferSize)
-		show_result_buffer->read_position = 0;
-
-	show_result_buffer->buffer_not_full.notify_all();
-	lock.unlock();
 	return true;
 }
 
@@ -258,19 +202,7 @@ void OutputDataTask()
 	// 循环发送检测结果
 	while (true)
 	{
-		if (OutputData(&ResultBuffer,&ShowResultBuffer) == false) break;
-	}
-}
-
-/****************************************************************************************/
-/*                                 Show Result Task                                     */
-/****************************************************************************************/
-void ShowResultTask()
-{
-	// 循环显示检测结果
-	while (true)
-	{
-		if(ShowResult(&ShowResultBuffer) == false) break;
+		if (OutputData(&ResultBuffer) == false) break;
 	}
 }
 
@@ -292,15 +224,6 @@ void InitResultBuffer(DetectResultRingBufferStruct* buffer)
 	buffer->write_position = 0;
 }
 
-/****************************************************************************************/
-/*                          Initial Show Result Buffer                                  */
-/****************************************************************************************/
-void InitShowResultBuffer(ShowResultRingBufferStruct* show_result_buffer)
-{
-	show_result_buffer->write_position = 0;
-	show_result_buffer->read_position = 0;
-}
-
 void RunOnNetwork()
 {
 	// 初始化Socket网络环境
@@ -313,13 +236,11 @@ void RunOnNetwork()
 	// 初始化数据缓冲和结果缓冲
 	InitBuffer(&Buffer);
 	InitResultBuffer(&ResultBuffer);
-	InitShowResultBuffer(&ShowResultBuffer);
 
 	// 创建三个线程：读取数据线程、计算结果、返回结果
 	std::thread InputDataThread(InputDataTask);
 	std::thread DetectorThread(DetectTask);
 	std::thread OutputDataThread(OutputDataTask);
-//	std::thread ShowResultThread(ShowResultTask);
 
 	// 三个线程开始运行
 	InputDataThread.join();

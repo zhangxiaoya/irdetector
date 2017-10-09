@@ -184,7 +184,6 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Models\Point.h" />
     <ClInclude Include="Models\DetectResultRingBufferStruct.hpp" />
     <ClInclude Include="Models\FrameDataRingBufferStruct.hpp" />
-    <ClInclude Include="Models\ShowResultRingBuffer.hpp" />
     <ClInclude Include="Monitor\Filter.hpp" />
     <ClInclude Include="Monitor\Monitor.hpp" />
     <ClInclude Include="Network\NetworkTransfer.h" />

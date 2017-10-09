@@ -22,7 +22,9 @@ public:
 
 	static void DrawRectangles(unsigned char* frame, ObjectRect* allRects, int width, int height);
 
-	static inline void DrawRectangles(unsigned short* frame, ResultSegment* allRects, int width, int height, int delay = 0);
+	static void DrawRectangles(unsigned short* frame, ResultSegment* allRects, int width, int height, int delay = 0);
+
+	static void DrawRectangles(cv::Mat& frame, ResultSegment* allRects);
 
 	template<typename T>
 	static void ToTxt(T* frame, std::string fileName, const int width,  const int height);
@@ -130,4 +132,13 @@ inline void ShowFrame::DrawRectangles(unsigned short* frame, ResultSegment* allR
 	imshow("after draw", img);
 	cv::waitKey(delay);
 }
+
+inline void ShowFrame::DrawRectangles(cv::Mat& frame, ResultSegment* allRects)
+{
+	for (auto i = 0; i < allRects->targetCount; ++i)
+	{
+		rectangle(frame, cv::Point(allRects->targets[i].topLeftX, allRects->targets[i].topleftY), cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1), cv::Scalar(255, 255, 0));
+	}
+}
+
 #endif
