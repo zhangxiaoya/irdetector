@@ -1,4 +1,4 @@
-﻿#include "DataReceiver.h"
+﻿#include "NetworkTransfer.h"
 #include <iostream>
 #include "../Monitor/Filter.hpp"
 #include "../Models/ResultSegment.hpp"
@@ -200,7 +200,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 				{
 					std::cout << "Invalid frame order： "
 						<< "Expected frame index is " << static_cast<int>(frameIndex)
-						<< " , but actualy index is " << static_cast<int>(ReceiveDataBuffer[0]) << std::endl;
+						<< " , but actualy index is " << static_cast<int>(partBuffer[0]) << std::endl;
 					std::cout << "Resetting .....>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 					frameIndex = static_cast<unsigned char>(partBuffer[0]);
 					for (auto idx = 0; idx < packageCount; ++idx)

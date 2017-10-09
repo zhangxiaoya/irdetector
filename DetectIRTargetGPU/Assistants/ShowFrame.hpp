@@ -15,11 +15,16 @@ public:
 	template<typename T>
 	static void ToMat(T* frame, const int width, const int height, cv::Mat& img, int type);
 
+	template<typename T>
+	static void ToMat(T* frame, const int width, const int height, cv::Mat& img);
+
 	static void Show(std::string titleName, unsigned char* frame, const int width, const int height);
 
-	static void DrawRectangles(unsigned char* frame, ObjectRect* allRects, int width, int height);
+	static void DrawRectangles(unsigned short* frame, ObjectRect* allRects, int width, int height);
 
-	static inline void DrawRectangles(unsigned short* frame, ResultSegment* allRects, int width, int height);
+	static void DrawRectangles(unsigned short* frame, ResultSegment* allRects, int width, int height, int delay = 0);
+
+	static void DrawRectangles(cv::Mat& frame, ResultSegment* allRects);
 
 	template<typename T>
 	static void ToTxt(T* frame, std::string fileName, const int width,  const int height);
@@ -33,7 +38,7 @@ void ShowFrame::ToMat(T* frame, const int width, const int height, cv::Mat& img,
 	for (auto i = 0; i < width * height; i++)
 	{
 		short pixelValue = frame[i];
-		pixelValue >>= 1;
+		pixelValue >>= 0;
 		char ucPixelValue = static_cast<unsigned char>(pixelValue & 0xFF);
 		tempFrame[i] = static_cast<unsigned char>(ucPixelValue);
 	}
@@ -48,6 +53,19 @@ void ShowFrame::ToMat(T* frame, const int width, const int height, cv::Mat& img,
 		}
 	}
 	delete[] tempFrame;
+}
+
+template <typename T>
+void ShowFrame::ToMat(T* frame, const int width, const int height, cv::Mat& img)
+{
+	for (auto r = 0; r < height; ++r)
+	{
+		auto ptr = img.ptr<uchar>(r);
+		for (auto c = 0; c < width; ++c)
+		{
+			ptr[c] = static_cast<uchar>(frame[r * width + c]);
+		}
+	}
 }
 
 template<typename T>
@@ -83,10 +101,10 @@ inline void ShowFrame::Show(std::string titleName, unsigned char* frame, const i
 	cv::waitKey(0);
 }
 
-inline void ShowFrame::DrawRectangles(unsigned char* frame, ObjectRect* allRects, int width, int height)
+inline void ShowFrame::DrawRectangles(unsigned short* frame, ObjectRect* allRects, int width, int height)
 {
 	cv::Mat img;
-	ToMat<unsigned char>(frame, width, height, img, CV_8UC1);
+	ToMat<unsigned short>(frame, width, height, img, CV_8UC1);
 
 	for (auto i = 0; i < width * height; ++i)
 	{
@@ -101,21 +119,26 @@ inline void ShowFrame::DrawRectangles(unsigned char* frame, ObjectRect* allRects
 	cv::waitKey(1);
 }
 
-inline void ShowFrame::DrawRectangles(unsigned short* frame, ResultSegment* allRects, int width, int height)
+inline void ShowFrame::DrawRectangles(unsigned short* frame, ResultSegment* allRects, int width, int height, int delay)
 {
 	cv::Mat img;
 	ToMat<unsigned short>(frame, width, height, img, CV_8UC1);
 
 	for (auto i = 0; i < allRects->targetCount; ++i)
 	{
-//		if (allRects[i].width < 2 || allRects[i].height < 2 || allRects[i].width > 20 || allRects[i].height > 20)
-//		{
-//			continue;
-//		}
 		rectangle(img, cv::Point(allRects->targets[i].topLeftX, allRects->targets[i].topleftY), cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1), cv::Scalar(255, 255, 0));
 	}
 
-	cv::imshow("after draw", img);
-	cv::waitKey(0);
+	imshow("after draw", img);
+	cv::waitKey(delay);
 }
+
+inline void ShowFrame::DrawRectangles(cv::Mat& frame, ResultSegment* allRects)
+{
+	for (auto i = 0; i < allRects->targetCount; ++i)
+	{
+		rectangle(frame, cv::Point(allRects->targets[i].topLeftX, allRects->targets[i].topleftY), cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1), cv::Scalar(255, 255, 0));
+	}
+}
+
 #endif

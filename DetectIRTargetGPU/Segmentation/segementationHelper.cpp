@@ -1,15 +1,12 @@
 #include <cuda_runtime_api.h>
 #include <iostream>
 #include <iomanip>
-#include "segementationHelper.cuh"
+#include "segementationHelper.h"
 #include "../Assistants/ShowFrame.hpp"
 #include "../CCL/MeshCCLKernelD.cuh"
-#include "../Models/FourLimits.h"
-#include "../Models/Point.h"
-#include "../Models/ObjectRect.h"
 #include "../Checkers/CheckPerf.h"
 
-void GetAllObjects(int width, int height, int* labelsOnHost, FourLimits* allObjects)
+void OverSegmentation::GetAllObjects(int width, int height, int* labelsOnHost, FourLimits* allObjects)
 {
 	// top
 	for(auto r = 0; r < height;++r)
@@ -54,7 +51,7 @@ void GetAllObjects(int width, int height, int* labelsOnHost, FourLimits* allObje
 	}
 }
 
-void do_work(int width, int height, FourLimits* allObjects, ObjectRect* allObjectRects)
+void OverSegmentation::GenerateRect(int width, int height, FourLimits* allObjects, ObjectRect* allObjectRects)
 {
 	for(auto i = 0;i < width * height;++i)
 	{
@@ -67,7 +64,9 @@ void do_work(int width, int height, FourLimits* allObjects, ObjectRect* allObjec
 	}
 }
 
-void Segmentation(unsigned short* frameOnHost, int width, int height)
+
+
+void OverSegmentation::Segmentation(unsigned short* frameOnHost, int width, int height)
 {
 	int* labelsOnHost;
 	int* labelsOnDevice;
@@ -100,7 +99,7 @@ void Segmentation(unsigned short* frameOnHost, int width, int height)
 
 	auto allObjectRects = new ObjectRect[width * height];
 
-	CheckPerf(do_work(width, height, allObjects, allObjectRects), "To Rect");
+	CheckPerf(GenerateRect(width, height, allObjects, allObjectRects), "To Rect");
 
 //	ShowFrame::DrawRectangles(frameOnHost, allObjectRects, width, height);
 

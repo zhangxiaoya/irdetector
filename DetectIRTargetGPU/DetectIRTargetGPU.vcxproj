@@ -158,7 +158,8 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClCompile Include="Detector\Detector.hpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Models\ResultSegment.hpp" />
-    <ClCompile Include="Network\DataReceiver.cpp" />
+    <ClCompile Include="Network\NetworkTransfer.cpp" />
+    <ClCompile Include="Validation\Validation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Assistants\ShowFrame.hpp" />
@@ -171,30 +172,31 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="DataReaderFromeFiles\BinaryFileReader.hpp" />
     <ClInclude Include="Dilations\DilatetionKernel.cuh" />
     <ClInclude Include="Dilations\DilatetionOnCPU.hpp" />
-    <ClInclude Include="Headers\FourLimitsWithScore.hpp" />
     <ClInclude Include="Headers\GlobalMainHeaders.h" />
     <ClInclude Include="Init\Init.hpp" />
     <ClInclude Include="LevelDiscretization\LevelDiscretizationKernel.cuh" />
     <ClInclude Include="LevelDiscretization\LevelDiscretizationOnCPU.hpp" />
     <ClInclude Include="LogPrinter\LogPrinter.hpp" />
     <ClInclude Include="Models\FourLimits.h" />
+    <ClInclude Include="Models\FourLimitsWithScore.hpp" />
     <ClInclude Include="Models\LogLevel.hpp" />
     <ClInclude Include="Models\ObjectRect.h" />
     <ClInclude Include="Models\Point.h" />
-    <ClInclude Include="Models\ResultBufferStruct.hpp" />
-    <ClInclude Include="Models\RingBufferStruct.hpp" />
+    <ClInclude Include="Models\DetectResultRingBufferStruct.hpp" />
+    <ClInclude Include="Models\FrameDataRingBufferStruct.hpp" />
     <ClInclude Include="Monitor\Filter.hpp" />
     <ClInclude Include="Monitor\Monitor.hpp" />
-    <ClInclude Include="Network\DataReceiver.h" />
-    <ClInclude Include="Segmentation\segementationHelper.cuh" />
-    <ClInclude Include="Validation\DetectorValidation.hpp" />
-    <ClInclude Include="Validation\Validation.hpp" />
+    <ClInclude Include="Network\NetworkTransfer.h" />
+    <ClInclude Include="Segmentation\segementationHelper.h" />
+    <ClInclude Include="Validation\PerformanceValidation.hpp" />
+    <ClInclude Include="Validation\CorrectnessValidation.hpp" />
+    <ClInclude Include="Validation\Validation.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CCL\MeshCCLKernelD.cu" />
     <CudaCompile Include="Dilations\DilatetionKernel.cu" />
     <CudaCompile Include="LevelDiscretization\LevelDiscretizationKernel.cu" />
-    <CudaCompile Include="Segmentation\segementationHelper.cu" />
+    <CudaCompile Include="Segmentation\segementationHelper.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cuda_runtime_api.h>
 
+// To-Do
 class Monitor
 {
 public:
@@ -35,6 +36,7 @@ inline void Monitor::ResetData(unsigned char* dataSource) const
 
 inline void Monitor::Dialation()
 {
+	// To-Do
 }
 
 #endif

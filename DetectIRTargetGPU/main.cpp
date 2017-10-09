@@ -1,14 +1,15 @@
-#include "Validation/Validation.hpp"
+#include "Validation/CorrectnessValidation.hpp"
 #include "Init/Init.hpp"
-#include "Validation/DetectorValidation.hpp"
-#include "Network/DataReceiver.h"
+#include "Validation/PerformanceValidation.hpp"
+#include "Network/NetworkTransfer.h"
 
 #include <windows.h>
 #include <iostream>
 #include <mutex>
 #include <thread>
-#include "Models/RingBufferStruct.hpp"
-#include "Models/ResultBufferStruct.hpp"
+#include "Models/FrameDataRingBufferStruct.hpp"
+#include "Models/DetectResultRingBufferStruct.hpp"
+#include "Validation/Validation.h"
 
 const bool IsSendResultToServer = true; // 是否发送结果到服务端
 
@@ -21,20 +22,24 @@ static const int FrameDataSize = WIDTH * HEIGHT * BYTESIZE;        // 每个图像帧
 static const int ImageSize = WIDTH * HEIGHT;                       // 每一帧图像像素大小
 unsigned char FrameData[FrameDataSize];                            // 每一帧图像临时缓冲
 unsigned short FrameDataInprocessing[ImageSize] = {0};             // 每一帧图像临时缓冲
-ResultSegment ResultItem;                                      // 每一帧图像检测结果
-static const int ResultItemSize = sizeof(ResultSegment);       // 每一帧图像检测结果大小
+unsigned short FrameDataToShow[ImageSize] = {0};                   // 每一帧显示结果图像临时缓冲
+ResultSegment ResultItemSendToServer;                              // 每一帧图像检测结果
+ResultSegment ResultItemToShow;                                    // 每一帧图像显示结果
+static const int ResultItemSize = sizeof(ResultSegment);           // 每一帧图像检测结果大小
 
 Detector* detector = new Detector();                  // 初始化检测器
 
 // 缓冲区全局变量声明与定义
-static const int BufferSize = 10;                     // 线程同步缓冲区大小
-RingBufferStruct Buffer(FrameDataSize, BufferSize);   // 数据接收线程环形缓冲区初始化
-ResultBufferStruct ResultBuffer(BufferSize);          // 结果发送线程环形缓冲区初始化
+static const int BufferSize = 10;                               // 线程同步缓冲区大小
+FrameDataRingBufferStruct Buffer(FrameDataSize, BufferSize);    // 数据接收线程环形缓冲区初始化
+DetectResultRingBufferStruct ResultBuffer(WIDTH, HEIGHT, BufferSize);          // 结果发送线程环形缓冲区初始化
+
+cv::Mat CVFrame(HEIGHT, WIDTH, CV_8UC1);
 
 /****************************************************************************************/
 /*                                Input Data Operation                                  */
 /****************************************************************************************/
-bool InputDataToBuffer(RingBufferStruct* buffer)
+bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 {
 	// Check buffer is full or not, if full automatic unlock mutex
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
@@ -71,7 +76,7 @@ bool InputDataToBuffer(RingBufferStruct* buffer)
 /****************************************************************************************/
 /*                              Detect target Operation                                 */
 /****************************************************************************************/
-bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
+bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruct* resultBuffer)
 {
 	// 并发读取图像数据
 	std::unique_lock<std::mutex> readLock(buffer->bufferMutex);
@@ -98,7 +103,7 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 	readLock.unlock();
 
 	// 检测目标，并检测性能
-	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItem), "Total process");
+	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
 
 	if(IsSendResultToServer)
 	{
@@ -111,7 +116,7 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 		}
 
 		// Copy data received from network to ring buffer and update ring buffer header pointer
-		memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItem, ResultItemSize);
+		memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItemSendToServer, ResultItemSize);
 		resultBuffer->write_position++;
 
 		// Reset data header pointer when to the end of buffer
@@ -123,6 +128,12 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 		writerLock.unlock();
 	}
 
+	// 临时显示结果
+	ShowFrame::ToMat(FrameDataInprocessing, WIDTH, HEIGHT, CVFrame);
+	ShowFrame::DrawRectangles(CVFrame, &ResultItemSendToServer);
+	cv::imshow("Result", CVFrame);
+	cv::waitKey(1);
+
 	// 返回一次线程执行状态
 	return true;
 }
@@ -130,7 +141,7 @@ bool DetectTarget(RingBufferStruct* buffer, ResultBufferStruct* resultBuffer)
 /****************************************************************************************/
 /*                               Send Result Operation                                  */
 /****************************************************************************************/
-bool OutputData(ResultBufferStruct* buffer)
+bool OutputData(DetectResultRingBufferStruct* buffer)
 {
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while (buffer->write_position == buffer->read_position)
@@ -142,9 +153,8 @@ bool OutputData(ResultBufferStruct* buffer)
 		buffer->buffer_not_empty.wait(lock);
 	}
 
-	memcpy(&ResultItem, buffer->item_buffer + buffer->read_position * ResultItemSize, ResultItemSize);
-	SendResultToRemoteServer(ResultItem);
-//	SendResultToRemoteServer(buffer->item_buffer[buffer->read_position]);
+	memcpy(&ResultItemSendToServer, buffer->item_buffer + buffer->read_position * ResultItemSize, ResultItemSize);
+	SendResultToRemoteServer(ResultItemSendToServer);
 
 	buffer->read_position++;
 
@@ -196,7 +206,7 @@ void OutputDataTask()
 /****************************************************************************************/
 /*                               Initial Data Buffer                                    */
 /****************************************************************************************/
-void InitBuffer(RingBufferStruct* buffer)
+void InitBuffer(FrameDataRingBufferStruct* buffer)
 {
 	buffer->write_position = 0;
 	buffer->read_position = 0;
@@ -205,7 +215,7 @@ void InitBuffer(RingBufferStruct* buffer)
 /****************************************************************************************/
 /*                               Initial Result Buffer                                  */
 /****************************************************************************************/
-void InitResultBuffer(ResultBufferStruct* buffer)
+void InitResultBuffer(DetectResultRingBufferStruct* buffer)
 {
 	buffer->read_position = 0;
 	buffer->write_position = 0;
@@ -238,22 +248,6 @@ void RunOnNetwork()
 	DestroyNetWork();
 }
 
-void TestUsingBinaryFile()
-{
-	DetectorValidation visualEffectValidator;
-	visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
-//	visualEffectValidator.InitDataReader("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1.bin");
-	visualEffectValidator.VailidationAll();
-}
-
-void TestPerformance()
-{
-	/* 下面是CUDA核函数测试程序和单机文本文件测试，开发阶段不要删除，方便调试 */
-	Validation validation;
-	validation.InitValidationData("D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1_partOne.bin");
-	validation.VailidationAll();
-}
-
 /****************************************************************************************/
 /*                                     Main Function                                    */
 /****************************************************************************************/
@@ -265,9 +259,9 @@ int main(int argc, char* argv[])
 	{
 		RunOnNetwork();
 
-//		TestPerformance();
+//		CheckConrrectness();
 
-//		TestUsingBinaryFile();
+//		CheckPerformance();
 	}
 
 	// 销毁检测子
@@ -276,6 +270,7 @@ int main(int argc, char* argv[])
 	// 释放CUDA设备
 	CUDAInit::cudaDeviceRelease();
 
+	// 系统暂停
 	system("Pause");
 	return 0;
 }
