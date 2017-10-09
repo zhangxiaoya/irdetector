@@ -590,10 +590,10 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 //		if(temp > 4.0 && temp < 6.0)
 //		{
 //			// convert all obejct to rect
-			ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
+//			ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
 //
 //			// show result
-			ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+//			ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
 //		}
 
 		// Merge all objects
