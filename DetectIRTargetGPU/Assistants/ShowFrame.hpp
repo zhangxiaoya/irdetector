@@ -15,6 +15,9 @@ public:
 	template<typename T>
 	static void ToMat(T* frame, const int width, const int height, cv::Mat& img, int type);
 
+	template<typename T>
+	static void ToMat(T* frame, const int width, const int height, cv::Mat& img);
+
 	static void Show(std::string titleName, unsigned char* frame, const int width, const int height);
 
 	static void DrawRectangles(unsigned char* frame, ObjectRect* allRects, int width, int height);
@@ -48,6 +51,19 @@ void ShowFrame::ToMat(T* frame, const int width, const int height, cv::Mat& img,
 		}
 	}
 	delete[] tempFrame;
+}
+
+template <typename T>
+void ShowFrame::ToMat(T* frame, const int width, const int height, cv::Mat& img)
+{
+	for (auto r = 0; r < height; ++r)
+	{
+		auto ptr = img.ptr<uchar>(r);
+		for (auto c = 0; c < width; ++c)
+		{
+			ptr[c] = static_cast<uchar>(frame[r * width + c]);
+		}
+	}
 }
 
 template<typename T>

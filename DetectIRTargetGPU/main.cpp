@@ -23,6 +23,7 @@ static const int FrameDataSize = WIDTH * HEIGHT * BYTESIZE;        // Ã¿¸öÍ¼ÏñÖ¡
 static const int ImageSize = WIDTH * HEIGHT;                       // Ã¿Ò»Ö¡Í¼ÏñÏñËØ´óÐ¡
 unsigned char FrameData[FrameDataSize];                            // Ã¿Ò»Ö¡Í¼ÏñÁÙÊ±»º³å
 unsigned short FrameDataInprocessing[ImageSize] = {0};             // Ã¿Ò»Ö¡Í¼ÏñÁÙÊ±»º³å
+unsigned short FrameDataToShow[ImageSize] = {0};                   // Ã¿Ò»Ö¡ÏÔÊ¾½á¹ûÍ¼ÏñÁÙÊ±»º³å
 ResultSegment ResultItemSendToServer;                              // Ã¿Ò»Ö¡Í¼Ïñ¼ì²â½á¹û
 ResultSegment ResultItemToShow;                                    // Ã¿Ò»Ö¡Í¼ÏñÏÔÊ¾½á¹û
 static const int ResultItemSize = sizeof(ResultSegment);           // Ã¿Ò»Ö¡Í¼Ïñ¼ì²â½á¹û´óÐ¡
@@ -34,6 +35,8 @@ static const int BufferSize = 10;                               // Ïß³ÌÍ¬²½»º³åÇ
 FrameDataRingBufferStruct Buffer(FrameDataSize, BufferSize);    // Êý¾Ý½ÓÊÕÏß³Ì»·ÐÎ»º³åÇø³õÊ¼»¯
 DetectResultRingBufferStruct ResultBuffer(WIDTH, HEIGHT, BufferSize);          // ½á¹û·¢ËÍÏß³Ì»·ÐÎ»º³åÇø³õÊ¼»¯
 ShowResultRingBufferStruct ShowResultBuffer(BufferSize);        // ÏÔÊ¾½á¹ûÏß³Ì»·ÐÎ»º³åÇø
+
+cv::Mat CVFrame(HEIGHT, WIDTH, CV_8UC1);
 
 /****************************************************************************************/
 /*                                Input Data Operation                                  */
@@ -149,6 +152,7 @@ bool OutputData(DetectResultRingBufferStruct* buffer, ShowResultRingBufferStruct
 
 	memcpy(&ResultItemSendToServer, buffer->item_buffer + buffer->read_position * ResultItemSize, ResultItemSize);
 	SendResultToRemoteServer(ResultItemSendToServer);
+	memcpy(&FrameDataToShow, buffer->frame_buffer + buffer->read_position * FrameDataSize, FrameDataSize);
 //	SendResultToRemoteServer(buffer->item_buffer[buffer->read_position]);
 
 	buffer->read_position++;
@@ -169,6 +173,7 @@ bool OutputData(DetectResultRingBufferStruct* buffer, ShowResultRingBufferStruct
 
 	// Copy data received from network to ring buffer and update ring buffer header pointer
 	memcpy(showResultBuffer->item_buffer + showResultBuffer->write_position * ResultItemSize, &ResultItemSendToServer, ResultItemSize);
+	memcpy(showResultBuffer->frame_buffer + showResultBuffer->write_position * FrameDataSize, &FrameDataToShow, FrameDataSize);
 	showResultBuffer->write_position++;
 
 	// Reset data header pointer when to the end of buffer
@@ -182,13 +187,12 @@ bool OutputData(DetectResultRingBufferStruct* buffer, ShowResultRingBufferStruct
 	return true;
 }
 
-void ShowResultProcess(const ResultSegment& result_segment)
+void ShowResultProcess(const ResultSegment& result_segment, unsigned short* frame)
 {
-	for (auto i = 0; i < result_segment.targetCount;++i)
-	{
-		std::cout << "target " << i << std::endl;
-		std::cout << result_segment.targets->bottomRightX <<std::endl;
-	}
+	cv::Mat tFrame(HEIGHT, WIDTH, CV_8UC1);
+	ShowFrame::ToMat<unsigned short>(frame, WIDTH, HEIGHT, tFrame);
+	cv::imshow("Result", tFrame);
+//	cv::waitKey(1);
 }
 
 bool ShowResult(ShowResultRingBufferStruct* show_result_buffer)
@@ -204,8 +208,13 @@ bool ShowResult(ShowResultRingBufferStruct* show_result_buffer)
 	}
 
 	memcpy(&ResultItemToShow, show_result_buffer->item_buffer + show_result_buffer->read_position * ResultItemSize, ResultItemSize);
+	unsigned short resultFrame[WIDTH* HEIGHT * BYTESIZE];
+	memcpy(&resultFrame, show_result_buffer->frame_buffer + show_result_buffer->read_position * FrameDataSize, FrameDataSize);
 	// To-Do
-	ShowResultProcess(ResultItemToShow);
+//	ShowResultProcess(ResultItemToShow, resultFrame);
+	cv::Mat tFrame(HEIGHT, WIDTH, CV_8UC1);
+	ShowFrame::ToMat<unsigned short>(resultFrame, WIDTH, HEIGHT, tFrame);
+	cv::imshow("Result", tFrame);
 
 	show_result_buffer->read_position++;
 
@@ -310,7 +319,7 @@ void RunOnNetwork()
 	std::thread InputDataThread(InputDataTask);
 	std::thread DetectorThread(DetectTask);
 	std::thread OutputDataThread(OutputDataTask);
-	std::thread ShowResultThread(ShowResultTask);
+//	std::thread ShowResultThread(ShowResultTask);
 
 	// Èý¸öÏß³Ì¿ªÊ¼ÔËÐÐ
 	InputDataThread.join();
