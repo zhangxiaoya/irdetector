@@ -155,7 +155,6 @@ bool OutputData(DetectResultRingBufferStruct* buffer)
 
 	memcpy(&ResultItemSendToServer, buffer->item_buffer + buffer->read_position * ResultItemSize, ResultItemSize);
 	SendResultToRemoteServer(ResultItemSendToServer);
-//	SendResultToRemoteServer(buffer->item_buffer[buffer->read_position]);
 
 	buffer->read_position++;
 
@@ -164,8 +163,6 @@ bool OutputData(DetectResultRingBufferStruct* buffer)
 
 	buffer->buffer_not_full.notify_all();
 	lock.unlock();
-
-
 
 	return true;
 }
