@@ -20,7 +20,7 @@ public:
 
 	static void Show(std::string titleName, unsigned char* frame, const int width, const int height);
 
-	static void DrawRectangles(unsigned char* frame, ObjectRect* allRects, int width, int height);
+	static void DrawRectangles(unsigned short* frame, ObjectRect* allRects, int width, int height);
 
 	static void DrawRectangles(unsigned short* frame, ResultSegment* allRects, int width, int height, int delay = 0);
 
@@ -101,10 +101,10 @@ inline void ShowFrame::Show(std::string titleName, unsigned char* frame, const i
 	cv::waitKey(0);
 }
 
-inline void ShowFrame::DrawRectangles(unsigned char* frame, ObjectRect* allRects, int width, int height)
+inline void ShowFrame::DrawRectangles(unsigned short* frame, ObjectRect* allRects, int width, int height)
 {
 	cv::Mat img;
-	ToMat<unsigned char>(frame, width, height, img, CV_8UC1);
+	ToMat<unsigned short>(frame, width, height, img, CV_8UC1);
 
 	for (auto i = 0; i < width * height; ++i)
 	{
