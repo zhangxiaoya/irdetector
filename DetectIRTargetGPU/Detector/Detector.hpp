@@ -624,7 +624,7 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 		FalseAlarmFilter();
 
 		// put all valid result to resultSegment
-		result->targetCount = lastResultCount >= 1 ? 1 : lastResultCount;
+		result->targetCount = lastResultCount >= 5 ? 1 : lastResultCount;
 
 		for (auto i = 0; i < result->targetCount; ++i)
 		{
