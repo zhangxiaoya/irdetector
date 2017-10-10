@@ -85,6 +85,6 @@ inline void PerformanceValidation::VailidationAll()
 
 		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
 
-		ShowFrame::DrawRectangles(dataPoint[i], &result, width, height);
+		ShowFrame::DrawRectangles(dataPoint[i], &result, width, height, 1);
 	}
 }

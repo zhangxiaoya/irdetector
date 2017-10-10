@@ -38,7 +38,7 @@ private:
 
 	static void GetAllObjects(int* labelsOnHost, FourLimits* allObjects, int width, int height);
 
-	static void ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height);
+	static void ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height, int validObjectCount = 0);
 
 	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
@@ -334,12 +334,17 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 	}
 }
 
-inline void Detector::ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height)
+inline void Detector::ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height, int validObjectCount)
 {
-	for (auto i = 0; i < width * height; ++i)
+	if (validObjectCount == 0)
+		validObjectCount = width * height;
+	for (auto i = 0; i < validObjectCount; ++i)
 	{
 		if (allObjects[i].top == -1)
+		{
+			allObjectRects[i].width = 0;
 			continue;
+		}
 		allObjectRects[i].width = allObjects[i].right - allObjects[i].left + 1;
 		allObjectRects[i].height = allObjects[i].bottom - allObjects[i].top + 1;
 		allObjectRects[i].lt = Point(allObjects[i].left, allObjects[i].top);
@@ -507,43 +512,45 @@ inline void Detector::FalseAlarmFilter()
 	for (auto i = 0; i < validObjectsCount; ++i)
 	{
 		auto score = 0;
-		filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, allValidObjects[i], width);
+		auto object = allValidObjects[i];
+		filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, object, width, height);
 
-		auto currentResult = (CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, width, height, allValidObjects[i]))
-			|| (CHECK_DECRETIZATED_FLAG && filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, width, height, allValidObjects[i]));
+		auto currentResult = (CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, width, height, object))
+			|| (CHECK_DECRETIZATED_FLAG && filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, width, height, object));
 		if (currentResult == false) continue;
 		score++;
 
 		if (CHECK_SURROUNDING_BOUNDARY_FLAG)
 		{
-			currentResult &= filters.CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(discretizationResultOnHost, width, height, allValidObjects[i]);
+			currentResult &= filters.CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(discretizationResultOnHost, width, height, object);
 			if (currentResult == false) continue;
 			score++;
 		}
 		if (CHECK_COVERAGE_FLAG)
 		{
-			currentResult &= filters.CheckCoverageOfPreprocessedFrame(discretizationResultOnHost, width, allValidObjects[i]);
+			currentResult &= filters.CheckCoverageOfPreprocessedFrame(discretizationResultOnHost, width, object);
 			if (currentResult == false) continue;
 			score++;
 		}
 		if (CHECK_INSIDE_BOUNDARY_FLAG)
 		{
-			currentResult &= filters.CheckInsideBoundaryDescendGradient(originalFrameOnHost, width, allValidObjects[i]);
+			currentResult &= filters.CheckInsideBoundaryDescendGradient(originalFrameOnHost, width, object);
 			if (currentResult == false) continue;
 			score++;
 		}
 		if (CHECK_STANDARD_DEVIATION_FLAG)
 		{
-			currentResult &= filters.CheckStandardDeviation(originalFrameOnHost, width, allValidObjects[i]);
+			currentResult &= filters.CheckStandardDeviation(originalFrameOnHost, width, object);
 			if (currentResult == false) continue;
 			score++;
 		}
 		if (currentResult != true)
-			allValidObjects[i].top = -1;
+			object.top = -1;
 		else
 		{
-			this->insideObjects[lastResultCount].object = allValidObjects[i];
-			this->insideObjects[lastResultCount].score = score + static_cast<int>(filters.GetCenterValue());
+			this->insideObjects[lastResultCount].object = object;
+//			this->insideObjects[lastResultCount].score = score + static_cast<int>(filters.GetCenterValue());
+			this->insideObjects[lastResultCount].score = score + filters.GetContrast();
 			lastResultCount++;
 		}
 	}
