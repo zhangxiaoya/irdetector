@@ -17,7 +17,7 @@
 
 inline bool CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b)
 {
-	return a.score > b.score;
+	return a.score - b.score > 0.0000001;
 }
 
 class Detector
