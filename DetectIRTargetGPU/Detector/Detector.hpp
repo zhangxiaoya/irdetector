@@ -387,8 +387,6 @@ inline void Detector::MergeObjects() const
 				continue;
 			if (CheckCross(allValidObjects[i], allValidObjects[j]))
 			{
-				allValidObjects[j].top = -1;
-
 				if (allValidObjects[i].top > allValidObjects[j].top)
 					allValidObjects[i].top = allValidObjects[j].top;
 
@@ -400,15 +398,20 @@ inline void Detector::MergeObjects() const
 
 				if (allValidObjects[i].bottom < allValidObjects[j].bottom)
 					allValidObjects[i].bottom = allValidObjects[j].bottom;
+
+				allValidObjects[j].top = -1;
+
 			}
 
-			if ((allValidObjects[i].bottom - allValidObjects[i].top) > TARGET_HEIGHT_MAX_LIMIT ||
-				(allValidObjects[i].right - allValidObjects[i].left) > TARGET_WIDTH_MAX_LIMIT)
+			if ((allValidObjects[i].bottom - allValidObjects[i].top + 1) > TARGET_HEIGHT_MAX_LIMIT ||
+				(allValidObjects[i].right - allValidObjects[i].left + 1) > TARGET_WIDTH_MAX_LIMIT)
 			{
 				allValidObjects[i].top = -1;
 				break;
 			}
 		}
+//		ConvertFourLimitsToRect(allValidObjects, allObjectRects, width, height, validObjectsCount);
+//		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
 	}
 }
 
@@ -603,11 +606,13 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 //			ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
 //		}
 
+
+
 		// Merge all objects
 		MergeObjects();
 
 		// Remove objects with low contrast
-		RemoveObjectWithLowContrast();
+//		RemoveObjectWithLowContrast();
 
 		// Remove objects after merge
 		RemoveInvalidObjectAfterMerge();
