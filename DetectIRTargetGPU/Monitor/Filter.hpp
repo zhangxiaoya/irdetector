@@ -41,7 +41,7 @@ public:
 
 	double GetContrast() const
 	{
-		return this->centerValueOfOriginalImage * 1.0 / this->surroundingAverageValueOfOriginImage;
+		return this->averageValueOfOriginalImage * 1.0 / this->surroundingAverageValueOfOriginImage;
 	}
 
 private:
