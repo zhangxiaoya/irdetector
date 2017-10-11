@@ -482,7 +482,7 @@ inline void Detector::RemoveInValidObjects()
 	validObjectsCount = 0;
 	for (auto i = 0; i < width * height; ++i)
 	{
-		if (allObjects[i].top != -1)
+		if (allObjects[i].top != -1 && ((allObjects[i].right - allObjects[i].left + 1) > 3 || (allObjects[i].bottom - allObjects[i].top + 1 > 3)))
 		{
 			allValidObjects[validObjectsCount] = allObjects[i];
 			validObjectsCount++;
@@ -552,8 +552,11 @@ inline void Detector::FalseAlarmFilter()
 		else
 		{
 			this->insideObjects[lastResultCount].object = object;
+			auto contrast = filters.GetContrast();
+			if(contrast < 1.010)
+				continue;
 //			this->insideObjects[lastResultCount].score = score + static_cast<int>(filters.GetCenterValue());
-			this->insideObjects[lastResultCount].score = score + filters.GetContrast();
+			this->insideObjects[lastResultCount].score = score + contrast;
 			lastResultCount++;
 		}
 	}
@@ -624,7 +627,7 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 		FalseAlarmFilter();
 
 		// put all valid result to resultSegment
-		result->targetCount = lastResultCount >= 5 ? 1 : lastResultCount;
+		result->targetCount = lastResultCount >= 3 ? 3 : lastResultCount;
 
 		for (auto i = 0; i < result->targetCount; ++i)
 		{
