@@ -553,7 +553,7 @@ inline void Detector::FalseAlarmFilter()
 		{
 			this->insideObjects[lastResultCount].object = object;
 			auto contrast = filters.GetContrast();
-			if(contrast < 1.010)
+			if(contrast < 1.002)
 				continue;
 //			this->insideObjects[lastResultCount].score = score + static_cast<int>(filters.GetCenterValue());
 			this->insideObjects[lastResultCount].score = score + contrast;
@@ -610,8 +610,9 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 //		}
 
 
-
 		// Merge all objects
+		MergeObjects();
+
 		MergeObjects();
 
 		// Remove objects with low contrast
