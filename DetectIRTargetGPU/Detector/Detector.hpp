@@ -184,7 +184,7 @@ inline bool Detector::ReleaseSpace()
 		CheckCUDAReturnStatus(cudaFree(this->dilationResultOnDevice), status);
 		if (status == true)
 		{
-			this->dilationResultOnDevice == nullptr;
+			this->dilationResultOnDevice = nullptr;
 		}
 	}
 	if (this->labelsOnDevice != nullptr)

@@ -153,7 +153,7 @@ inline void CorrectnessValidation::VailidationAll()
 
 	char iterationText[200];
 
-	for(auto i = 0;i<frameCount;++i)
+	for(unsigned i = 0;i<frameCount;++i)
 	{
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);

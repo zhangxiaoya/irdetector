@@ -62,7 +62,7 @@ inline void BinaryFileReader::ReleaseSpace()
 {
 	if (dataMatrix != nullptr)
 	{
-		for (auto i = 0; i < frameCount; ++i)
+		for (unsigned i = 0; i < frameCount; ++i)
 		{
 			cudaFreeHost(dataMatrix[i]);
 		}
@@ -185,9 +185,9 @@ inline void BinaryFileReader::CalculateFrameCount(std::ifstream& fin)
 {
 	logPrinter.PrintLogs("Start binary file reading ...", LogLevel::Info);
 	fin.seekg(0, std::ios::end);
-	auto len = fin.tellg();
+	const auto len = fin.tellg();
 
-	frameCount = len * 1.0 / (width * height * ByteSize);
+	frameCount = static_cast<unsigned>(len * 1.0 / (width * height * ByteSize));
 
 	fin.seekg(0, std::ios::beg);
 	logPrinter.PrintLogs("The image count in this binary file is ", LogLevel::Info, frameCount);
@@ -200,15 +200,16 @@ inline bool BinaryFileReader::InitSpaceOnHost()
 	dataMatrix = new unsigned short*[frameCount];
 
 	// frame data of each frame is on pinned memory
-	for (auto i = 0; i < frameCount; ++i)
+	for (unsigned i = 0; i < frameCount; ++i)
 	{
-		auto cuda_error = cudaMallocHost(reinterpret_cast<void**>(&dataMatrix[i]), width * height * sizeof(unsigned short));
+		const auto cuda_error = cudaMallocHost(reinterpret_cast<void**>(&dataMatrix[i]), width * height * sizeof(unsigned short));
 		if (cuda_error != cudaSuccess)
 		{
 			logPrinter.PrintLogs("Init space on host failed! Starting roll back ...", Error);
 
 			for (auto j = i - 1; j >= 0; j--)
 				cudaFreeHost(dataMatrix[j]);
+
 			delete[] dataMatrix;
 
 			logPrinter.PrintLogs("Roll back done!", Info);
