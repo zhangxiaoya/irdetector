@@ -120,9 +120,6 @@
     <ClInclude Include="Validation\PerformanceValidation.hpp">
       <Filter>Validation</Filter>
     </ClInclude>
-    <ClInclude Include="Network\NetworkTransfer.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="Segmentation\segementationHelper.h">
       <Filter>Segmentation</Filter>
     </ClInclude>
@@ -138,6 +135,9 @@
     <ClInclude Include="Models\DetectResultRingBufferStruct.hpp">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Network\NetworkTransfer.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -150,11 +150,11 @@
     <ClCompile Include="Models\ResultSegment.hpp">
       <Filter>Models</Filter>
     </ClCompile>
-    <ClCompile Include="Network\NetworkTransfer.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="Validation\Validation.cpp">
       <Filter>Validation</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\NetworkTransfer.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

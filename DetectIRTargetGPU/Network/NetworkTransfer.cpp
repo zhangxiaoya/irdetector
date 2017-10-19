@@ -132,26 +132,6 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 //	 打印开始接收数据消息
 	std::cout << "Receiving one frame data from remote device ...\n";
 
-//	unsigned char frame[320 * 256 * 2];
-//	auto receivedStatus = recvfrom(
-//		RemoteDataServerSocket,
-//		reinterpret_cast<char*>(frame),
-//		320*256*2,
-//		0,
-//		reinterpret_cast<sockaddr *>(&RemoteDataServerSocketAddress),
-//		&RemoteDataServerSocketAddressLen);
-//
-//	if(receivedStatus != SOCKET_ERROR)
-//	{
-//		memcpy(frameData, frame, 320 * 256 * 2);
-//		return true;
-//	}
-//	else
-//	{
-//		std::cout << WSAGetLastError() << std::endl;
-//		return false;
-//	}
-
 	// 记录当前帧的帧号
 	unsigned char frameIndex = 0;
 	// 记录每一帧每一段的是否已经接收
@@ -167,7 +147,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 	    auto partBuffer = ReceiveDataBuffer + i * quarterBufferSize;
 		// 接收一次数据
 		memset(partBuffer, 0, sizeof(partBuffer));
-		auto receivedStatus = recvfrom(
+		const auto receivedStatus = recvfrom(
 			RemoteDataServerSocket,
 			reinterpret_cast<char*>(partBuffer),
 			quarterBufferSize,
