@@ -78,13 +78,13 @@ inline void PerformanceValidation::VailidationAll()
 	ResultSegment result;
 	detector->SetAllParameters();
 
-	for(auto i = 0;i<frameCount;++i)
+	for(unsigned i = 0;i<frameCount;++i)
 	{
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);
 
 		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
 
-		ShowFrame::DrawRectangles(dataPoint[i], &result, width, height);
+		ShowFrame::DrawRectangles(dataPoint[i], &result, width, height, 1);
 	}
 }

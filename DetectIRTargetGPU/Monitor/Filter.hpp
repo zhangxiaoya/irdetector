@@ -23,7 +23,7 @@ public:
 
 	bool CheckStandardDeviation(unsigned short* originalFrameOnHost, int width, const FourLimits& object) const;
 
-	void InitObjectParameters(unsigned short* frameOfOriginalImage, unsigned short* frameOfPreprocessedImage, const FourLimits& object, int width);
+	void InitObjectParameters(unsigned short* frameOfOriginalImage, unsigned short* frameOfPreprocessedImage, const FourLimits& object, int width, int height);
 
 public:
 	void SetConvexPartitionOfOriginalImage(int value);
@@ -37,6 +37,11 @@ public:
 	unsigned short GetCenterValue() const
 	{
 		return this->centerValueOfPreprocessedImage;
+	}
+
+	double GetContrast() const
+	{
+		return this->averageValueOfOriginalImage * 1.0 / this->surroundingAverageValueOfOriginImage;
 	}
 
 private:
@@ -56,6 +61,8 @@ private:
 	unsigned short centerValueOfPreprocessedImage;
 	unsigned short averageValueOfOriginalImage;
 	unsigned short averageValueOfPreprocessedImage;
+
+	unsigned short surroundingAverageValueOfOriginImage;
 
 	int ConvexPartitionOfOriginalImage;
 	int ConcavePartitionOfOriginalImage;
@@ -103,6 +110,7 @@ inline Filter::Filter(): centerX(0), centerY(0),
                          centerValueOfPreprocessedImage(0),
                          averageValueOfOriginalImage(0),
                          averageValueOfPreprocessedImage(0),
+                         surroundingAverageValueOfOriginImage(0),
                          ConvexPartitionOfOriginalImage(0),
                          ConcavePartitionOfOriginalImage(0),
                          ConvexPartitionOfDiscretizedImage(0),
@@ -302,7 +310,7 @@ inline bool Filter::CheckStandardDeviation(unsigned short* originalFrameOnHost, 
 	return false;
 }
 
-inline void Filter::InitObjectParameters(unsigned short* frameOfOriginalImage, unsigned short* frameOfPreprocessedImage, const FourLimits& object, int width)
+inline void Filter::InitObjectParameters(unsigned short* frameOfOriginalImage, unsigned short* frameOfPreprocessedImage, const FourLimits& object, int width, int height)
 {
 	centerX = (object.left + object.right) / 2;
 	centerY = (object.top + object.bottom) / 2;
@@ -314,6 +322,7 @@ inline void Filter::InitObjectParameters(unsigned short* frameOfOriginalImage, u
 	Util::CalculateAverage(frameOfPreprocessedImage, object, averageValueOfPreprocessedImage, width);
 	Util::CalCulateCenterValue(frameOfOriginalImage, centerValueOfOriginalImage, width, centerX, centerY);
 	Util::CalCulateCenterValue(frameOfPreprocessedImage, centerValueOfPreprocessedImage, width, centerX, centerY);
+	Util::CalculateSurroundingValue(frameOfOriginalImage, object, surroundingAverageValueOfOriginImage, width, height);
 }
 
 inline void Filter::SetConvexPartitionOfOriginalImage(int value)

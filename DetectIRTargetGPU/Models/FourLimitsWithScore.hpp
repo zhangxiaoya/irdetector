@@ -4,10 +4,10 @@
 class FourLimitsWithScore
 {
 public:
-	FourLimitsWithScore(): score(0)
+	FourLimitsWithScore(): score(0.0)
 	{
 	}
 
 	FourLimits object;
-	int score;
+	double score;
 };
