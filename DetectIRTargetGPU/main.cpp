@@ -60,8 +60,8 @@ bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 	memcpy(buffer->item_buffer + buffer->write_position * FrameDataSize, FrameData, FrameDataSize);
 	buffer->write_position++;
 
-	auto frameIndex = reinterpret_cast<int*>(FrameData + 2);
-	std::cout<<" ====================================================================>" << *frameIndex << std::endl;
+//	auto frameIndex = reinterpret_cast<int*>(FrameData + 2);
+//	std::cout<<" ====================================================================>" << *frameIndex << std::endl;
 
 	// Reset data header pointer when to the end of buffer
 	if (buffer->write_position == BufferSize)
@@ -103,7 +103,17 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	readLock.unlock();
 
 	// 检测目标，并检测性能
-	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+//	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+
+	LARGE_INTEGER t1, t2, tc;
+	QueryPerformanceFrequency(&tc);
+	QueryPerformanceCounter(&t1);
+	detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer);
+	QueryPerformanceCounter(&t2);
+	const auto timeC = (t2.QuadPart - t1.QuadPart) * 1.0 / tc.QuadPart;
+	printf("Operation of %20s Use Time:%f\n", "Total process", timeC);
+	if (timeC >= 0.006)
+		printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
 	if(IsSendResultToServer)
 	{
