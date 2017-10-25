@@ -27,7 +27,7 @@ ResultSegment ResultItemSendToServer;                              // 每一帧图像
 ResultSegment ResultItemToShow;                                    // 每一帧图像显示结果
 static const int ResultItemSize = sizeof(ResultSegment);           // 每一帧图像检测结果大小
 
-Detector* detector = new Detector();                  // 初始化检测器
+Detector* detector = new Detector(WIDTH, HEIGHT);                  // 初始化检测器
 
 // 缓冲区全局变量声明与定义
 static const int BufferSize = 10;                               // 线程同步缓冲区大小
@@ -269,9 +269,9 @@ int main(int argc, char* argv[])
 	{
 //		RunOnNetwork();
 
-		CheckConrrectness(WIDTH, HEIGHT);
+//		CheckConrrectness(WIDTH, HEIGHT);
 
-//		CheckPerformance(WIDTH, HEIGHT);
+		CheckPerformance(WIDTH, HEIGHT);
 	}
 
 	// 销毁检测子

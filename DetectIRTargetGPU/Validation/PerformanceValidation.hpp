@@ -65,7 +65,7 @@ inline void PerformanceValidation::VailidationAll()
 {
 	if (CheckFileReader()) return;
 
-	this->detector = new Detector();
+	this->detector = new Detector(Width, Height);
 	detector->InitSpace();
 	detector->SetAllParameters();
 
