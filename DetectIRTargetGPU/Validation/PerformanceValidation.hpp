@@ -39,7 +39,7 @@ private:
 	LogPrinter logPrinter;
 };
 
-inline void PerformanceValidation::InitDataReader(std::string validationFileName)
+inline void PerformanceValidation::InitDataReader(const std::string validationFileName)
 {
 	if(fileReader != nullptr)
 	{
@@ -69,7 +69,7 @@ inline void PerformanceValidation::VailidationAll()
 	detector->InitSpace();
 	detector->SetAllParameters();
 
-	auto frameCount = fileReader->GetFrameCount();
+	const auto frameCount = fileReader->GetFrameCount();
 	auto dataPoint = fileReader->GetDataPoint();
 
 	logPrinter.PrintLogs("Test the visual effect of detect result ... ", Info);

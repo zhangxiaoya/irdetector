@@ -89,7 +89,7 @@ private:
 	LogPrinter logPrinter;
 };
 
-inline void CorrectnessValidation::InitValidationData(std::string validationFileName)
+inline void CorrectnessValidation::InitValidationData(const std::string validationFileName)
 {
 	if(fileReader != nullptr)
 	{
@@ -144,8 +144,8 @@ inline void CorrectnessValidation::VailidationAll()
 	if (CheckFileReader()) return;
 	if (CheckInitSpace()) return;
 
-	auto frameCount = fileReader->GetFrameCount();
-	auto dataPoint = fileReader->GetDataPoint();
+	const auto frameCount = fileReader->GetFrameCount();
+	const auto dataPoint = fileReader->GetDataPoint();
 
 	logPrinter.PrintLogs("Test the accuracy for this test file ... ", Info);
 	auto checkResult = false;
@@ -153,7 +153,7 @@ inline void CorrectnessValidation::VailidationAll()
 
 	char iterationText[200];
 
-	for(unsigned i = 0;i<frameCount;++i)
+	for (unsigned i = 0; i < frameCount; ++i)
 	{
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);
