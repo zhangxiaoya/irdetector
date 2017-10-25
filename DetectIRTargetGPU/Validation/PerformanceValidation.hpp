@@ -10,11 +10,11 @@
 class PerformanceValidation
 {
 public:
-	explicit PerformanceValidation(BinaryFileReader* file_reader = nullptr)
+	explicit PerformanceValidation(const int width, const int height, BinaryFileReader* file_reader = nullptr)
 		: fileReader(file_reader),
 		  detector(nullptr),
-		  width(320),
-		  height(256)
+		  Width(width),
+		  Height(height)
 	{
 	}
 
@@ -33,8 +33,8 @@ private:
 	BinaryFileReader* fileReader;
 	Detector* detector;
 
-	int width;
-	int height;
+	int Width;
+	int Height;
 
 	LogPrinter logPrinter;
 };
@@ -85,6 +85,6 @@ inline void PerformanceValidation::VailidationAll()
 
 		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
 
-		ShowFrame::DrawRectangles(dataPoint[i], &result, width, height, 1);
+		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, 1);
 	}
 }
