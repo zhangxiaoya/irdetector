@@ -272,7 +272,7 @@ int main(int argc, char* argv[])
 	{
 //		RunOnNetwork();
 
-//		CheckConrrectness(WIDTH, HEIGHT);
+		CheckConrrectness(WIDTH, HEIGHT);
 
 		CheckPerformance(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 	}

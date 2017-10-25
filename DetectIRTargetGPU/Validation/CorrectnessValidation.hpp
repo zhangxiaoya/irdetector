@@ -15,7 +15,10 @@
 class CorrectnessValidation
 {
 public:
-	explicit CorrectnessValidation(const int width, const int height, BinaryFileReader* file_reader = nullptr)
+	explicit CorrectnessValidation(const int width,
+	                               const int height,
+	                               const int pixelSize,
+	                               BinaryFileReader* file_reader = nullptr)
 		: fileReader(file_reader),
 		  originalFrameOnHost(nullptr),
 		  originalFrameOnDeivce(nullptr),
@@ -32,7 +35,8 @@ public:
 		  modificationFlagOnDevice(nullptr),
 		  isInitSpaceReady(false),
 		  Width(width),
-		  Height(height)
+		  Height(height),
+		  PixelSize(pixelSize)
 	{
 	}
 
@@ -85,6 +89,7 @@ private:
 
 	int Width;
 	int Height;
+	int PixelSize;
 
 	LogPrinter logPrinter;
 };
@@ -96,7 +101,7 @@ inline void CorrectnessValidation::InitValidationData(const std::string validati
 		delete fileReader;
 		fileReader = nullptr;
 	}
-	fileReader = new BinaryFileReader(validationFileName);
+	fileReader = new BinaryFileReader(Width, Height, PixelSize, validationFileName);
 	fileReader->ReadBinaryFileToHostMemory();
 
 	this->InitSpace();

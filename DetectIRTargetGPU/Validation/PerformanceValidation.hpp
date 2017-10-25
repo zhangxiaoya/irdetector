@@ -10,12 +10,17 @@
 class PerformanceValidation
 {
 public:
-	explicit PerformanceValidation(const int width, const int height, const int dilationRadius,
-	                               const int discretizationScale, BinaryFileReader* file_reader = nullptr)
+	explicit PerformanceValidation(const int width,
+	                               const int height,
+	                               const int pixelSize,
+	                               const int dilationRadius,
+	                               const int discretizationScale,
+	                               BinaryFileReader* file_reader = nullptr)
 		: fileReader(file_reader),
 		  detector(nullptr),
 		  Width(width),
 		  Height(height),
+		  PixelSize(pixelSize),
 		  DilationRadius(dilationRadius),
 		  DiscretizationScale(discretizationScale)
 	{
@@ -38,6 +43,7 @@ private:
 
 	int Width;
 	int Height;
+	int PixelSize;
 	int DilationRadius;
 	int DiscretizationScale;
 
@@ -51,7 +57,7 @@ inline void PerformanceValidation::InitDataReader(const std::string validationFi
 		delete fileReader;
 		fileReader = nullptr;
 	}
-	fileReader = new BinaryFileReader(validationFileName);
+	fileReader = new BinaryFileReader(Width, Height, PixelSize, validationFileName);
 	fileReader->ReadBinaryFileToHostMemory();
 }
 

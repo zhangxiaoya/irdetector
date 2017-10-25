@@ -10,7 +10,7 @@ void CheckConrrectness(const int width, const int height)
 {
 	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\2\\ir_file_20170531_1000m_1_partOne.bin";
 
-	CorrectnessValidation validator(width, height);
+	CorrectnessValidation validator(width, height, sizeof(unsigned short));
 	validator.InitValidationData(validation_file_name);
 	validator.VailidationAll();
 }
@@ -22,7 +22,7 @@ void CheckPerformance(const int width, const int height, const int dilationRadiu
 	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\8\\ir_file_20170925_220915_mubiaojingzhi.bin";
 //	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\4\\test\\ir_file_20170713_300m_jingzhi.bin";
 
-	PerformanceValidation validator(width, height, dilationRadius, discretizationScale);
+	PerformanceValidation validator(width, height, sizeof(unsigned short), dilationRadius, discretizationScale);
 	validator.InitDataReader(validation_file_name);
 	validator.VailidationAll();
 }
