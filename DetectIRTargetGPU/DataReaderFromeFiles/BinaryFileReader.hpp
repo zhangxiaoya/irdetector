@@ -2,7 +2,6 @@
 #define __BINARY_FILE_READER__
 
 #include "../Headers/GlobalMainHeaders.h"
-#include "../Common/SplitBinaryFile.hpp"
 #include <fstream>
 #include <cuda_runtime_api.h>
 
@@ -77,8 +76,6 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 	std::ifstream fin;
 	OpenBinaryFile(fin);
 
-//	SplitBinaryFileOperator splitOperator(width, height);
-
 	if (fin.is_open())
 	{
 		// counting frame and init space on host and device respectly
@@ -115,12 +112,7 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 					unsigned short perPixel;
 					ConstitudePixel(highPart, lowPart, perPixel);
 
-					// but we only need only low part of one pixel (temparory)
-//					originalPerFramePixelArray[pixelIndex] = perPixel;
 					dataMatrix[frameIndex][pixelIndex++] = perPixel;
-
-//					if (splitOperator.IsReady() && !splitOperator.IsFinished())
-//						splitOperator.Split(highPart, lowPart);
 
 					// update these variables
 					ChangeRows(row, col);
