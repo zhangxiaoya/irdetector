@@ -23,7 +23,7 @@ inline bool CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b)
 class Detector
 {
 public:
-	Detector(const int width, const int height, const int dilationRadius);
+	Detector(const int width, const int height, const int dilationRadius, const int discretizationScale);
 
 	~Detector();
 
@@ -60,7 +60,7 @@ private:
 	int Height;
 
 	int DilationRadius;
-	int discretizationScale;
+	int DiscretizationScale;
 
 	bool isInitSpaceReady;
 	bool isFrameDataReady;
@@ -98,11 +98,11 @@ private:
 	bool CHECK_STANDARD_DEVIATION_FLAG;
 };
 
-inline Detector::Detector(const int width, const int height, const int dilationRadius)
+inline Detector::Detector(const int width, const int height, const int dilationRadius, const int discretizationScale)
 	: Width(width),
 	  Height(height),
 	  DilationRadius(dilationRadius),
-	  discretizationScale(15),
+	  DiscretizationScale(discretizationScale),
 	  isInitSpaceReady(true),
 	  isFrameDataReady(true),
 	  originalFrameOnHost(nullptr),
@@ -576,7 +576,7 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 		NaiveDilation(this->originalFrameOnDevice, this->dilationResultOnDevice, Width, Height, DilationRadius);
 
 		// level disretization on gpu
-		LevelDiscretizationOnGPU(this->dilationResultOnDevice, Width, Height, discretizationScale);
+		LevelDiscretizationOnGPU(this->dilationResultOnDevice, Width, Height, DiscretizationScale);
 
 		// CCL On Device
 		MeshCCL(this->dilationResultOnDevice, this->labelsOnDevice, this->referenceOfLabelsOnDevice, this->modificationFlagOnDevice, Width, Height);
