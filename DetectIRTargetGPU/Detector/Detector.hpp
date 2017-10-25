@@ -23,7 +23,7 @@ inline bool CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b)
 class Detector
 {
 public:
-	explicit Detector(int width, int height);
+	Detector(const int width, const int height, const int dilationRadius);
 
 	~Detector();
 
@@ -59,7 +59,7 @@ private:
 	int Width;
 	int Height;
 
-	int radius;
+	int DilationRadius;
 	int discretizationScale;
 
 	bool isInitSpaceReady;
@@ -98,10 +98,10 @@ private:
 	bool CHECK_STANDARD_DEVIATION_FLAG;
 };
 
-inline Detector::Detector(const int width, const int height)
+inline Detector::Detector(const int width, const int height, const int dilationRadius)
 	: Width(width),
 	  Height(height),
-	  radius(1),
+	  DilationRadius(dilationRadius),
 	  discretizationScale(15),
 	  isInitSpaceReady(true),
 	  isFrameDataReady(true),
@@ -572,8 +572,8 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 	if (isFrameDataReady == true)
 	{
 		// dilation on gpu
-//		DilationFilter(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, radius);
-		NaiveDilation(this->originalFrameOnDevice, this->dilationResultOnDevice, Width, Height, radius);
+//		DilationFilter(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, DilationRadius);
+		NaiveDilation(this->originalFrameOnDevice, this->dilationResultOnDevice, Width, Height, DilationRadius);
 
 		// level disretization on gpu
 		LevelDiscretizationOnGPU(this->dilationResultOnDevice, Width, Height, discretizationScale);

@@ -10,11 +10,12 @@
 class PerformanceValidation
 {
 public:
-	explicit PerformanceValidation(const int width, const int height, BinaryFileReader* file_reader = nullptr)
+	explicit PerformanceValidation(const int width, const int height, const int dilationRadius, BinaryFileReader* file_reader = nullptr)
 		: fileReader(file_reader),
 		  detector(nullptr),
 		  Width(width),
-		  Height(height)
+		  Height(height),
+		  DilationRadius(dilationRadius)
 	{
 	}
 
@@ -35,6 +36,7 @@ private:
 
 	int Width;
 	int Height;
+	int DilationRadius;
 
 	LogPrinter logPrinter;
 };
@@ -65,7 +67,7 @@ inline void PerformanceValidation::VailidationAll()
 {
 	if (CheckFileReader()) return;
 
-	this->detector = new Detector(Width, Height);
+	this->detector = new Detector(Width, Height, DilationRadius);
 	detector->InitSpace();
 	detector->SetAllParameters();
 
