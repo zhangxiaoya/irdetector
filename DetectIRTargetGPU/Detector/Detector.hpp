@@ -31,7 +31,12 @@ public:
 
 	void DetectTargets(unsigned short* frame, ResultSegment* result);
 
-	void SetAllParameters();
+	void SetRemoveFalseAlarmParameters(bool checkStandardDeviationFlag,
+	                                   bool checkSurroundingBoundaryFlag,
+	                                   bool checkInsideBoundaryFlag,
+	                                   bool checkCoverageFlag,
+	                                   bool checkOriginalImageThreshold,
+	                                   bool checkDiscretizatedThreshold);
 
 private:
 	void CopyFrameData(unsigned short* frame);
@@ -642,18 +647,23 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 	}
 }
 
-inline void Detector::SetAllParameters()
+inline void Detector::SetRemoveFalseAlarmParameters(const bool checkStandardDeviationFlag,
+                                                    const bool checkSurroundingBoundaryFlag,
+                                                    const bool checkInsideBoundaryFlag,
+                                                    const bool checkCoverageFlag,
+                                                    const bool checkOriginalImageThreshold,
+                                                    const bool checkDiscretizatedThreshold)
 {
-	CHECK_STANDARD_DEVIATION_FLAG = true;
-	CHECK_SURROUNDING_BOUNDARY_FLAG = false;
-	CHECK_INSIDE_BOUNDARY_FLAG = false;
-	CHECK_COVERAGE_FLAG = false;
+	CHECK_STANDARD_DEVIATION_FLAG = checkStandardDeviationFlag;
+	CHECK_SURROUNDING_BOUNDARY_FLAG = checkSurroundingBoundaryFlag;
+	CHECK_INSIDE_BOUNDARY_FLAG = checkInsideBoundaryFlag;
+	CHECK_COVERAGE_FLAG = checkCoverageFlag;
 
-	CHECK_ORIGIN_FLAG = true;
+	CHECK_ORIGIN_FLAG = checkOriginalImageThreshold;
 	filters.SetConvexPartitionOfOriginalImage(20 * 256);
 	filters.SetConcavePartitionOfOriginalImage(1);
 
-	CHECK_DECRETIZATED_FLAG = true;
+	CHECK_DECRETIZATED_FLAG = checkDiscretizatedThreshold;
 	filters.SetConvexPartitionOfDiscretizedImage(20 * 256);
 	filters.SetConcavePartitionOfDiscretizedImage(1);
 }

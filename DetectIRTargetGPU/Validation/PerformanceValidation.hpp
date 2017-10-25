@@ -72,7 +72,7 @@ inline void PerformanceValidation::VailidationAll()
 
 	this->detector = new Detector(Width, Height, DilationRadius, DiscretizationScale);
 	detector->InitSpace();
-	detector->SetAllParameters();
+	detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
 
 	const auto frameCount = fileReader->GetFrameCount();
 	auto dataPoint = fileReader->GetDataPoint();
@@ -81,7 +81,7 @@ inline void PerformanceValidation::VailidationAll()
 	char iterationText[200];
 
 	ResultSegment result;
-	detector->SetAllParameters();
+	detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
 
 	for(unsigned i = 0;i<frameCount;++i)
 	{

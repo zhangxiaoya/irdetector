@@ -241,7 +241,7 @@ void RunOnNetwork()
 
 	// 初始化检测子局部存储和检测参数
 	detector->InitSpace();
-	detector->SetAllParameters();
+	detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
 
 	// 初始化数据缓冲和结果缓冲
 	InitBuffer(&Buffer);
