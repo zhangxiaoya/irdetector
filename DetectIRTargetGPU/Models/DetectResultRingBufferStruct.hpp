@@ -4,22 +4,20 @@
 
 struct DetectResultRingBufferStruct
 {
-
-
-	explicit DetectResultRingBufferStruct(int _width = 320, int _height = 256, int buffer_size = 10)
+	explicit DetectResultRingBufferStruct(const int width, const int height, const int buffer_size)
 		: finish_flag(false),
 		  item_buffer(nullptr),
 		  frame_buffer(nullptr),
 		  read_position(0),
 		  write_position(0),
-		  width(_width),
-		  height(_height),
+		  Width(width),
+		  Height(height),
 		  bufferSize(buffer_size),
 		  resultItemSize(0)
 	{
 		resultItemSize = sizeof(ResultSegment);
 		item_buffer = new ResultSegment[bufferSize * resultItemSize];
-		frame_buffer = new unsigned short[buffer_size * sizeof(unsigned short) * width * height];
+		frame_buffer = new unsigned short[buffer_size * sizeof(unsigned short) * Width * Height];
 	}
 
 	~DetectResultRingBufferStruct()
@@ -37,8 +35,8 @@ struct DetectResultRingBufferStruct
 	std::condition_variable buffer_not_full;        // 条件变量, 指示产品缓冲区不为满.
 	std::condition_variable buffer_not_empty;       // 条件变量, 指示产品缓冲区不为空.
 
-	unsigned width;
-	unsigned height;
+	unsigned Width;
+	unsigned Height;
 
 private:
 	int bufferSize;
