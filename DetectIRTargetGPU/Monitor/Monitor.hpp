@@ -7,7 +7,13 @@
 class Monitor
 {
 public:
-	Monitor(): originalFrameOnHost(nullptr), originalFrameOnDevice(nullptr), prepareResultOnHost(nullptr), prepareResultOnDevice(nullptr), width(320), height(256)
+	Monitor(const int width, const int height):
+		originalFrameOnHost(nullptr),
+		originalFrameOnDevice(nullptr),
+		prepareResultOnHost(nullptr),
+		prepareResultOnDevice(nullptr),
+		Width(width),
+		Height(height)
 	{
 	}
 
@@ -21,16 +27,16 @@ private:
 	unsigned char* prepareResultOnHost;
 	unsigned char* prepareResultOnDevice;
 
-	int width;
-	int height;
+	int Width;
+	int Height;
 };
 
 inline void Monitor::ResetData(unsigned char* dataSource) const
 {
 	if(dataSource !=nullptr)
 	{
-		memcpy(this->originalFrameOnHost, dataSource, sizeof(unsigned char) * width * height);
-		cudaMemcpy(originalFrameOnDevice, originalFrameOnHost, sizeof(unsigned char) * width * height, cudaMemcpyHostToDevice);
+		memcpy(this->originalFrameOnHost, dataSource, sizeof(unsigned char) * Width * Height);
+		cudaMemcpy(originalFrameOnDevice, originalFrameOnHost, sizeof(unsigned char) * Width * Height, cudaMemcpyHostToDevice);
 	}
 }
 
