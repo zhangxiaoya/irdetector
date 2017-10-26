@@ -2,20 +2,19 @@
 #define __BINARY_FILE_READER__
 
 #include "../Headers/GlobalMainHeaders.h"
-#include "../Common/SplitBinaryFile.hpp"
 #include <fstream>
 #include <cuda_runtime_api.h>
 
 class BinaryFileReader
 {
 public:
-	explicit BinaryFileReader(const std::string& binary_file_name)
+	BinaryFileReader(const int width, const int height, const int pixelSize, const std::string& binary_file_name)
 		: frameCount(0),
 		  dataMatrix(nullptr),
 		  binaryFileName(binary_file_name),
-		  width(320),
-		  height(256),
-		  ByteSize(2)
+		  Width(width),
+		  Height(height),
+		  PixelSize(pixelSize)
 	{
 	}
 
@@ -48,9 +47,9 @@ private:
 
 	std::string binaryFileName;
 
-	int width;
-	int height;
-	int ByteSize;
+	int Width;
+	int Height;
+	int PixelSize;
 };
 
 inline BinaryFileReader::~BinaryFileReader()
@@ -77,8 +76,6 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 	std::ifstream fin;
 	OpenBinaryFile(fin);
 
-//	SplitBinaryFileOperator splitOperator(width, height);
-
 	if (fin.is_open())
 	{
 		// counting frame and init space on host and device respectly
@@ -88,7 +85,7 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 		auto init_space_on_host = InitSpaceOnHost();
 		if (init_space_on_host)
 		{
-			auto originalPerFramePixelArray = new unsigned short[width * height];
+			auto originalPerFramePixelArray = new unsigned short[Width * Height];
 			auto iterationText = new char[200];
 
 			// init some variables
@@ -109,18 +106,13 @@ inline bool BinaryFileReader::ReadBinaryFileToHostMemory()
 					break;
 
 				// per frame
-				while (byteIndex - 2 < width * height * ByteSize)
+				while (byteIndex - 2 < Width * Height * PixelSize)
 				{
 					// take 16-bit space per pixel
 					unsigned short perPixel;
 					ConstitudePixel(highPart, lowPart, perPixel);
 
-					// but we only need only low part of one pixel (temparory)
-//					originalPerFramePixelArray[pixelIndex] = perPixel;
 					dataMatrix[frameIndex][pixelIndex++] = perPixel;
-
-//					if (splitOperator.IsReady() && !splitOperator.IsFinished())
-//						splitOperator.Split(highPart, lowPart);
 
 					// update these variables
 					ChangeRows(row, col);
@@ -187,7 +179,7 @@ inline void BinaryFileReader::CalculateFrameCount(std::ifstream& fin)
 	fin.seekg(0, std::ios::end);
 	const auto len = fin.tellg();
 
-	frameCount = static_cast<unsigned>(len * 1.0 / (width * height * ByteSize));
+	frameCount = static_cast<unsigned>(len * 1.0 / (Width * Height * PixelSize));
 
 	fin.seekg(0, std::ios::beg);
 	logPrinter.PrintLogs("The image count in this binary file is ", LogLevel::Info, frameCount);
@@ -202,7 +194,7 @@ inline bool BinaryFileReader::InitSpaceOnHost()
 	// frame data of each frame is on pinned memory
 	for (unsigned i = 0; i < frameCount; ++i)
 	{
-		const auto cuda_error = cudaMallocHost(reinterpret_cast<void**>(&dataMatrix[i]), width * height * sizeof(unsigned short));
+		const auto cuda_error = cudaMallocHost(reinterpret_cast<void**>(&dataMatrix[i]), Width * Height * sizeof(unsigned short));
 		if (cuda_error != cudaSuccess)
 		{
 			logPrinter.PrintLogs("Init space on host failed! Starting roll back ...", Error);
@@ -230,7 +222,7 @@ inline void BinaryFileReader::ConstitudePixel(unsigned char highPart, unsigned c
 inline void BinaryFileReader::ChangeRows(unsigned& row, unsigned& col) const
 {
 	col++;
-	if (col == width)
+	if (col == Width)
 	{
 		col = 0;
 		row++;

@@ -46,10 +46,12 @@ void ShowFrame::ToMat(T* frame, const int width, const int height, cv::Mat& img,
 	img = cv::Mat(height, width, type);
 	for (auto r = 0; r < height; ++r)
 	{
-		auto ptr = img.ptr<uchar>(r);
+		auto ptr = img.ptr<cv::Vec3b>(r);
 		for (auto c = 0; c < width; ++c)
 		{
-			ptr[c] = static_cast<uchar>(tempFrame[r * width + c]);
+			ptr[c][0] = static_cast<uchar>(tempFrame[r * width + c]);
+			ptr[c][1] = static_cast<uchar>(tempFrame[r * width + c]);
+			ptr[c][2] = static_cast<uchar>(tempFrame[r * width + c]);
 		}
 	}
 	delete[] tempFrame;
@@ -122,7 +124,7 @@ inline void ShowFrame::DrawRectangles(unsigned short* frame, ObjectRect* allRect
 inline void ShowFrame::DrawRectangles(unsigned short* frame, ResultSegment* allRects, int width, int height, int delay)
 {
 	cv::Mat img;
-	ToMat<unsigned short>(frame, width, height, img, CV_8UC1);
+	ToMat<unsigned short>(frame, width, height, img, CV_8UC3);
 
 	for (auto i = 0; i < allRects->targetCount; ++i)
 	{
