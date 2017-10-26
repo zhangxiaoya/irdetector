@@ -8,7 +8,9 @@
 /****************************************************************************************/
 void CheckConrrectness(const int width, const int height)
 {
-	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\2\\ir_file_20170531_1000m_1_partOne.bin";
+//	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\2\\ir_file_20170531_1000m_1_partOne.bin";
+//	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\6\\binaryfiles\\Frame_00000003.bin";
+	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\temp\\Frame_000_double.bin";
 
 	CorrectnessValidation validator(width, height, sizeof(unsigned short));
 	validator.InitValidationData(validation_file_name);
@@ -19,8 +21,10 @@ void CheckPerformance(const int width, const int height, const int dilationRadiu
 {
 //	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\2\\ir_file_20170531_1000m_1_partOne.bin";
 //	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\binaryFiles\\ir_file_20170531_1000m_1.bin";
-	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\8\\ir_file_20170925_220915_mubiaojingzhi.bin";
+//	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\8\\ir_file_20170925_220915_mubiaojingzhi.bin";
 //	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\4\\test\\ir_file_20170713_300m_jingzhi.bin";
+//	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\6\\binaryfiles\\Frame_00000003.bin";
+	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\temp\\Frame_000_double.bin";
 
 	PerformanceValidation validator(width, height, sizeof(unsigned short), dilationRadius, discretizationScale);
 	validator.InitDataReader(validation_file_name);
