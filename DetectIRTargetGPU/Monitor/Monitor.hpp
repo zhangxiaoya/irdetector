@@ -3,16 +3,22 @@
 #include "../Models/Confidences.hpp"
 #include "../Detector/Detector.hpp"
 
+const int ConfValue = 12;
+
 class Monitor
 {
 public:
-	Monitor(const int width, const int height): currentFrame(nullptr),
-	                                            Width(width),
-	                                            Height(height),
-	                                            confidences(nullptr),
-	                                            detector(nullptr)
+	Monitor(const int width, const int height, const int dilationRadius, const int discretizationScale):
+		currentFrame(nullptr),
+		Width(width),
+		Height(height),
+		DilationRadius(dilationRadius),
+		DiscretizationScale(discretizationScale),
+		confidences(nullptr),
+		detector(nullptr)
 	{
-		confidences = new Confidences(Width, Height);
+		InitDetector();
+		InitMonitor();
 	}
 
 	~Monitor()
@@ -26,10 +32,14 @@ public:
 protected:
 	void InitMonitor();
 
+	void InitDetector();
+
 private:
 	unsigned short* currentFrame;
 	int Width;
 	int Height;
+	int DilationRadius;
+	int DiscretizationScale;
 
 	Confidences* confidences;
 	Detector* detector;
@@ -44,16 +54,27 @@ inline bool Monitor::Process(unsigned short* frame)
 	{
 		const auto centerX = result.targets[i].bottomRightX + result.targets[i].topLeftX;
 		const auto centerY = result.targets[i].bottomRightY + result.targets[i].topLeftY;
-		int BlockX = centerX / BlockSize;
-		int BlockY = centerY / BlockSize;
+		const auto BlockX = centerX / BlockSize;
+		const auto BlockY = centerY / BlockSize;
+
+		confidences->ConfidenceMap[BlockY][BlockX][confidences->QueueEnd] = ConfValue;
 	}
+	confidences->QueueEnd++;
+	if (confidences->QueueBeg == confidences->QueueEnd)
+		confidences->QueueBeg++;
 
 	return true;
 }
 
 inline void Monitor::InitMonitor()
 {
-	confidences->InitConfidenceMap();
+	this->confidences = new Confidences(Width, Height);
+	this->confidences->InitConfidenceMap();
+}
+
+inline void Monitor::InitDetector()
+{
+	this->detector = new Detector(Width, Height, DilationRadius, DiscretizationScale);
 }
 
 #endif
