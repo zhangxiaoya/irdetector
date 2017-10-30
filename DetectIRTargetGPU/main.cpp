@@ -16,8 +16,8 @@ const bool IsSendResultToServer = true; // 是否发送结果到服务端(测试用)
 /****************************************************************************************/
 /* 参数定义： 图像信息全局变量声明与定义                                                   */
 /****************************************************************************************/
-extern const unsigned int WIDTH = 320 * 2;   // 图像宽度
-extern const unsigned int HEIGHT = 256 * 2;  // 图像高度
+extern const unsigned int WIDTH = 320;   // 图像宽度
+extern const unsigned int HEIGHT = 256;  // 图像高度
 extern const unsigned int BYTESIZE = 2;  // 每个像素字节数
 
 /****************************************************************************************/
