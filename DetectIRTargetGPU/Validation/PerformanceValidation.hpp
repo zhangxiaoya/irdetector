@@ -10,11 +10,19 @@
 class PerformanceValidation
 {
 public:
-	explicit PerformanceValidation(BinaryFileReader* file_reader = nullptr)
+	explicit PerformanceValidation(const int width,
+	                               const int height,
+	                               const int pixelSize,
+	                               const int dilationRadius,
+	                               const int discretizationScale,
+	                               BinaryFileReader* file_reader = nullptr)
 		: fileReader(file_reader),
 		  detector(nullptr),
-		  width(320),
-		  height(256)
+		  Width(width),
+		  Height(height),
+		  PixelSize(pixelSize),
+		  DilationRadius(dilationRadius),
+		  DiscretizationScale(discretizationScale)
 	{
 	}
 
@@ -33,20 +41,23 @@ private:
 	BinaryFileReader* fileReader;
 	Detector* detector;
 
-	int width;
-	int height;
+	int Width;
+	int Height;
+	int PixelSize;
+	int DilationRadius;
+	int DiscretizationScale;
 
 	LogPrinter logPrinter;
 };
 
-inline void PerformanceValidation::InitDataReader(std::string validationFileName)
+inline void PerformanceValidation::InitDataReader(const std::string validationFileName)
 {
 	if(fileReader != nullptr)
 	{
 		delete fileReader;
 		fileReader = nullptr;
 	}
-	fileReader = new BinaryFileReader(validationFileName);
+	fileReader = new BinaryFileReader(Width, Height, PixelSize, validationFileName);
 	fileReader->ReadBinaryFileToHostMemory();
 }
 
@@ -65,18 +76,18 @@ inline void PerformanceValidation::VailidationAll()
 {
 	if (CheckFileReader()) return;
 
-	this->detector = new Detector();
+	this->detector = new Detector(Width, Height, DilationRadius, DiscretizationScale);
 	detector->InitSpace();
-	detector->SetAllParameters();
+	detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
 
-	auto frameCount = fileReader->GetFrameCount();
+	const auto frameCount = fileReader->GetFrameCount();
 	auto dataPoint = fileReader->GetDataPoint();
 
 	logPrinter.PrintLogs("Test the visual effect of detect result ... ", Info);
 	char iterationText[200];
 
 	ResultSegment result;
-	detector->SetAllParameters();
+	detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
 
 	for(unsigned i = 0;i<frameCount;++i)
 	{
@@ -85,6 +96,6 @@ inline void PerformanceValidation::VailidationAll()
 
 		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
 
-		ShowFrame::DrawRectangles(dataPoint[i], &result, width, height, 1);
+		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, 1);
 	}
 }

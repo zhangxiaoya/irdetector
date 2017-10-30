@@ -1,5 +1,5 @@
 #pragma once
 
-void CheckConrrectness();
+void CheckConrrectness(const int width, const int height);
 
-void CheckPerformance();
+void CheckPerformance(const int width, const int height, const int dilationRadius, const int discretizationScale);

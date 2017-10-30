@@ -11,13 +11,24 @@
 #include "Models/DetectResultRingBufferStruct.hpp"
 #include "Validation/Validation.h"
 
-const bool IsSendResultToServer = true; // 是否发送结果到服务端
+const bool IsSendResultToServer = true; // 是否发送结果到服务端(测试用)
 
-// 图像信息全局变量声明与定义
-extern const unsigned int WIDTH = 320;   // 图像宽度
-extern const unsigned int HEIGHT = 256;  // 图像高度
+/****************************************************************************************/
+/* 参数定义： 图像信息全局变量声明与定义                                                   */
+/****************************************************************************************/
+extern const unsigned int WIDTH = 320 * 2;   // 图像宽度
+extern const unsigned int HEIGHT = 256 * 2;  // 图像高度
 extern const unsigned int BYTESIZE = 2;  // 每个像素字节数
 
+/****************************************************************************************/
+/* 参数定义：预处理阶段参数                                                               */
+/****************************************************************************************/
+const int DilationRadius = 1;            // 滤波器半径
+const int DiscretizationScale = 15;      // 离散化尺度
+
+/****************************************************************************************/
+/* 其他参数定义                                                                          */
+/****************************************************************************************/
 static const int FrameDataSize = WIDTH * HEIGHT * BYTESIZE;        // 每个图像帧数据大小
 static const int ImageSize = WIDTH * HEIGHT;                       // 每一帧图像像素大小
 unsigned char FrameData[FrameDataSize];                            // 每一帧图像临时缓冲
@@ -26,18 +37,18 @@ unsigned short FrameDataToShow[ImageSize] = {0};                   // 每一帧显示
 ResultSegment ResultItemSendToServer;                              // 每一帧图像检测结果
 ResultSegment ResultItemToShow;                                    // 每一帧图像显示结果
 static const int ResultItemSize = sizeof(ResultSegment);           // 每一帧图像检测结果大小
-
-Detector* detector = new Detector();                  // 初始化检测器
-
-// 缓冲区全局变量声明与定义
-static const int BufferSize = 10;                               // 线程同步缓冲区大小
-FrameDataRingBufferStruct Buffer(FrameDataSize, BufferSize);    // 数据接收线程环形缓冲区初始化
-DetectResultRingBufferStruct ResultBuffer(WIDTH, HEIGHT, BufferSize);          // 结果发送线程环形缓冲区初始化
-
+Detector* detector = new Detector(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);  // 初始化检测器
 cv::Mat CVFrame(HEIGHT, WIDTH, CV_8UC1);
 
 /****************************************************************************************/
-/*                                Input Data Operation                                  */
+/* 参数定义：缓冲区全局变量声明与定义                                                      */
+/****************************************************************************************/
+static const int BufferSize = 10;                                              // 线程同步缓冲区大小
+FrameDataRingBufferStruct Buffer(FrameDataSize, BufferSize);                   // 数据接收线程环形缓冲区初始化
+DetectResultRingBufferStruct ResultBuffer(WIDTH, HEIGHT, BufferSize);          // 结果发送线程环形缓冲区初始化
+
+/****************************************************************************************/
+/* 函数定义：从网络读取数据操作（读取一帧）                                                 */
 /****************************************************************************************/
 bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 {
@@ -60,9 +71,6 @@ bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 	memcpy(buffer->item_buffer + buffer->write_position * FrameDataSize, FrameData, FrameDataSize);
 	buffer->write_position++;
 
-	auto frameIndex = reinterpret_cast<int*>(FrameData + 2);
-	std::cout<<" ====================================================================>" << *frameIndex << std::endl;
-
 	// Reset data header pointer when to the end of buffer
 	if (buffer->write_position == BufferSize)
 		buffer->write_position = 0;
@@ -74,7 +82,7 @@ bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 }
 
 /****************************************************************************************/
-/*                              Detect target Operation                                 */
+/* 函数定义：检测一帧数据，并且把结果放在缓冲区                                             */
 /****************************************************************************************/
 bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruct* resultBuffer)
 {
@@ -103,7 +111,17 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	readLock.unlock();
 
 	// 检测目标，并检测性能
-	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+//	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+
+	LARGE_INTEGER t1, t2, tc;
+	QueryPerformanceFrequency(&tc);
+	QueryPerformanceCounter(&t1);
+	detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer);
+	QueryPerformanceCounter(&t2);
+	const auto timeC = (t2.QuadPart - t1.QuadPart) * 1.0 / tc.QuadPart;
+	printf("Operation of %20s Use Time:%f\n", "Total process", timeC);
+	if (timeC >= 0.006)
+		printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
 	if(IsSendResultToServer)
 	{
@@ -139,7 +157,7 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 }
 
 /****************************************************************************************/
-/*                               Send Result Operation                                  */
+/* 函数定义：发送一帧检测结果                                                             */
 /****************************************************************************************/
 bool OutputData(DetectResultRingBufferStruct* buffer)
 {
@@ -168,11 +186,11 @@ bool OutputData(DetectResultRingBufferStruct* buffer)
 }
 
 /****************************************************************************************/
-/*                                  Input Data Task                                     */
+/* 函数定义：读取图像帧线程任务                                                           */
 /****************************************************************************************/
 void InputDataTask()
 {
-	// 循环接收数据（线程优先级太高）
+	// 循环接收数据
 	while (true)
 	{
 		if(InputDataToBuffer(&Buffer) == false) break;
@@ -180,7 +198,7 @@ void InputDataTask()
 }
 
 /****************************************************************************************/
-/*                                      Detect Task                                     */
+/* 函数定义：检测目标线程任务                                                             */
 /****************************************************************************************/
 void DetectTask()
 {
@@ -192,7 +210,7 @@ void DetectTask()
 }
 
 /****************************************************************************************/
-/*                               Output Result Task                                     */
+/* 函数定义：发送结果线程任务                                                             */
 /****************************************************************************************/
 void OutputDataTask()
 {
@@ -204,16 +222,16 @@ void OutputDataTask()
 }
 
 /****************************************************************************************/
-/*                               Initial Data Buffer                                    */
+/* 函数定义：初始化接受数据缓冲                                                            */
 /****************************************************************************************/
-void InitBuffer(FrameDataRingBufferStruct* buffer)
+void InitDataSourceBuffer(FrameDataRingBufferStruct* buffer)
 {
 	buffer->write_position = 0;
 	buffer->read_position = 0;
 }
 
 /****************************************************************************************/
-/*                               Initial Result Buffer                                  */
+/* 函数定义：初始化检测结果缓冲                                                           */
 /****************************************************************************************/
 void InitResultBuffer(DetectResultRingBufferStruct* buffer)
 {
@@ -221,6 +239,9 @@ void InitResultBuffer(DetectResultRingBufferStruct* buffer)
 	buffer->write_position = 0;
 }
 
+/****************************************************************************************/
+/* 函数定义：在网络环境运行                                                               */
+/****************************************************************************************/
 void RunOnNetwork()
 {
 	// 初始化Socket网络环境
@@ -228,10 +249,10 @@ void RunOnNetwork()
 
 	// 初始化检测子局部存储和检测参数
 	detector->InitSpace();
-	detector->SetAllParameters();
+	detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
 
 	// 初始化数据缓冲和结果缓冲
-	InitBuffer(&Buffer);
+	InitDataSourceBuffer(&Buffer);
 	InitResultBuffer(&ResultBuffer);
 
 	// 创建三个线程：读取数据线程、计算结果、返回结果
@@ -257,11 +278,11 @@ int main(int argc, char* argv[])
 	const auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-		RunOnNetwork();
+//		RunOnNetwork();
 
-//		CheckConrrectness();
+		CheckConrrectness(WIDTH, HEIGHT);
 
-//		CheckPerformance();
+		CheckPerformance(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 	}
 
 	// 销毁检测子
