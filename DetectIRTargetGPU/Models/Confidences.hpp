@@ -8,15 +8,15 @@ typedef int ConfElem[6];
 class Confidences
 {
 public:
-	Confidences(const int width, const int height):
+	Confidences(const int width, const int height, const int blockCols, const int blockRows):
+		BlockCols(blockCols),
+		BlockRows(blockRows),
 		Width(width),
 		Height(height),
 		QueueBeg(0),
 		QueueEnd(0),
 		ConfidenceMap(nullptr)
 	{
-		BlockCols = (Width + (BlockSize - 1)) / BlockSize;
-		BlockRows = (Height + (BlockSize - 1)) / BlockSize;
 	}
 
 	~Confidences();
