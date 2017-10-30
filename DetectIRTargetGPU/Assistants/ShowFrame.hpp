@@ -128,7 +128,7 @@ inline void ShowFrame::DrawRectangles(unsigned short* frame, ResultSegment* allR
 
 	for (auto i = 0; i < allRects->targetCount; ++i)
 	{
-		rectangle(img, cv::Point(allRects->targets[i].topLeftX, allRects->targets[i].topleftY), cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1), cv::Scalar(255, 255, 0));
+		rectangle(img, cv::Point(allRects->targets[i].topLeftX, allRects->targets[i].topLeftY), cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1), cv::Scalar(255, 255, 0));
 	}
 
 	imshow("after draw", img);
@@ -139,7 +139,7 @@ inline void ShowFrame::DrawRectangles(cv::Mat& frame, ResultSegment* allRects)
 {
 	for (auto i = 0; i < allRects->targetCount; ++i)
 	{
-		rectangle(frame, cv::Point(allRects->targets[i].topLeftX, allRects->targets[i].topleftY), cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1), cv::Scalar(255, 255, 0));
+		rectangle(frame, cv::Point(allRects->targets[i].topLeftX, allRects->targets[i].topLeftY), cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1), cv::Scalar(255, 255, 0));
 	}
 }
 

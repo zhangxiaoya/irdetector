@@ -639,7 +639,7 @@ inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result
 		{
 			TargetPosition pos;
 			pos.topLeftX = insideObjects[i].object.left;
-			pos.topleftY = insideObjects[i].object.top;
+			pos.topLeftY = insideObjects[i].object.top;
 			pos.bottomRightX = insideObjects[i].object.right;
 			pos.bottomRightY = insideObjects[i].object.bottom;
 			result->targets[i] = pos;

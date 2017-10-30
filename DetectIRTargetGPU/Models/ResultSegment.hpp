@@ -3,7 +3,7 @@
 struct TargetPosition
 {
 	int topLeftX;
-	int topleftY;
+	int topLeftY;
 	int bottomRightX;
 	int bottomRightY;
 };
