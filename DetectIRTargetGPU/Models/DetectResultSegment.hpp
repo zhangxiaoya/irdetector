@@ -9,8 +9,8 @@ struct DetectResultSegment
 };
 
 
-struct DetectResult
+struct DetectResultWithTrackerStatus
 {
-	DetectResultSegment* result;
+	DetectResultSegment* detectResultPointers;
 	bool hasTracker[5];
 };

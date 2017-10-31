@@ -68,7 +68,7 @@ private:
 	Confidences* confidences;
 	Detector* detector;
 	DetectResultSegment detectResult;
-	DetectResult result;
+	DetectResultWithTrackerStatus detectResultWithStatus;
 
 	Tracker* TrackerList;
 };
@@ -223,14 +223,14 @@ inline void Monitor::UpdateTrackerOrAddTracker(const int blockX, const int block
 
 	// Go through detect result and check if there are target in current block without tracked now
 	// Without check multi target in one block
-	for (auto i = 0; i < result.result->targetCount; ++i)
+	for (auto i = 0; i < detectResultWithStatus.detectResultPointers->targetCount; ++i)
 	{
-		if(result.hasTracker[i] == true)
+		if(detectResultWithStatus.hasTracker[i] == true)
 			continue;
 
 		auto BR = 0;
 		auto BC = 0;
-		GetBlockPos(result.result->targets[i], BR, BC);
+		GetBlockPos(detectResultWithStatus.detectResultPointers->targets[i], BR, BC);
 		if(blockX == BC && blockY == BR)
 		{
 			hasTargetNotTracked = true;
@@ -251,22 +251,22 @@ inline void Monitor::UpdateTrackerOrAddTracker(const int blockX, const int block
 
 			// tracker for this block exist
 			hasTrackerForThisBlock = true;
-			for (auto i = 0; i < result.result->targetCount; ++ i)
+			for (auto i = 0; i < detectResultWithStatus.detectResultPointers->targetCount; ++ i)
 			{
-				if(result.hasTracker[i] == true)
+				if(detectResultWithStatus.hasTracker[i] == true)
 					continue;
 
 				auto BR = 0;
 				auto BC = 0;
-				GetBlockPos(result.result->targets[i], BR, BC);
+				GetBlockPos(detectResultWithStatus.detectResultPointers->targets[i], BR, BC);
 				if (TrackerList[j].BlockX == BC && TrackerList[j].BlockY == BR)
 				{
 					// Use Manhattan Distance to check if this is the same target with tracker
-					if (CheckDistance(result.result->targets[i], TrackerList[j].Postion) < 8)
-						UpdateTracker(TrackerList[j], result.result->targets[i]);
+					if (CheckDistance(detectResultWithStatus.detectResultPointers->targets[i], TrackerList[j].Postion) < 8)
+						UpdateTracker(TrackerList[j], detectResultWithStatus.detectResultPointers->targets[i]);
 					else
-						AddTracker(result.result->targets[i]);
-					result.hasTracker[i] = true;
+						AddTracker(detectResultWithStatus.detectResultPointers->targets[i]);
+					detectResultWithStatus.hasTracker[i] = true;
 				}
 			}
 		}
@@ -274,9 +274,9 @@ inline void Monitor::UpdateTrackerOrAddTracker(const int blockX, const int block
 		// if there are no tracker
 		if(hasTrackerForThisBlock == false)
 		{
-			for (auto i = 0; i < result.result->targetCount; ++i)
+			for (auto i = 0; i < detectResultWithStatus.detectResultPointers->targetCount; ++i)
 			{
-				AddTracker(result.result->targets[i]);
+				AddTracker(detectResultWithStatus.detectResultPointers->targets[i]);
 			}
 		}
 	}
@@ -299,8 +299,8 @@ inline bool Monitor::Process(unsigned short* frame)
 	detector->DetectTargets(frame, &detectResult);
 
 	// store current detected targets
-	result.result = &detectResult;
-	memset(result.hasTracker, false, sizeof(bool) * 5);
+	detectResultWithStatus.detectResultPointers = &detectResult;
+	memset(detectResultWithStatus.hasTracker, false, sizeof(bool) * 5);
 
 	ResetCurrentDetectMask();
 
