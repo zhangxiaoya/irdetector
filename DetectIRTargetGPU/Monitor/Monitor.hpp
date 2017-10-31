@@ -3,8 +3,8 @@
 #include "../Models/Confidences.hpp"
 #include "../Detector/Detector.hpp"
 
-const int ConfValue = 12;
-const int  IncrementConfValue = 10;
+const int ConfValue = 6;
+const int  IncrementConfValue = 12;
 
 class Monitor
 {
@@ -33,12 +33,21 @@ public:
 
 	bool Process(unsigned short* frame);
 
+private:
+	void IncreaseConfidenceValueAndUpdateConfidenceQueue() const;
+
+	void DecreaseConfidenceValueMap() const;
+
+	void ResetCurrentDetectMask() const;
+
 protected:
 	void InitMonitor();
 
 	void InitDetector();
 
 	void InitConfidenceValueMap();
+
+	void ReleaseConfidenceValueMap();
 
 private:
 	unsigned short* currentFrame;
@@ -58,14 +67,11 @@ private:
 	ResultSegment result;
 };
 
-inline bool Monitor::Process(unsigned short* frame)
+inline void Monitor::IncreaseConfidenceValueAndUpdateConfidenceQueue() const
 {
-	detector->DetectTargets(frame, &result);
-
-	memset(this->CurrentDetectMask, false, sizeof(bool) * BlockRows * BlockCols);
-
 	for (auto i = 0; i < result.targetCount; ++i)
 	{
+		// Update ConfidenceMap Queue
 		const auto centerX = result.targets[i].bottomRightX + result.targets[i].topLeftX;
 		const auto centerY = result.targets[i].bottomRightY + result.targets[i].topLeftY;
 		const auto BlockX = centerX / BlockSize;
@@ -74,6 +80,7 @@ inline bool Monitor::Process(unsigned short* frame)
 		CurrentDetectMask[BlockY * BlockCols + BlockX] = true;
 		confidences->ConfidenceMap[BlockY][BlockX][confidences->QueueEnd] = ConfValue;
 
+		// CinfidenceValueMap Increase
 		ConfidenceValueMap[BlockY * BlockCols + BlockX] += IncrementConfValue;
 		if (BlockX - 1 >= 0)
 			ConfidenceValueMap[BlockY * BlockCols + BlockX - 1] += IncrementConfValue / 2;
@@ -84,6 +91,15 @@ inline bool Monitor::Process(unsigned short* frame)
 		if (BlockY + 1 < BlockRows)
 			ConfidenceValueMap[(BlockY + 1) * BlockCols + BlockX] += IncrementConfValue / 2;
 	}
+
+	confidences->QueueEnd++;
+	if (confidences->QueueBeg == confidences->QueueEnd)
+		confidences->QueueBeg++;
+}
+
+inline void Monitor::DecreaseConfidenceValueMap() const
+{
+	// ConfidenceValueMap Decrease
 	for (auto r = 0; r < BlockRows; ++r)
 	{
 		for (auto c = 0; c < BlockCols; ++c)
@@ -96,10 +112,22 @@ inline bool Monitor::Process(unsigned short* frame)
 			}
 		}
 	}
+}
 
-	confidences->QueueEnd++;
-	if (confidences->QueueBeg == confidences->QueueEnd)
-		confidences->QueueBeg++;
+inline void Monitor::ResetCurrentDetectMask() const
+{
+	memset(this->CurrentDetectMask, false, sizeof(bool) * BlockRows * BlockCols);
+}
+
+inline bool Monitor::Process(unsigned short* frame)
+{
+	detector->DetectTargets(frame, &result);
+
+	ResetCurrentDetectMask();
+
+	IncreaseConfidenceValueAndUpdateConfidenceQueue();
+
+	DecreaseConfidenceValueMap();
 
 	return true;
 }
@@ -116,6 +144,7 @@ inline void Monitor::InitMonitor()
 inline void Monitor::InitDetector()
 {
 	this->detector = new Detector(Width, Height, DilationRadius, DiscretizationScale);
+	this->detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
 }
 
 inline void Monitor::InitConfidenceValueMap()
@@ -123,6 +152,16 @@ inline void Monitor::InitConfidenceValueMap()
 	this->ConfidenceValueMap = new int[BlockRows * BlockCols];
 	this->CurrentDetectMask = new bool[BlockRows * BlockCols];
 	memset(this->CurrentDetectMask, false, sizeof(bool) * BlockRows * BlockCols);
+	memset(this->ConfidenceValueMap, 0, sizeof(int) * BlockCols * BlockRows);
+}
+
+inline void Monitor::ReleaseConfidenceValueMap()
+{
+	delete[] this->ConfidenceValueMap;
+	this->ConfidenceValueMap = NULL;
+
+	delete[] this->CurrentDetectMask;
+	this->CurrentDetectMask = NULL;
 }
 
 #endif
