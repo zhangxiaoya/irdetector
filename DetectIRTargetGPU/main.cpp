@@ -34,9 +34,9 @@ static const int ImageSize = WIDTH * HEIGHT;                       // 每一帧图像
 unsigned char FrameData[FrameDataSize];                            // 每一帧图像临时缓冲
 unsigned short FrameDataInprocessing[ImageSize] = {0};             // 每一帧图像临时缓冲
 unsigned short FrameDataToShow[ImageSize] = {0};                   // 每一帧显示结果图像临时缓冲
-ResultSegment ResultItemSendToServer;                              // 每一帧图像检测结果
-ResultSegment ResultItemToShow;                                    // 每一帧图像显示结果
-static const int ResultItemSize = sizeof(ResultSegment);           // 每一帧图像检测结果大小
+DetectResultSegment ResultItemSendToServer;                              // 每一帧图像检测结果
+DetectResultSegment ResultItemToShow;                                    // 每一帧图像显示结果
+static const int ResultItemSize = sizeof(DetectResultSegment);           // 每一帧图像检测结果大小
 Detector* detector = new Detector(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);  // 初始化检测器
 cv::Mat CVFrame(HEIGHT, WIDTH, CV_8UC1);
 

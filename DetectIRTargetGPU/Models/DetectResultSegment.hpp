@@ -1,7 +1,7 @@
 #pragma once
 #include "TargetPosition.hpp"
 
-struct ResultSegment
+struct DetectResultSegment
 {
 	unsigned char header[16];
 	int targetCount;
@@ -11,6 +11,6 @@ struct ResultSegment
 
 struct DetectResult
 {
-	ResultSegment* result;
+	DetectResultSegment* result;
 	bool hasTracker[5];
 };

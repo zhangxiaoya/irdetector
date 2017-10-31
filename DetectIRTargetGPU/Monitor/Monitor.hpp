@@ -3,7 +3,7 @@
 #include "../Models/Confidences.hpp"
 #include "../Detector/Detector.hpp"
 #include "Tracker.hpp"
-#include "../Models/ResultSegment.hpp"
+#include "../Models/DetectResultSegment.hpp"
 
 const int ConfValue = 6;
 const int  IncrementConfValue = 12;
@@ -67,7 +67,7 @@ private:
 
 	Confidences* confidences;
 	Detector* detector;
-	ResultSegment detectResult;
+	DetectResultSegment detectResult;
 	DetectResult result;
 
 	Tracker* TrackerList;

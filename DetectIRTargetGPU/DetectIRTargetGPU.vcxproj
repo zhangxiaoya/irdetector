@@ -158,7 +158,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClCompile Include="Common\SplitBinaryFile.hpp" />
     <ClCompile Include="Detector\Detector.hpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Models\ResultSegment.hpp" />
+    <ClCompile Include="Models\DetectResultSegment.hpp" />
     <ClCompile Include="Network\NetworkTransfer.cpp" />
     <ClCompile Include="Validation\Validation.cpp" />
   </ItemGroup>

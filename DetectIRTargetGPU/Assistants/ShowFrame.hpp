@@ -7,7 +7,7 @@
 #include <iomanip>
 #include "../Headers/GlobalMainHeaders.h"
 #include "../Models/ObjectRect.h"
-#include "../Models/ResultSegment.hpp"
+#include "../Models/DetectResultSegment.hpp"
 
 class ShowFrame
 {
@@ -22,9 +22,9 @@ public:
 
 	static void DrawRectangles(unsigned short* frame, ObjectRect* allRects, int width, int height);
 
-	static void DrawRectangles(unsigned short* frame, ResultSegment* allRects, int width, int height, int delay = 0);
+	static void DrawRectangles(unsigned short* frame, DetectResultSegment* allRects, int width, int height, int delay = 0);
 
-	static void DrawRectangles(cv::Mat& frame, ResultSegment* allRects);
+	static void DrawRectangles(cv::Mat& frame, DetectResultSegment* allRects);
 
 	template<typename T>
 	static void ToTxt(T* frame, std::string fileName, const int width,  const int height);
@@ -121,7 +121,7 @@ inline void ShowFrame::DrawRectangles(unsigned short* frame, ObjectRect* allRect
 	cv::waitKey(1);
 }
 
-inline void ShowFrame::DrawRectangles(unsigned short* frame, ResultSegment* allRects, int width, int height, int delay)
+inline void ShowFrame::DrawRectangles(unsigned short* frame, DetectResultSegment* allRects, int width, int height, int delay)
 {
 	cv::Mat img;
 	ToMat<unsigned short>(frame, width, height, img, CV_8UC3);
@@ -135,7 +135,7 @@ inline void ShowFrame::DrawRectangles(unsigned short* frame, ResultSegment* allR
 	cv::waitKey(delay);
 }
 
-inline void ShowFrame::DrawRectangles(cv::Mat& frame, ResultSegment* allRects)
+inline void ShowFrame::DrawRectangles(cv::Mat& frame, DetectResultSegment* allRects)
 {
 	for (auto i = 0; i < allRects->targetCount; ++i)
 	{

@@ -12,7 +12,7 @@
 #include "../Assistants/ShowFrame.hpp"
 #include "../Common/Util.h"
 #include "../Monitor/Filter.hpp"
-#include "../Models/ResultSegment.hpp"
+#include "../Models/DetectResultSegment.hpp"
 #include "../Models/FourLimitsWithScore.hpp"
 
 inline bool CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b)
@@ -29,7 +29,7 @@ public:
 
 	bool InitSpace();
 
-	void DetectTargets(unsigned short* frame, ResultSegment* result);
+	void DetectTargets(unsigned short* frame, DetectResultSegment* result);
 
 	void SetRemoveFalseAlarmParameters(bool checkStandardDeviationFlag,
 	                                   bool checkSurroundingBoundaryFlag,
@@ -570,7 +570,7 @@ inline void Detector::FalseAlarmFilter()
 		std::sort(this->insideObjects, this->insideObjects + lastResultCount, CompareResult);
 }
 
-inline void Detector::DetectTargets(unsigned short* frame, ResultSegment* result)
+inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* result)
 {
 	CopyFrameData(frame);
 

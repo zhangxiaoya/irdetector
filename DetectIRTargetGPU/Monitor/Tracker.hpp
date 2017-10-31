@@ -1,6 +1,6 @@
 #ifndef __TRACKER_H__
 #define __TRACKER_H__
-#include "../Models/ResultSegment.hpp"
+#include "../Models/DetectResultSegment.hpp"
 
 class Tracker
 {

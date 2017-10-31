@@ -156,14 +156,14 @@
     <ClCompile Include="Detector\Detector.hpp">
       <Filter>Detector</Filter>
     </ClCompile>
-    <ClCompile Include="Models\ResultSegment.hpp">
-      <Filter>Models</Filter>
-    </ClCompile>
     <ClCompile Include="Validation\Validation.cpp">
       <Filter>Validation</Filter>
     </ClCompile>
     <ClCompile Include="Network\NetworkTransfer.cpp">
       <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Models\DetectResultSegment.hpp">
+      <Filter>Models</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

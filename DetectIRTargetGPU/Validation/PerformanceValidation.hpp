@@ -86,7 +86,7 @@ inline void PerformanceValidation::VailidationAll()
 	logPrinter.PrintLogs("Test the visual effect of detect result ... ", Info);
 	char iterationText[200];
 
-	ResultSegment result;
+	DetectResultSegment result;
 	detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
 
 	for(unsigned i = 0;i<frameCount;++i)

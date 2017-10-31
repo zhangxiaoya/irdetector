@@ -1,7 +1,7 @@
 ﻿#include "NetworkTransfer.h"
 #include <iostream>
 #include "../Monitor/Filter.hpp"
-#include "../Models/ResultSegment.hpp"
+#include "../Models/DetectResultSegment.hpp"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -212,7 +212,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 /************************************************************************/
 /*                       Send One Result to Remote                      */
 /************************************************************************/
-bool SendResultToRemoteServer(ResultSegment& result)
+bool SendResultToRemoteServer(DetectResultSegment& result)
 {
 	// 打印日志消息
 	std::cout << "Sending result to remote server \n";
@@ -224,7 +224,7 @@ bool SendResultToRemoteServer(ResultSegment& result)
 	auto sendStatus = sendto(
 		RemoteResultServerSocket,
 		reinterpret_cast<char*>(&result),
-		sizeof(ResultSegment),
+		sizeof(DetectResultSegment),
 		0,
 		reinterpret_cast<sockaddr *>(&RemoteResultServerSocketAddress),
 		RemoteResultServerSocketAddressLen);

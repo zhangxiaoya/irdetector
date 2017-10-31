@@ -1,6 +1,6 @@
 #pragma once
 #include <condition_variable>
-#include "ResultSegment.hpp"
+#include "DetectResultSegment.hpp"
 
 struct DetectResultRingBufferStruct
 {
@@ -15,8 +15,8 @@ struct DetectResultRingBufferStruct
 		  bufferSize(buffer_size),
 		  resultItemSize(0)
 	{
-		resultItemSize = sizeof(ResultSegment);
-		item_buffer = new ResultSegment[bufferSize * resultItemSize];
+		resultItemSize = sizeof(DetectResultSegment);
+		item_buffer = new DetectResultSegment[bufferSize * resultItemSize];
 		frame_buffer = new unsigned short[buffer_size * sizeof(unsigned short) * Width * Height];
 	}
 
@@ -27,13 +27,13 @@ struct DetectResultRingBufferStruct
 	}
 
 	bool finish_flag;
-	ResultSegment* item_buffer;                      // »·ÐÎ»º³å
-	unsigned short* frame_buffer;                    // Ö¡Êý¾Ý»º³åÇø
+	DetectResultSegment* item_buffer;                      // ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½
+	unsigned short* frame_buffer;                    // Ö¡ï¿½ï¿½ï¿½Ý»ï¿½ï¿½ï¿½ï¿½ï¿½
 	size_t read_position;
 	size_t write_position;
 	std::mutex bufferMutex;
-	std::condition_variable buffer_not_full;        // Ìõ¼þ±äÁ¿, Ö¸Ê¾²úÆ·»º³åÇø²»ÎªÂú.
-	std::condition_variable buffer_not_empty;       // Ìõ¼þ±äÁ¿, Ö¸Ê¾²úÆ·»º³åÇø²»Îª¿Õ.
+	std::condition_variable buffer_not_full;        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ö¸Ê¾ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½.
+	std::condition_variable buffer_not_empty;       // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, Ö¸Ê¾ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½.
 
 	unsigned Width;
 	unsigned Height;
