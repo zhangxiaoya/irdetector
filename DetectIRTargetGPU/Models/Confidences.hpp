@@ -1,9 +1,13 @@
 #ifndef __CONFIDEBCES_H__
 #define __CONFIDEBCES_H__
 
+#ifndef CONFIDENCE_QUEUE_ELEM_SIZE
+#define CONFIDENCE_QUEUE_ELEM_SIZE 6
+#endif
+
 const int BlockSize = 16;
 
-typedef int ConfElem[6];
+typedef int ConfQueueElem[CONFIDENCE_QUEUE_ELEM_SIZE];
 
 class Confidences
 {
@@ -31,7 +35,7 @@ public:
 	int QueueBeg;
 	int QueueEnd;
 
-	ConfElem* ConfidenceMap;
+	ConfQueueElem* ConfidenceMap;
 };
 
 inline Confidences::~Confidences()
@@ -41,7 +45,7 @@ inline Confidences::~Confidences()
 
 inline void Confidences::InitConfidenceMap()
 {
-	this->ConfidenceMap = new ConfElem[BlockRows * BlockCols];
+	this->ConfidenceMap = new ConfQueueElem[BlockRows * BlockCols];
 	QueueBeg = QueueEnd = 0;
 }
 
