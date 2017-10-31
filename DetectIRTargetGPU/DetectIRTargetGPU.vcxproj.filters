@@ -144,9 +144,6 @@
     <ClInclude Include="Monitor\Tracker.hpp">
       <Filter>Monitor</Filter>
     </ClInclude>
-    <ClInclude Include="Models\DetectResult.hpp">
-      <Filter>Models</Filter>
-    </ClInclude>
     <ClInclude Include="Models\TargetPosition.hpp">
       <Filter>Models</Filter>
     </ClInclude>

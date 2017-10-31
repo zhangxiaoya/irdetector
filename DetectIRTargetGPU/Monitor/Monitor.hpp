@@ -3,7 +3,7 @@
 #include "../Models/Confidences.hpp"
 #include "../Detector/Detector.hpp"
 #include "Tracker.hpp"
-#include "../Models/DetectResult.hpp"
+#include "../Models/ResultSegment.hpp"
 
 const int ConfValue = 6;
 const int  IncrementConfValue = 12;
@@ -223,14 +223,14 @@ inline void Monitor::UpdateTrackerOrAddTracker(const int blockX, const int block
 
 	// Go through detect result and check if there are target in current block without tracked now
 	// Without check multi target in one block
-	for (auto i = 0; i < result.targetCount; ++i)
+	for (auto i = 0; i < result.result->targetCount; ++i)
 	{
 		if(result.hasTracker[i] == true)
 			continue;
 
 		auto BR = 0;
 		auto BC = 0;
-		GetBlockPos(result.targets[i], BR, BC);
+		GetBlockPos(result.result->targets[i], BR, BC);
 		if(blockX == BC && blockY == BR)
 		{
 			hasTargetNotTracked = true;
@@ -251,21 +251,21 @@ inline void Monitor::UpdateTrackerOrAddTracker(const int blockX, const int block
 
 			// tracker for this block exist
 			hasTrackerForThisBlock = true;
-			for (auto i = 0; i < result.targetCount; ++ i)
+			for (auto i = 0; i < result.result->targetCount; ++ i)
 			{
 				if(result.hasTracker[i] == true)
 					continue;
 
 				auto BR = 0;
 				auto BC = 0;
-				GetBlockPos(result.targets[i], BR, BC);
+				GetBlockPos(result.result->targets[i], BR, BC);
 				if (TrackerList[j].BlockX == BC && TrackerList[j].BlockY == BR)
 				{
 					// Use Manhattan Distance to check if this is the same target with tracker
-					if (CheckDistance(result.targets[i], TrackerList[j].Postion) < 8)
-						UpdateTracker(TrackerList[j], result.targets[i]);
+					if (CheckDistance(result.result->targets[i], TrackerList[j].Postion) < 8)
+						UpdateTracker(TrackerList[j], result.result->targets[i]);
 					else
-						AddTracker(result.targets[i]);
+						AddTracker(result.result->targets[i]);
 					result.hasTracker[i] = true;
 				}
 			}
@@ -274,9 +274,9 @@ inline void Monitor::UpdateTrackerOrAddTracker(const int blockX, const int block
 		// if there are no tracker
 		if(hasTrackerForThisBlock == false)
 		{
-			for (auto i = 0; i < result.targetCount; ++i)
+			for (auto i = 0; i < result.result->targetCount; ++i)
 			{
-				AddTracker(result.targets[i]);
+				AddTracker(result.result->targets[i]);
 			}
 		}
 	}
@@ -298,10 +298,9 @@ inline bool Monitor::Process(unsigned short* frame)
 {
 	detector->DetectTargets(frame, &detectResult);
 
-	memcpy(result.header, detectResult.header, 16);
-	memcpy(result.targets, detectResult.targets, sizeof(TargetPosition) * 5);
+	// store current detected targets
+	result.result = &detectResult;
 	memset(result.hasTracker, false, sizeof(bool) * 5);
-	result.targetCount = detectResult.targetCount;
 
 	ResetCurrentDetectMask();
 

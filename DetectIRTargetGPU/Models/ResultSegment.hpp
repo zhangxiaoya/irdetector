@@ -7,3 +7,10 @@ struct ResultSegment
 	int targetCount;
 	TargetPosition targets[5];
 };
+
+
+struct DetectResult
+{
+	ResultSegment* result;
+	bool hasTracker[5];
+};
