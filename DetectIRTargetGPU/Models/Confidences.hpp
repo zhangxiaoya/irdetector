@@ -31,26 +31,17 @@ public:
 	int QueueBeg;
 	int QueueEnd;
 
-	ConfElem** ConfidenceMap;
+	ConfElem* ConfidenceMap;
 };
 
 inline Confidences::~Confidences()
 {
-	for (auto i = 0; i < BlockRows; ++i)
-	{
-		delete[] ConfidenceMap[i];
-	}
 	delete[]  ConfidenceMap;
 }
 
-// NOT Thread Safe
 inline void Confidences::InitConfidenceMap()
 {
-	this->ConfidenceMap = new ConfElem*[BlockRows];
-	for (auto i = 0; i < BlockRows; ++i)
-	{
-		ConfidenceMap[i] = new ConfElem[BlockCols];
-	}
+	this->ConfidenceMap = new ConfElem[BlockRows * BlockCols];
 	QueueBeg = QueueEnd = 0;
 }
 

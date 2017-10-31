@@ -94,7 +94,7 @@ inline void Monitor::IncreaseConfidenceValueAndUpdateConfidenceQueue() const
 		const auto BlockY = centerY / BlockSize;
 
 		CurrentDetectMask[BlockY * BlockCols + BlockX] = true;
-		confidences->ConfidenceMap[BlockY][BlockX][confidences->QueueEnd] = ConfValue;
+		confidences->ConfidenceMap[BlockY * BlockCols + BlockX][confidences->QueueEnd] = ConfValue;
 
 		// CinfidenceValueMap Increase
 		ConfidenceValueMap[BlockY * BlockCols + BlockX] += IncrementConfValue;
@@ -145,6 +145,7 @@ inline bool Monitor::Process(unsigned short* frame)
 
 	DecreaseConfidenceValueMap();
 
+	
 
 	return true;
 }
