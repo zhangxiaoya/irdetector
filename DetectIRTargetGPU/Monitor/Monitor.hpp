@@ -212,6 +212,8 @@ inline void Monitor::AddTracker(const TargetPosition& targetPos)
 			TrackerList[i].Postion.topLeftY = targetPos.topLeftY;
 			TrackerList[i].BlockX = BC;
 			TrackerList[i].BlockY = BR;
+
+			TrackerList[i].InitLifeTime();
 			break;
 		}
 	}
@@ -266,6 +268,7 @@ inline void Monitor::UpdateTrackerOrAddTracker(const int blockX, const int block
 						UpdateTracker(TrackerList[j], detectResultWithStatus.detectResultPointers->targets[i]);
 					else
 						AddTracker(detectResultWithStatus.detectResultPointers->targets[i]);
+
 					detectResultWithStatus.hasTracker[i] = true;
 				}
 			}
