@@ -141,6 +141,9 @@
     <ClInclude Include="Models\Confidences.hpp">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Monitor\Tracker.hpp">
+      <Filter>Monitor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

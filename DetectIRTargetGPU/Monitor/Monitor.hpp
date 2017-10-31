@@ -2,13 +2,17 @@
 #define __MONITOR_H__
 #include "../Models/Confidences.hpp"
 #include "../Detector/Detector.hpp"
+#include "Tracker.hpp"
 
 const int ConfValue = 6;
 const int  IncrementConfValue = 12;
 
+const int MaxTrackerCount = 10;
+
 class Monitor
 {
 public:
+
 	Monitor(const int width, const int height, const int dilationRadius, const int discretizationScale):
 		currentFrame(nullptr),
 		Width(width),
@@ -23,12 +27,18 @@ public:
 		InitDetector();
 
 		InitConfidenceValueMap();
+
+		InitTrackerList();
 	}
 
 	~Monitor()
 	{
 		delete detector;
 		delete confidences;
+
+		ReleaseConfidenceValueMap();
+
+		ReleaseTrackerList();
 	}
 
 	bool Process(unsigned short* frame);
@@ -47,7 +57,11 @@ protected:
 
 	void InitConfidenceValueMap();
 
+	void InitTrackerList();
+
 	void ReleaseConfidenceValueMap();
+
+	void ReleaseTrackerList();
 
 private:
 	unsigned short* currentFrame;
@@ -65,6 +79,8 @@ private:
 	Confidences* confidences;
 	Detector* detector;
 	ResultSegment result;
+
+	Tracker* TrackerList;
 };
 
 inline void Monitor::IncreaseConfidenceValueAndUpdateConfidenceQueue() const
@@ -129,6 +145,7 @@ inline bool Monitor::Process(unsigned short* frame)
 
 	DecreaseConfidenceValueMap();
 
+
 	return true;
 }
 
@@ -150,9 +167,15 @@ inline void Monitor::InitDetector()
 inline void Monitor::InitConfidenceValueMap()
 {
 	this->ConfidenceValueMap = new int[BlockRows * BlockCols];
-	this->CurrentDetectMask = new bool[BlockRows * BlockCols];
 	memset(this->CurrentDetectMask, false, sizeof(bool) * BlockRows * BlockCols);
+
+	this->CurrentDetectMask = new bool[BlockRows * BlockCols];
 	memset(this->ConfidenceValueMap, 0, sizeof(int) * BlockCols * BlockRows);
+}
+
+inline void Monitor::InitTrackerList()
+{
+	this->TrackerList = new Tracker[MaxTrackerCount];
 }
 
 inline void Monitor::ReleaseConfidenceValueMap()
@@ -162,6 +185,12 @@ inline void Monitor::ReleaseConfidenceValueMap()
 
 	delete[] this->CurrentDetectMask;
 	this->CurrentDetectMask = NULL;
+}
+
+inline void Monitor::ReleaseTrackerList()
+{
+	delete[] TrackerList;
+	this->TrackerList = NULL;
 }
 
 #endif
