@@ -194,6 +194,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Segmentation\segementationHelper.h" />
     <ClInclude Include="Validation\PerformanceValidation.hpp" />
     <ClInclude Include="Validation\CorrectnessValidation.hpp" />
+    <ClInclude Include="Validation\trackingValidation.hpp" />
     <ClInclude Include="Validation\Validation.h" />
   </ItemGroup>
   <ItemGroup>

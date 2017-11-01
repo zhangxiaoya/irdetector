@@ -280,9 +280,11 @@ int main(int argc, char* argv[])
 	{
 //		RunOnNetwork();
 
-		CheckConrrectness(WIDTH, HEIGHT);
+//		CheckConrrectness(WIDTH, HEIGHT);
 
-		CheckPerformance(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+//		CheckPerformance(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+
+		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 	}
 
 	// Ïú»Ù¼ì²â×Ó

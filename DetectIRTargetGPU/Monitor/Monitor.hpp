@@ -105,6 +105,15 @@ inline Monitor::~Monitor()
 
 inline void Monitor::UpdateConfidenceValueAndUpdateConfidenceQueue() const
 {
+	// all queue unit should be zero
+	for (auto R = 0; R < BlockRows; ++R)
+	{
+		for (auto C = 0; C < BlockCols; ++C)
+		{
+			confidences->ConfidenceMap[R * BlockCols + C][confidences->QueueEnd] = 0;
+		}
+	}
+
 	for (auto i = 0; i < detectResult.targetCount; ++i)
 	{
 		// Get block coordination
@@ -145,8 +154,14 @@ inline void Monitor::UpdateConfidenceValueAndUpdateConfidenceQueue() const
 
 	// update confidence queue front and end index
 	confidences->QueueEnd++;
+	if (confidences->QueueEnd >= CONFIDENCE_QUEUE_ELEM_SIZE)
+		confidences->QueueEnd = 0;
 	if (confidences->QueueBeg == confidences->QueueEnd)
+	{
 		confidences->QueueBeg++;
+		if (confidences->QueueBeg >= CONFIDENCE_QUEUE_ELEM_SIZE)
+			confidences->QueueBeg = 0;
+	}
 
 	// if not detect targets in this block, shrink confidence value
 	DecreaseConfidenceValueMap();
@@ -381,15 +396,16 @@ inline void Monitor::InitMonitor()
 inline void Monitor::InitDetector()
 {
 	this->detector = new Detector(Width, Height, DilationRadius, DiscretizationScale);
+	this->detector->InitSpace();
 	this->detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
 }
 
 inline void Monitor::InitConfidenceValueMap()
 {
 	this->ConfidenceValueMap = new int[BlockRows * BlockCols];
-	memset(this->CurrentDetectMask, false, sizeof(bool) * BlockRows * BlockCols);
-
 	this->CurrentDetectMask = new bool[BlockRows * BlockCols];
+
+	memset(this->CurrentDetectMask, false, sizeof(bool) * BlockRows * BlockCols);
 	memset(this->ConfidenceValueMap, 0, sizeof(int) * BlockCols * BlockRows);
 }
 

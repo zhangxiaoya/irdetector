@@ -46,6 +46,13 @@ inline Confidences::~Confidences()
 inline void Confidences::InitConfidenceMap()
 {
 	this->ConfidenceMap = new ConfQueueElem[BlockRows * BlockCols];
+	for(auto R = 0; R < BlockRows; ++R)
+	{
+		for(auto C = 0; C < BlockCols; ++C)
+		{
+			memset(this->ConfidenceMap[R * BlockRows + C],0,sizeof(int) * CONFIDENCE_QUEUE_ELEM_SIZE);
+		}
+	}
 	QueueBeg = QueueEnd = 0;
 }
 

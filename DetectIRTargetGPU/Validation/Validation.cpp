@@ -2,6 +2,7 @@
 #include "Validation.h"
 #include "CorrectnessValidation.hpp"
 #include "PerformanceValidation.hpp"
+#include "trackingValidation.hpp"
 
 /****************************************************************************************/
 /*                          Test Algrithm Core Performance                              */
@@ -31,6 +32,14 @@ void CheckPerformance(const int width, const int height, const int dilationRadiu
 
 
 	PerformanceValidation validator(width, height, sizeof(unsigned short), dilationRadius, discretizationScale);
+	validator.InitDataReader(validation_file_name);
+	validator.VailidationAll();
+}
+
+void CheckTracking(const int width, const int height, const int dilationRadius, const int discretizationScale)
+{
+	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\8\\ir_file_20170925_220915_mubiaojingzhi.bin";
+	TrackingValidation validator(width, height,sizeof(unsigned short), dilationRadius, discretizationScale);
 	validator.InitDataReader(validation_file_name);
 	validator.VailidationAll();
 }

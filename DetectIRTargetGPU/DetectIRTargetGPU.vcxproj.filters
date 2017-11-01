@@ -147,6 +147,9 @@
     <ClInclude Include="Models\TargetPosition.hpp">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Validation\trackingValidation.hpp">
+      <Filter>Validation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
