@@ -18,10 +18,10 @@ public:
 
 	~Monitor();
 
-	bool Process(unsigned short* frame);
+	bool Process(unsigned short* frame, DetectResultSegment* result);
 
 private:
-	void IncreaseConfidenceValueAndUpdateConfidenceQueue() const;
+	void UpdateConfidenceValueAndUpdateConfidenceQueue() const;
 
 	void DecreaseConfidenceValueMap() const;
 
@@ -37,7 +37,9 @@ private:
 
 	void AddTracker(const TargetPosition& targetPos);
 
-	void UpdateTrackerOrAddTracker(int blockX, int blockY);
+	void UpdateTrackerOrAddTrackerForBlockUnit(int blockX, int blockY);
+
+	void UpdateTrackerForAllBlocks();
 
 protected:
 	void InitMonitor();
@@ -101,49 +103,65 @@ inline Monitor::~Monitor()
 	ReleaseTrackerList();
 }
 
-inline void Monitor::IncreaseConfidenceValueAndUpdateConfidenceQueue() const
+inline void Monitor::UpdateConfidenceValueAndUpdateConfidenceQueue() const
 {
 	for (auto i = 0; i < detectResult.targetCount; ++i)
 	{
-		// Update ConfidenceMap Queue
+		// Get block coordination
 		const auto centerX = detectResult.targets[i].bottomRightX + detectResult.targets[i].topLeftX;
 		const auto centerY = detectResult.targets[i].bottomRightY + detectResult.targets[i].topLeftY;
 		const auto BlockX = centerX / BlockSize;
 		const auto BlockY = centerY / BlockSize;
 
+		// Set block mask unit to true
 		CurrentDetectMask[BlockY * BlockCols + BlockX] = true;
+		// Insert confidence value to this queue
 		confidences->ConfidenceMap[BlockY * BlockCols + BlockX][confidences->QueueEnd] = ConfValue;
 
-		// CinfidenceValueMap Increase
+		// Increase confidence value for confidence value map unit and its neighbor units
 		ConfidenceValueMap[BlockY * BlockCols + BlockX] += IncrementConfValue;
 		if (BlockX - 1 >= 0)
+		{
 			ConfidenceValueMap[BlockY * BlockCols + BlockX - 1] += IncrementConfValue / 2;
+			CurrentDetectMask[BlockY * BlockCols + BlockX - 1] = true;
+		}
 		if (BlockY - 1 >= 0)
+		{
 			ConfidenceValueMap[(BlockY - 1) * BlockCols + BlockX] += IncrementConfValue / 2;
+			CurrentDetectMask[(BlockY - 1) * BlockCols + BlockX] = true;
+		}
 		if (BlockX + 1 < BlockCols)
+		{
 			ConfidenceValueMap[BlockY * BlockCols + BlockX + 1] += IncrementConfValue / 2;
+			CurrentDetectMask[BlockY * BlockCols + BlockX + 1] = true;
+
+		}
 		if (BlockY + 1 < BlockRows)
+		{
 			ConfidenceValueMap[(BlockY + 1) * BlockCols + BlockX] += IncrementConfValue / 2;
+			CurrentDetectMask[(BlockY + 1) * BlockCols + BlockX] = true;
+		}
 	}
 
+	// update confidence queue front and end index
 	confidences->QueueEnd++;
 	if (confidences->QueueBeg == confidences->QueueEnd)
 		confidences->QueueBeg++;
+
+	// if not detect targets in this block, shrink confidence value
+	DecreaseConfidenceValueMap();
 }
 
 inline void Monitor::DecreaseConfidenceValueMap() const
 {
-	// ConfidenceValueMap Decrease
-	for (auto r = 0; r < BlockRows; ++r)
+	for (auto R = 0; R < BlockRows; ++R)
 	{
-		for (auto c = 0; c < BlockCols; ++c)
+		for (auto C = 0; C < BlockCols; ++C)
 		{
-			if (CurrentDetectMask[r * BlockCols + c] == false)
-			{
-				ConfidenceValueMap[r * BlockCols + c] -= IncrementConfValue;
-				if (ConfidenceValueMap[r * BlockCols + c] < 0)
-					ConfidenceValueMap[r * BlockCols + c] = 0;
-			}
+			if (CurrentDetectMask[R * BlockCols + C] == false)
+				ConfidenceValueMap[R * BlockCols + C] -= IncrementConfValue;
+			if (ConfidenceValueMap[R * BlockCols + C] < 0)
+				ConfidenceValueMap[R * BlockCols + C] = 0;
 		}
 	}
 }
@@ -219,20 +237,20 @@ inline void Monitor::AddTracker(const TargetPosition& targetPos)
 	}
 }
 
-inline void Monitor::UpdateTrackerOrAddTracker(const int blockX, const int blockY)
+inline void Monitor::UpdateTrackerOrAddTrackerForBlockUnit(const int blockX, const int blockY)
 {
+	// flag if has deteted target without tracked
 	auto hasTargetNotTracked = false;
 
 	// Go through detect result and check if there are target in current block without tracked now
-	// Without check multi target in one block
-	for (auto i = 0; i < detectResultWithStatus.detectResultPointers->targetCount; ++i)
+	for (auto targetIdx = 0; targetIdx < detectResultWithStatus.detectResultPointers->targetCount; ++targetIdx)
 	{
-		if(detectResultWithStatus.hasTracker[i] == true)
+		if(detectResultWithStatus.hasTracker[targetIdx] == true)
 			continue;
 
 		auto BR = 0;
 		auto BC = 0;
-		GetBlockPos(detectResultWithStatus.detectResultPointers->targets[i], BR, BC);
+		GetBlockPos(detectResultWithStatus.detectResultPointers->targets[targetIdx], BR, BC);
 		if(blockX == BC && blockY == BR)
 		{
 			hasTargetNotTracked = true;
@@ -244,32 +262,33 @@ inline void Monitor::UpdateTrackerOrAddTracker(const int blockX, const int block
 	{
 		auto hasTrackerForThisBlock = false;
 
-		for (auto j = 0; j < MaxTrackerCount; ++j)
+		for (auto trackerIdx = 0; trackerIdx < MaxTrackerCount; ++trackerIdx)
 		{
-			if (TrackerList[j].ValidFlag == false)
+			if (TrackerList[trackerIdx].ValidFlag == false)
 				continue;
-			if(TrackerList[j].BlockX != blockX || TrackerList[j].BlockY != blockY)
+			if(TrackerList[trackerIdx].BlockX != blockX || TrackerList[trackerIdx].BlockY != blockY)
 				continue;
 
 			// tracker for this block exist
 			hasTrackerForThisBlock = true;
-			for (auto i = 0; i < detectResultWithStatus.detectResultPointers->targetCount; ++ i)
+			for (auto targetIdx = 0; targetIdx < detectResultWithStatus.detectResultPointers->targetCount; ++ targetIdx)
 			{
-				if(detectResultWithStatus.hasTracker[i] == true)
+				if(detectResultWithStatus.hasTracker[targetIdx] == true)
 					continue;
 
 				auto BR = 0;
 				auto BC = 0;
-				GetBlockPos(detectResultWithStatus.detectResultPointers->targets[i], BR, BC);
-				if (TrackerList[j].BlockX == BC && TrackerList[j].BlockY == BR)
+				// To-Do need check
+				GetBlockPos(detectResultWithStatus.detectResultPointers->targets[targetIdx], BR, BC);
+				if (TrackerList[trackerIdx].BlockX == BC && TrackerList[trackerIdx].BlockY == BR)
 				{
 					// Use Manhattan Distance to check if this is the same target with tracker
-					if (CheckDistance(detectResultWithStatus.detectResultPointers->targets[i], TrackerList[j].Postion) < 8)
-						UpdateTracker(TrackerList[j], detectResultWithStatus.detectResultPointers->targets[i]);
+					if (CheckDistance(detectResultWithStatus.detectResultPointers->targets[targetIdx], TrackerList[trackerIdx].Postion) < 8)
+						UpdateTracker(TrackerList[trackerIdx], detectResultWithStatus.detectResultPointers->targets[targetIdx]);
 					else
-						AddTracker(detectResultWithStatus.detectResultPointers->targets[i]);
+						AddTracker(detectResultWithStatus.detectResultPointers->targets[targetIdx]);
 
-					detectResultWithStatus.hasTracker[i] = true;
+					detectResultWithStatus.hasTracker[targetIdx] = true;
 				}
 			}
 		}
@@ -285,43 +304,67 @@ inline void Monitor::UpdateTrackerOrAddTracker(const int blockX, const int block
 	}
 	else
 	{
-		for(auto j =0 ; j < MaxTrackerCount; ++j)
+		for (auto trackerIdx = 0; trackerIdx < MaxTrackerCount; ++trackerIdx)
 		{
-			if (TrackerList[j].ValidFlag == false)
+			if (TrackerList[trackerIdx].ValidFlag == false)
 				continue;
-			if(TrackerList[j].BlockX != blockX || TrackerList[j].BlockY != blockY)
+			if (TrackerList[trackerIdx].BlockX != blockX || TrackerList[trackerIdx].BlockY != blockY)
 				continue;
 			// To-Do
 			// Re-search
+			// Sample way : cannot find target again, to shrink lifetime 
+			TrackerList[trackerIdx].ShrinkLifeTime();
 		}
 	}
 }
 
-inline bool Monitor::Process(unsigned short* frame)
+inline void Monitor::UpdateTrackerForAllBlocks()
 {
-	detector->DetectTargets(frame, &detectResult);
-
-	// store current detected targets
-	detectResultWithStatus.detectResultPointers = &detectResult;
-	memset(detectResultWithStatus.hasTracker, false, sizeof(bool) * 5);
-
-	ResetCurrentDetectMask();
-
-	IncreaseConfidenceValueAndUpdateConfidenceQueue();
-
-	DecreaseConfidenceValueMap();
-
 	for (auto R = 0; R < BlockRows; ++R)
 	{
 		for (auto C = 0; C < BlockCols; ++C)
 		{
+			// Get Total confidence value: block confidence value and sum of confidence queue
 			const auto TotalConfValue = this->ConfidenceValueMap[R * BlockCols + C] + CalculateQueueSum(C, R);
 			if(TotalConfValue > TrackConfirmThreshold)
 			{
-				UpdateTrackerOrAddTracker(C, R);
+				UpdateTrackerOrAddTrackerForBlockUnit(C, R);
 			}
 		}
 	}
+}
+
+inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
+{
+	// detect target in single frame
+	detector->DetectTargets(frame, &detectResult);
+
+	// copy detect result and set default tracking status
+	detectResultWithStatus.detectResultPointers = &detectResult;
+	memset(detectResultWithStatus.hasTracker, false, sizeof(bool) * 5);
+
+	// reset current frame block mask map
+	ResetCurrentDetectMask();
+
+	// update confidence value map and confidence queue map
+	UpdateConfidenceValueAndUpdateConfidenceQueue();
+
+	// update tracker for all blocks
+	UpdateTrackerForAllBlocks();
+
+	memcpy(result->header, detectResult.header, 16);
+	int trackingTargetCount = 0;
+	for (auto i = 0; i < MaxTrackerCount; ++i)
+	{
+		if(TrackerList[i].ValidFlag == true)
+		{
+			result->targets[trackingTargetCount] = TrackerList[i].Postion;
+			trackingTargetCount++;
+			if(trackingTargetCount >= 5)
+				break;
+		}
+	}
+	result->targetCount = trackingTargetCount;
 
 	return true;
 }
