@@ -6,10 +6,11 @@
 #include "../Models/DetectResultSegment.hpp"
 
 const int ConfValue = 6;
-const int  IncrementConfValue = 12;
+const int IncrementConfValue = 12;
 
 const int MaxTrackerCount = 10;
-int TrackConfirmThreshold = 30;
+const int TrackConfirmThreshold = 10;
+const int MaxConfidenceValue = 100;
 
 class Monitor
 {
@@ -117,8 +118,8 @@ inline void Monitor::UpdateConfidenceValueAndUpdateConfidenceQueue() const
 	for (auto i = 0; i < detectResult.targetCount; ++i)
 	{
 		// Get block coordination
-		const auto centerX = detectResult.targets[i].bottomRightX + detectResult.targets[i].topLeftX;
-		const auto centerY = detectResult.targets[i].bottomRightY + detectResult.targets[i].topLeftY;
+		const auto centerX = (detectResult.targets[i].bottomRightX + detectResult.targets[i].topLeftX) / 2;
+		const auto centerY = (detectResult.targets[i].bottomRightY + detectResult.targets[i].topLeftY) / 2;
 		const auto BlockX = centerX / BlockSize;
 		const auto BlockY = centerY / BlockSize;
 
@@ -129,25 +130,35 @@ inline void Monitor::UpdateConfidenceValueAndUpdateConfidenceQueue() const
 
 		// Increase confidence value for confidence value map unit and its neighbor units
 		ConfidenceValueMap[BlockY * BlockCols + BlockX] += IncrementConfValue;
+		if (ConfidenceValueMap[BlockY * BlockCols + BlockX] > MaxConfidenceValue)
+			ConfidenceValueMap[BlockY * BlockCols + BlockX] = MaxConfidenceValue;
 		if (BlockX - 1 >= 0)
 		{
 			ConfidenceValueMap[BlockY * BlockCols + BlockX - 1] += IncrementConfValue / 2;
+			if (ConfidenceValueMap[BlockY * BlockCols + BlockX - 1] > MaxConfidenceValue)
+				ConfidenceValueMap[BlockY * BlockCols + BlockX - 1] = MaxConfidenceValue;
 			CurrentDetectMask[BlockY * BlockCols + BlockX - 1] = true;
 		}
 		if (BlockY - 1 >= 0)
 		{
 			ConfidenceValueMap[(BlockY - 1) * BlockCols + BlockX] += IncrementConfValue / 2;
+			if (ConfidenceValueMap[(BlockY - 1) * BlockCols + BlockX] > MaxConfidenceValue)
+				ConfidenceValueMap[(BlockY - 1) * BlockCols + BlockX] = MaxConfidenceValue;
 			CurrentDetectMask[(BlockY - 1) * BlockCols + BlockX] = true;
 		}
 		if (BlockX + 1 < BlockCols)
 		{
 			ConfidenceValueMap[BlockY * BlockCols + BlockX + 1] += IncrementConfValue / 2;
+			if (ConfidenceValueMap[BlockY * BlockCols + BlockX + 1] > MaxConfidenceValue)
+				ConfidenceValueMap[BlockY * BlockCols + BlockX + 1] = MaxConfidenceValue;
 			CurrentDetectMask[BlockY * BlockCols + BlockX + 1] = true;
 
 		}
 		if (BlockY + 1 < BlockRows)
 		{
 			ConfidenceValueMap[(BlockY + 1) * BlockCols + BlockX] += IncrementConfValue / 2;
+			if (ConfidenceValueMap[(BlockY + 1) * BlockCols + BlockX] > MaxConfidenceValue)
+				ConfidenceValueMap[(BlockY + 1) * BlockCols + BlockX] = MaxTrackerCount;
 			CurrentDetectMask[(BlockY + 1) * BlockCols + BlockX] = true;
 		}
 	}
@@ -335,6 +346,18 @@ inline void Monitor::UpdateTrackerOrAddTrackerForBlockUnit(const int blockX, con
 
 inline void Monitor::UpdateTrackerForAllBlocks()
 {
+
+//	for (auto R = 0; R < BlockRows; ++R)
+//	{
+//		for (auto C = 0; C < BlockCols; ++C)
+//		{
+//			// Get Total confidence value: block confidence value and sum of confidence queue
+//			const auto TotalConfValue = this->ConfidenceValueMap[R * BlockCols + C] + CalculateQueueSum(C, R);
+//			std::cout << std::setw(5) << TotalConfValue;
+//		}
+//		std::cout << std::endl;
+//	}
+
 	for (auto R = 0; R < BlockRows; ++R)
 	{
 		for (auto C = 0; C < BlockCols; ++C)
