@@ -96,6 +96,6 @@ inline void TrackingValidation::VailidationAll()
 		this->monitor->Process(dataPoint[i], &result);
 //		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
 
-		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, 1000);
+		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, 5000);
 	}
 }

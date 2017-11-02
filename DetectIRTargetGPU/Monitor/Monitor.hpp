@@ -244,7 +244,7 @@ inline void Monitor::AddTracker(const TargetPosition& targetPos)
 {
 	for(auto i = 0; i < MaxTrackerCount; ++i)
 	{
-		if (TrackerList[i].ValidFlag == true)
+		if (TrackerList[i].ValidFlag == false)
 		{
 			int BC = 0;
 			int BR = 0;
@@ -258,6 +258,7 @@ inline void Monitor::AddTracker(const TargetPosition& targetPos)
 			TrackerList[i].BlockY = BR;
 
 			TrackerList[i].InitLifeTime();
+			TrackerList[i].ValidFlag = true;
 			break;
 		}
 	}
@@ -346,12 +347,10 @@ inline void Monitor::UpdateTrackerOrAddTrackerForBlockUnit(const int blockX, con
 
 inline void Monitor::UpdateTrackerForAllBlocks()
 {
-
 	for (auto R = 0; R < BlockRows; ++R)
 	{
 		for (auto C = 0; C < BlockCols; ++C)
 		{
-			// Get Total confidence value: block confidence value and sum of confidence queue
 			const auto TotalConfValue = this->ConfidenceValueMap[R * BlockCols + C] + CalculateQueueSum(C, R);
 			std::cout << std::setw(5) << TotalConfValue;
 		}
@@ -367,6 +366,20 @@ inline void Monitor::UpdateTrackerForAllBlocks()
 			if(TotalConfValue > TrackConfirmThreshold)
 			{
 				UpdateTrackerOrAddTrackerForBlockUnit(C, R);
+			}
+			else
+			{
+				for (auto trackerIdx = 0; trackerIdx < MaxTrackerCount; ++trackerIdx)
+				{
+					if (TrackerList[trackerIdx].ValidFlag == false)
+						continue;
+					if (TrackerList[trackerIdx].BlockX != R || TrackerList[trackerIdx].BlockY != C)
+						continue;
+					// To-Do
+					// Re-search
+					// Sample way : cannot find target again, to shrink lifetime 
+					TrackerList[trackerIdx].ShrinkLifeTime();
+				}
 			}
 		}
 	}

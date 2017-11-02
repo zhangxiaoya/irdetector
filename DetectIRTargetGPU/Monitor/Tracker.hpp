@@ -41,6 +41,8 @@ inline void Tracker::ExtendLifeTime()
 inline void Tracker::ShrinkLifeTime()
 {
 	--LifeTime;
+	if (LifeTime <= 0)
+		this->ValidFlag = false;
 }
 
 #endif
