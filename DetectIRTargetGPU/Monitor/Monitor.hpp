@@ -158,7 +158,7 @@ inline void Monitor::UpdateConfidenceValueAndUpdateConfidenceQueue() const
 		{
 			ConfidenceValueMap[(BlockY + 1) * BlockCols + BlockX] += IncrementConfValue / 2;
 			if (ConfidenceValueMap[(BlockY + 1) * BlockCols + BlockX] > MaxConfidenceValue)
-				ConfidenceValueMap[(BlockY + 1) * BlockCols + BlockX] = MaxTrackerCount;
+				ConfidenceValueMap[(BlockY + 1) * BlockCols + BlockX] = MaxConfidenceValue;
 			CurrentDetectMask[(BlockY + 1) * BlockCols + BlockX] = true;
 		}
 	}
@@ -347,16 +347,16 @@ inline void Monitor::UpdateTrackerOrAddTrackerForBlockUnit(const int blockX, con
 inline void Monitor::UpdateTrackerForAllBlocks()
 {
 
-//	for (auto R = 0; R < BlockRows; ++R)
-//	{
-//		for (auto C = 0; C < BlockCols; ++C)
-//		{
-//			// Get Total confidence value: block confidence value and sum of confidence queue
-//			const auto TotalConfValue = this->ConfidenceValueMap[R * BlockCols + C] + CalculateQueueSum(C, R);
-//			std::cout << std::setw(5) << TotalConfValue;
-//		}
-//		std::cout << std::endl;
-//	}
+	for (auto R = 0; R < BlockRows; ++R)
+	{
+		for (auto C = 0; C < BlockCols; ++C)
+		{
+			// Get Total confidence value: block confidence value and sum of confidence queue
+			const auto TotalConfValue = this->ConfidenceValueMap[R * BlockCols + C] + CalculateQueueSum(C, R);
+			std::cout << std::setw(5) << TotalConfValue;
+		}
+		std::cout << std::endl;
+	}
 
 	for (auto R = 0; R < BlockRows; ++R)
 	{
