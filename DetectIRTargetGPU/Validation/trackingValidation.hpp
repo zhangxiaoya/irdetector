@@ -77,8 +77,7 @@ inline void TrackingValidation::VailidationAll()
 {
 	if (CheckFileReader()) return;
 
-	auto monitor1 = new Monitor(Width, Height, DilationRadius, DiscretizationScale);
-	this->monitor = monitor1;
+	this->monitor = new Monitor(Width, Height, DilationRadius, DiscretizationScale);
 
 	const auto frameCount = fileReader->GetFrameCount();
 	auto dataPoint = fileReader->GetDataPoint();

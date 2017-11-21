@@ -5,8 +5,6 @@
 #include "Tracker.hpp"
 #include "../Models/DetectResultSegment.hpp"
 
-bool IsTracking = true; // For debug tracking
-
 const int ConfValue = 6; // Confidence value for queue
 const int IncrementConfValue = 12; // Confidence value for map
 
@@ -67,6 +65,7 @@ private:
 	int Height;
 	int DilationRadius;
 	int DiscretizationScale;
+	bool IsTracking = true; // For debug tracking
 
 	int BlockCols;
 	int BlockRows;

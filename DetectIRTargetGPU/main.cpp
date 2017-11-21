@@ -10,6 +10,7 @@
 #include "Models/FrameDataRingBufferStruct.hpp"
 #include "Models/DetectResultRingBufferStruct.hpp"
 #include "Validation/Validation.h"
+#include "Monitor/Monitor.hpp"
 
 const bool IsSendResultToServer = true; // 是否发送结果到服务端(测试用)
 
@@ -38,6 +39,7 @@ DetectResultSegment ResultItemSendToServer;                              // 每一
 DetectResultSegment ResultItemToShow;                                    // 每一帧图像显示结果
 static const int ResultItemSize = sizeof(DetectResultSegment);           // 每一帧图像检测结果大小
 Detector* detector = new Detector(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);  // 初始化检测器
+Monitor* monitor = new Monitor(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);     // init monitor
 cv::Mat CVFrame(HEIGHT, WIDTH, CV_8UC1);
 
 /****************************************************************************************/
@@ -112,16 +114,17 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 
 	// 检测目标，并检测性能
 //	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+	CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
 
-	LARGE_INTEGER t1, t2, tc;
-	QueryPerformanceFrequency(&tc);
-	QueryPerformanceCounter(&t1);
-	detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer);
-	QueryPerformanceCounter(&t2);
-	const auto timeC = (t2.QuadPart - t1.QuadPart) * 1.0 / tc.QuadPart;
-	printf("Operation of %20s Use Time:%f\n", "Total process", timeC);
-	if (timeC >= 0.006)
-		printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+//	LARGE_INTEGER t1, t2, tc;
+//	QueryPerformanceFrequency(&tc);
+//	QueryPerformanceCounter(&t1);
+//	detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer);
+//	QueryPerformanceCounter(&t2);
+//	const auto timeC = (t2.QuadPart - t1.QuadPart) * 1.0 / tc.QuadPart;
+//	printf("Operation of %20s Use Time:%f\n", "Total process", timeC);
+//	if (timeC >= 0.006)
+//		printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
 	if(IsSendResultToServer)
 	{
@@ -278,17 +281,18 @@ int main(int argc, char* argv[])
 	const auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-//		RunOnNetwork();
+		RunOnNetwork();
 
 //		CheckConrrectness(WIDTH, HEIGHT);
 
 //		CheckPerformance(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 
-		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+//		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 	}
 
 	// 销毁检测子
 	delete detector;
+	delete monitor;
 
 	// 释放CUDA设备
 	CUDAInit::cudaDeviceRelease();
