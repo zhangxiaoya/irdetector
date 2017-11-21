@@ -5,14 +5,14 @@
 #include "Tracker.hpp"
 #include "../Models/DetectResultSegment.hpp"
 
-bool IsTracking = true;           // For debug tracking
+bool IsTracking = true; // For debug tracking
 
-const int ConfValue = 6;           // Confidence value for queue
+const int ConfValue = 6; // Confidence value for queue
 const int IncrementConfValue = 12; // Confidence value for map
 
-const int MaxTrackerCount = 10;       // Max tracker count
+const int MaxTrackerCount = 10; // Max tracker count
 const int TrackConfirmThreshold = 12; // Confirm tracking target threshold
-const int MaxConfidenceValue = 100;   // Max confidence value for per block
+const int MaxConfidenceValue = 100; // Max confidence value for per block
 
 // Monitor class
 class Monitor
@@ -83,13 +83,13 @@ private:
 };
 
 inline Monitor::Monitor(const int width, const int height, const int dilationRadius, const int discretizationScale) :
-	currentFrame(NULL),
+	currentFrame(nullptr),
 	Width(width),
 	Height(height),
 	DilationRadius(dilationRadius),
 	DiscretizationScale(discretizationScale),
-	confidences(NULL),
-	detector(NULL)
+	confidences(nullptr),
+	detector(nullptr)
 {
 	InitMonitor();
 
@@ -161,7 +161,6 @@ inline void Monitor::UpdateConfidenceValueAndUpdateConfidenceQueue() const
 			if (ConfidenceValueMap[BlockY * BlockCols + BlockX + 1] > MaxConfidenceValue)
 				ConfidenceValueMap[BlockY * BlockCols + BlockX + 1] = MaxConfidenceValue;
 			CurrentDetectMask[BlockY * BlockCols + BlockX + 1] = true;
-
 		}
 		// Bottom
 		if (BlockY + 1 < BlockRows)
@@ -175,7 +174,7 @@ inline void Monitor::UpdateConfidenceValueAndUpdateConfidenceQueue() const
 		// Top-Left
 		if (BlockX - 1 >= 0 && BlockY - 1 >= 0)
 		{
-			ConfidenceValueMap[(BlockY - 1) * BlockCols + BlockX-1] += IncrementConfValue / 2;
+			ConfidenceValueMap[(BlockY - 1) * BlockCols + BlockX - 1] += IncrementConfValue / 2;
 			if (ConfidenceValueMap[(BlockY - 1) * BlockCols + BlockX - 1] > MaxConfidenceValue)
 				ConfidenceValueMap[(BlockY - 1) * BlockCols + BlockX - 1] = MaxConfidenceValue;
 			CurrentDetectMask[(BlockY - 1) * BlockCols + BlockX - 1] = true;
@@ -244,7 +243,7 @@ inline int Monitor::CalculateQueueSum(const int blockX, const int blockY) const
 {
 	auto sum = 0;
 	auto i = confidences->QueueBeg;
-	while(i != confidences->QueueEnd)
+	while (i != confidences->QueueEnd)
 	{
 		sum += confidences->ConfidenceMap[blockY * BlockCols + blockX][i];
 		i++;
@@ -272,7 +271,7 @@ inline int Monitor::CheckDistance(const TargetPosition& targetPos, const TargetP
 	const auto trackerCenterY = (trackerPos.bottomRightY + trackerPos.topLeftY) / 2;
 
 	const auto ManhattanDistance = abs(targetCenterX - trackerCenterX) + abs(targetCenterY - trackerCenterY);
-	return  ManhattanDistance;
+	return ManhattanDistance;
 }
 
 inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targetPos)
@@ -284,7 +283,7 @@ inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targe
 
 	int bc = 0;
 	int br = 0;
-	GetBlockPos(targetPos,br, bc);
+	GetBlockPos(targetPos, br, bc);
 	tracker.BlockX = bc;
 	tracker.BlockY = br;
 	tracker.ExtendLifeTime();
@@ -292,7 +291,7 @@ inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targe
 
 inline void Monitor::AddTracker(const TargetPosition& targetPos)
 {
-	for(auto i = 0; i < MaxTrackerCount; ++i)
+	for (auto i = 0; i < MaxTrackerCount; ++i)
 	{
 		if (TrackerList[i].ValidFlag == false)
 		{
@@ -322,20 +321,20 @@ inline void Monitor::UpdateTrackerOrAddTrackerForBlockUnit(const int blockX, con
 	// Go through detect result and check if there are target in current block without tracked now
 	for (auto targetIdx = 0; targetIdx < detectResultWithStatus.detectResultPointers->targetCount; ++targetIdx)
 	{
-		if(detectResultWithStatus.hasTracker[targetIdx] == true)
+		if (detectResultWithStatus.hasTracker[targetIdx] == true)
 			continue;
 
 		auto BR = 0;
 		auto BC = 0;
 		GetBlockPos(detectResultWithStatus.detectResultPointers->targets[targetIdx], BR, BC);
-		if(blockX == BC && blockY == BR)
+		if (blockX == BC && blockY == BR)
 		{
 			hasTargetNotTracked = true;
 			break;
 		}
 	}
 
-	if(hasTargetNotTracked == true) // if target in this block without tracked is exist
+	if (hasTargetNotTracked == true) // if target in this block without tracked is exist
 	{
 		auto hasTrackerForThisBlock = false;
 
@@ -343,7 +342,7 @@ inline void Monitor::UpdateTrackerOrAddTrackerForBlockUnit(const int blockX, con
 		{
 			if (TrackerList[trackerIdx].ValidFlag == false)
 				continue;
-			if(TrackerList[trackerIdx].BlockX != blockX || TrackerList[trackerIdx].BlockY != blockY)
+			if (TrackerList[trackerIdx].BlockX != blockX || TrackerList[trackerIdx].BlockY != blockY)
 				continue;
 
 			// tracker for this block exist
@@ -366,7 +365,7 @@ inline void Monitor::UpdateTrackerOrAddTrackerForBlockUnit(const int blockX, con
 					|| (BC + 1 < BlockCols && BR - 1 >= 0 && TrackerList[trackerIdx].BlockX == BC + 1 && TrackerList[trackerIdx].BlockY == BR - 1)
 					|| (BC + 1 < BlockCols && BR + 1 < BlockRows && TrackerList[trackerIdx].BlockX == BC + 1 && TrackerList[trackerIdx].BlockY == BR + 1)
 					|| (BC - 1 >= 0 && BR + 1 < BlockRows && TrackerList[trackerIdx].BlockX == BC - 1 && TrackerList[trackerIdx].BlockY == BR + 1)
-					)
+				)
 				{
 					// Use Manhattan Distance to check if this is the same target with tracker
 					if (CheckDistance(detectResultWithStatus.detectResultPointers->targets[targetIdx], TrackerList[trackerIdx].Postion) < 10)
@@ -381,7 +380,7 @@ inline void Monitor::UpdateTrackerOrAddTrackerForBlockUnit(const int blockX, con
 		}
 
 		// if there are no tracker
-		if(hasTrackerForThisBlock == false)
+		if (hasTrackerForThisBlock == false)
 		{
 			for (auto i = 0; i < detectResultWithStatus.detectResultPointers->targetCount; ++i)
 			{
@@ -407,17 +406,6 @@ inline void Monitor::UpdateTrackerOrAddTrackerForBlockUnit(const int blockX, con
 
 inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 {
-	// temp output confidence matrix
-	for (auto R = 0; R < BlockRows; ++R)
-	{
-		for (auto C = 0; C < BlockCols; ++C)
-		{
-			const auto TotalConfValue = this->ConfidenceValueMap[R * BlockCols + C] + CalculateQueueSum(C, R);
-			std::cout << std::setw(5) << TotalConfValue;
-		}
-		std::cout << std::endl;
-	}
-
 	// Step 1. check if has tracker
 
 	// Step 2. if has tracker, then update all tracker for their target
@@ -478,7 +466,7 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 				{
 					auto targetWidth = TrackerList[i].Postion.bottomRightX - TrackerList[i].Postion.topLeftX + 1;
 					auto targetHeight = TrackerList[i].Postion.bottomRightY - TrackerList[i].Postion.topLeftY + 1;
-					
+
 					double maxContrast = 0.0;
 					double maxR = searchRegionTop;
 					double maxC = searchRegionLeft;
@@ -496,9 +484,11 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 						}
 					}
 
-					std::cout << "Constrat = " << maxContrast << std::endl;
-					if (maxContrast < DiscretizationScale * 4)
+					auto researchSuccessFlag = maxContrast > DiscretizationScale * 4;
+					if (researchSuccessFlag == false)
+					{
 						TrackerList[i].ShrinkLifeTime();
+					}
 					else
 					{
 						TargetPosition pos;
@@ -659,11 +649,11 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 		int trackingTargetCount = 0;
 		for (auto i = 0; i < MaxTrackerCount; ++i)
 		{
-			if(TrackerList[i].ValidFlag == true && TrackerList[i].LifeTime > 2)
+			if (TrackerList[i].ValidFlag == true && TrackerList[i].LifeTime > 2)
 			{
 				result->targets[trackingTargetCount] = TrackerList[i].Postion;
 				trackingTargetCount++;
-				if(trackingTargetCount >= 5)
+				if (trackingTargetCount >= 5)
 					break;
 			}
 		}
@@ -705,16 +695,16 @@ inline void Monitor::InitTrackerList()
 inline void Monitor::ReleaseConfidenceValueMap()
 {
 	delete[] this->ConfidenceValueMap;
-	this->ConfidenceValueMap = NULL;
+	this->ConfidenceValueMap = nullptr;
 
 	delete[] this->CurrentDetectMask;
-	this->CurrentDetectMask = NULL;
+	this->CurrentDetectMask = nullptr;
 }
 
 inline void Monitor::ReleaseTrackerList()
 {
 	delete[] TrackerList;
-	this->TrackerList = NULL;
+	this->TrackerList = nullptr;
 }
 
 #endif

@@ -99,8 +99,7 @@ inline void TrackingValidation::VailidationAll()
 		// if (i > 640)
 		// 	delay = 2000;
 
-		this->monitor->Process(dataPoint[i], &result);
-//		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
+		CheckPerf(this->monitor->Process(dataPoint[i], &result), "whole tracking process");
 
 		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, delay);
 	}
