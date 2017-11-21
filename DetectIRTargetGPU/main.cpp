@@ -147,10 +147,10 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	}
 
 	// 临时显示结果
-//	ShowFrame::ToMat(FrameDataInprocessing, WIDTH, HEIGHT, CVFrame);
-//	ShowFrame::DrawRectangles(CVFrame, &ResultItemSendToServer);
-//	cv::imshow("Result", CVFrame);
-//	cv::waitKey(1);
+	ShowFrame::ToMat(FrameDataInprocessing, WIDTH, HEIGHT, CVFrame);
+	ShowFrame::DrawRectangles(CVFrame, &ResultItemSendToServer);
+	cv::imshow("Result", CVFrame);
+	cv::waitKey(1);
 
 	// 返回一次线程执行状态
 	return true;
