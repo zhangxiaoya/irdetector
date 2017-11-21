@@ -38,7 +38,7 @@ private:
 
 	int CheckDistance(const TargetPosition& targetPos, const TargetPosition& trackerPos) const;
 
-	void UpdateTracker(Tracker& tracker, const TargetPosition& targetPos);
+	void UpdateTracker(Tracker& tracker, const TargetPosition& targetPos, bool isExtendLifetime = true);
 
 	void AddTracker(const TargetPosition& targetPos);
 
@@ -274,7 +274,7 @@ inline int Monitor::CheckDistance(const TargetPosition& targetPos, const TargetP
 	return ManhattanDistance;
 }
 
-inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targetPos)
+inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targetPos, bool isExtendLifetime)
 {
 	tracker.Postion.bottomRightY = targetPos.bottomRightY;
 	tracker.Postion.bottomRightX = targetPos.bottomRightX;
@@ -286,7 +286,8 @@ inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targe
 	GetBlockPos(targetPos, br, bc);
 	tracker.BlockX = bc;
 	tracker.BlockY = br;
-	tracker.ExtendLifeTime();
+	if(isExtendLifetime == true)
+		tracker.ExtendLifeTime();
 }
 
 inline void Monitor::AddTracker(const TargetPosition& targetPos)
@@ -496,7 +497,7 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 						pos.topLeftY = maxR;
 						pos.bottomRightX = maxC + targetWidth;
 						pos.bottomRightY = maxR + targetHeight;
-						UpdateTracker(TrackerList[i], pos);
+						UpdateTracker(TrackerList[i], pos, false);
 					}
 				}
 			}
