@@ -269,17 +269,8 @@ inline void Detector::CopyFrameData(unsigned short* frame)
 {
 	this->isFrameDataReady = true;
 
-//	memset(this->tempFrame, 0, sizeof(unsigned short) * width * height);
-//	for (auto i = 0; i < width * height * 2; i += 2)
-//	{
-//		short highPart = static_cast<short>(frame[i]);
-//		auto lowPart = frame[i + 1];
-//		short pixel = (highPart << 8) | lowPart;
-//		pixel >>= 1;
-//		tempFrame[i / 2] = static_cast<unsigned char>(pixel);
-//	}
-
 	memcpy(this->originalFrameOnHost, frame, sizeof(unsigned short) * Width * Height);
+	memset(this->originalFrameOnHost, 65535, 16);
 	memset(this->allObjects, -1, sizeof(FourLimits) * Width * Height);
 	memset(this->allObjectRects, 0, sizeof(ObjectRect) * Width * Height);
 
