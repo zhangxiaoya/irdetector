@@ -229,6 +229,10 @@ inline bool Detector::ReleaseSpace()
 	{
 		delete[] allValidObjects;
 	}
+	if(this->insideObjects != nullptr)
+	{
+		delete[] insideObjects;
+	}
 
 	if (status == true)
 	{
@@ -262,6 +266,7 @@ inline bool Detector::InitSpace()
 	allObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * Width * Height));
 	allObjectRects = static_cast<ObjectRect*>(malloc(sizeof(ObjectRect) * Width * Height));
 	allValidObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * Width * Height));
+	insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * Width * Height));
 	return isInitSpaceReady;
 }
 
@@ -505,7 +510,6 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 
 inline void Detector::FalseAlarmFilter()
 {
-	this->insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * validObjectsCount));
 	lastResultCount = 0;
 
 	for (auto i = 0; i < validObjectsCount; ++i)
