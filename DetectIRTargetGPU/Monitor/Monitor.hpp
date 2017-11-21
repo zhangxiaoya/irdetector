@@ -78,17 +78,22 @@ private:
 	DetectResultSegment detectResult;
 	DetectResultWithTrackerStatus detectResultWithStatus;
 
+	FourLimits* allCandidateTargets;  // this is an reference of all detected targets, the space of these target candidates is init and release in detetor, DON'T init or release this pointer !!!
+	int allCandidateTargetsCount;
+
 	Tracker* TrackerList;
 };
 
-inline Monitor::Monitor(const int width, const int height, const int dilationRadius, const int discretizationScale) :
-	currentFrame(nullptr),
-	Width(width),
-	Height(height),
-	DilationRadius(dilationRadius),
-	DiscretizationScale(discretizationScale),
-	confidences(nullptr),
-	detector(nullptr)
+inline Monitor::Monitor(const int width, const int height, const int dilationRadius, const int discretizationScale)
+	: currentFrame(nullptr),
+	  Width(width),
+	  Height(height),
+	  DilationRadius(dilationRadius),
+	  DiscretizationScale(discretizationScale),
+	  confidences(nullptr),
+	  detector(nullptr),
+	  allCandidateTargets(nullptr),
+	  allCandidateTargetsCount(0)
 {
 	InitMonitor();
 
@@ -525,7 +530,6 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 
 inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top, int width, int height)
 {
-	double result = 0.0;
 	int widthPadding = width;
 	int heightPadding = height;
 
@@ -538,8 +542,8 @@ inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top,
 	{
 		for (int c = left; c < left + width; ++c)
 		{
-			if (maxTarget < (double)frame[r * Width + c])
-				maxTarget = (double)frame[r * Width + c];
+			if (maxTarget < static_cast<double>(frame[r * Width + c]))
+				maxTarget = static_cast<double>(frame[r * Width + c]);
 		}
 	}
 
@@ -550,7 +554,7 @@ inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top,
 		double sumRow = 0.0;
 		for (int c = left; c < left + width; ++c)
 		{
-			sumRow += (double)frame[r * Width + c];
+			sumRow += static_cast<double>(frame[r * Width + c]);
 		}
 		sum += (sumRow / width);
 	}
@@ -610,7 +614,7 @@ inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top,
 	avgSurrouding = sum / (surroundingBottom - surroundingTop);
 
 	// result = maxTarget / avgSurrouding;
-	result = maxTarget - avgSurrouding;
+	double result = maxTarget - avgSurrouding;
 	return result;
 }
 
@@ -622,7 +626,7 @@ inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top,
 inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 {
 	// detect target in single frame
-	detector->DetectTargets(frame, &detectResult, nullptr, nullptr);
+	detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
 
 	// copy detect result and set default tracking status
 	detectResultWithStatus.detectResultPointers = &detectResult;
@@ -659,6 +663,7 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 		}
 		result->targetCount = trackingTargetCount;
 	}
+	std::cout << "All target candidates count is " << allCandidateTargetsCount << std::endl;
 	return true;
 }
 
