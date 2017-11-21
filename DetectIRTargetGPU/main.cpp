@@ -278,7 +278,7 @@ int main(int argc, char* argv[])
 	const auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-		RunOnNetwork();
+//		RunOnNetwork();
 
 //		CheckConrrectness(WIDTH, HEIGHT);
 
