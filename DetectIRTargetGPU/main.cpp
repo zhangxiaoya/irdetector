@@ -281,13 +281,13 @@ int main(int argc, char* argv[])
 	const auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-		RunOnNetwork();
+//		RunOnNetwork();
 
 //		CheckConrrectness(WIDTH, HEIGHT);
 
 //		CheckPerformance(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 
-//		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 	}
 
 	// Ïú»Ù¼ì²â×Ó

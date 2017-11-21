@@ -29,7 +29,7 @@ public:
 
 	bool InitSpace();
 
-	void DetectTargets(unsigned short* frame, DetectResultSegment* result);
+	void DetectTargets(unsigned short* frame, DetectResultSegment* result, FourLimits** allCandidatesTargets = nullptr, int* allCandidateTargetsCount = nullptr);
 
 	void SetRemoveFalseAlarmParameters(bool checkStandardDeviationFlag,
 	                                   bool checkSurroundingBoundaryFlag,
@@ -565,7 +565,7 @@ inline void Detector::FalseAlarmFilter()
 		std::sort(this->insideObjects, this->insideObjects + lastResultCount, CompareResult);
 }
 
-inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* result)
+inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* result, FourLimits** allCandidatesTargets, int* allCandidateTargetsCount)
 {
 	CopyFrameData(frame);
 
@@ -623,6 +623,12 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 
 		// Copy frame header
 		memcpy(result->header, frame, 16);
+
+		// return all candidate targets before remove false alarm
+		if (allCandidatesTargets != nullptr)
+			*allCandidatesTargets = this->allValidObjects;
+		if (allCandidateTargetsCount != nullptr)
+			*allCandidateTargetsCount = this->validObjectsCount;
 
 		// Filter all candiates
 		FalseAlarmFilter();

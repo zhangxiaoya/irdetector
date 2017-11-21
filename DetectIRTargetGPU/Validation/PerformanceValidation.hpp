@@ -94,7 +94,7 @@ inline void PerformanceValidation::VailidationAll()
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);
 
-		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
+		CheckPerf(detector->DetectTargets(dataPoint[i], &result, nullptr, nullptr), "whole");
 
 		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, 1);
 	}

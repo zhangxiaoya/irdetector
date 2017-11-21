@@ -622,7 +622,7 @@ inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top,
 inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 {
 	// detect target in single frame
-	detector->DetectTargets(frame, &detectResult);
+	detector->DetectTargets(frame, &detectResult, nullptr, nullptr);
 
 	// copy detect result and set default tracking status
 	detectResultWithStatus.detectResultPointers = &detectResult;
