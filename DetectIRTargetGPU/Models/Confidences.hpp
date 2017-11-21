@@ -5,7 +5,7 @@
 #define CONFIDENCE_QUEUE_ELEM_SIZE 6
 #endif
 
-const int BlockSize = 16;
+const int BlockSize = 10;
 
 typedef int ConfQueueElem[CONFIDENCE_QUEUE_ELEM_SIZE];
 

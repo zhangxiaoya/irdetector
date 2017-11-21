@@ -93,9 +93,15 @@ inline void TrackingValidation::VailidationAll()
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);
 
+		auto delay = 1;
+		//if (i > 43 && i < 46)
+		//	delay = 500;
+		// if (i > 640)
+		// 	delay = 2000;
+
 		this->monitor->Process(dataPoint[i], &result);
 //		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
 
-		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, 5000);
+		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, delay);
 	}
 }
