@@ -281,7 +281,7 @@ int main(int argc, char* argv[])
 	const auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-//		RunOnNetwork();
+		RunOnNetwork();
 
 //		CheckConrrectness(WIDTH, HEIGHT);
 
@@ -289,7 +289,7 @@ int main(int argc, char* argv[])
 
 //		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 
-		CheckSearching(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+//		CheckSearching(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 	}
 
 	// Ïú»Ù¼ì²â×Ó

@@ -168,7 +168,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 				{
 					// 如果帧号一致，检测数据段是不是已经接收过了，如果没有接收过，修改对应的标志
 					if (subIndex[static_cast<int>(partBuffer[1])] == false)
-						subIndex[static_cast<int>(partBuffer[1])] == true;
+						subIndex[static_cast<int>(partBuffer[1])] = true;
 					else // 如果已经接收到了，输出错误信息
 					{
 						std::cout << "Invalid data order, duplicated segment!" << std::endl;

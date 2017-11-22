@@ -64,6 +64,8 @@ protected:
 
 	bool IsInForbiddenZone(const FourLimits& candidateTargetRegion) const;
 
+	bool IsAtBorderZone(const FourLimits& candidateTargetRegion) const;
+
 private:
 	int Width;
 	int Height;
@@ -274,7 +276,17 @@ inline bool Detector::IsInForbiddenZone(const FourLimits& candidateTargetRegion)
 		if (centerX > ForbiddenZones[i].left && centerX < ForbiddenZones[i].right && centerY > ForbiddenZones[i].top && centerY < ForbiddenZones[i].bottom)
 			return true;
 	}
-	return true;
+	return false;
+}
+
+inline bool Detector::IsAtBorderZone(const FourLimits& candidateTargetRegion) const
+{
+	if (candidateTargetRegion.left < 2
+		|| candidateTargetRegion.bottom > (Height - 3)
+		|| candidateTargetRegion.top < 2
+		|| candidateTargetRegion.right > (Width - 3))
+		return true;
+	return false;
 }
 
 inline bool Detector::InitSpace()
@@ -534,6 +546,11 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 			continue;
 		}
 		if(IsInForbiddenZone(allValidObjects[i]) == true)
+		{
+			i++;
+			continue;
+		}
+		if(IsAtBorderZone(allValidObjects[i]) == true)
 		{
 			i++;
 			continue;

@@ -75,7 +75,7 @@ inline bool SearchValidation::CheckFileReader() const
 inline void SearchValidation::VailidationAll()
 {
 	if (CheckFileReader()) return;
-
+	
 	this->detector = new Detector(Width, Height, DilationRadius, DiscretizationScale);
 	detector->InitSpace();
 	detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
@@ -91,11 +91,14 @@ inline void SearchValidation::VailidationAll()
 
 	for (unsigned i = 0; i<frameCount; ++i)
 	{
+		if(i < 300)
+			continue;
+
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);
 
 		CheckPerf(detector->DetectTargets(dataPoint[i], &result, nullptr, nullptr), "whole");
 
-		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, 1);
+		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, 100);
 	}
 }
