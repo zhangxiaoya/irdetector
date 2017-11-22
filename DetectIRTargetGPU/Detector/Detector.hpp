@@ -60,6 +60,10 @@ private:
 protected:
 	bool ReleaseSpace();
 
+	void InitForbiddenZones();
+
+	bool IsInForbiddenZone(const FourLimits& candidateTargetRegion) const;
+
 private:
 	int Width;
 	int Height;
@@ -86,6 +90,9 @@ private:
 	FourLimits* allValidObjects;
 	ObjectRect* allObjectRects;
 	FourLimitsWithScore* insideObjects;
+
+	FourLimits ForbiddenZones[10];
+	int ForbiddenZoneCount;
 
 	int validObjectsCount;
 	int lastResultCount;
@@ -123,6 +130,7 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  allValidObjects(nullptr),
 	  allObjectRects(nullptr),
 	  insideObjects(nullptr),
+	  ForbiddenZoneCount(0),
 	  validObjectsCount(0),
 	  lastResultCount(0),
 	  TARGET_WIDTH_MAX_LIMIT(20),
@@ -134,6 +142,7 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  CHECK_COVERAGE_FLAG(false),
 	  CHECK_STANDARD_DEVIATION_FLAG(false)
 {
+	InitForbiddenZones();
 }
 
 inline Detector::~Detector()
@@ -243,6 +252,29 @@ inline bool Detector::ReleaseSpace()
 		logPrinter.PrintLogs("Release space failed!", Error);
 	}
 	return status;
+}
+
+// Manul set Forbidden Zone, sine the bad-point of camera
+inline void Detector::InitForbiddenZones()
+{
+	ForbiddenZoneCount = 1;
+
+	ForbiddenZones[0].top = 101;
+	ForbiddenZones[0].bottom = 106;
+	ForbiddenZones[0].left = 289;
+	ForbiddenZones[0].right = 295;
+}
+
+inline bool Detector::IsInForbiddenZone(const FourLimits& candidateTargetRegion) const
+{
+	double centerX = (candidateTargetRegion.left + candidateTargetRegion.right) / 2.0;
+	double centerY = (candidateTargetRegion.top + candidateTargetRegion.bottom) / 2.0;
+	for (auto i = 0; i < ForbiddenZoneCount; ++i)
+	{
+		if (centerX > ForbiddenZones[i].left && centerX < ForbiddenZones[i].right && centerY > ForbiddenZones[i].top && centerY < ForbiddenZones[i].bottom)
+			return true;
+	}
+	return true;
 }
 
 inline bool Detector::InitSpace()
@@ -497,6 +529,11 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 	for (auto i = 0; i < validObjectsCount;)
 	{
 		if (allValidObjects[i].top == -1)
+		{
+			i++;
+			continue;
+		}
+		if(IsInForbiddenZone(allValidObjects[i]) == true)
 		{
 			i++;
 			continue;
