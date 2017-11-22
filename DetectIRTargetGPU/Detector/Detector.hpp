@@ -281,10 +281,10 @@ inline bool Detector::IsInForbiddenZone(const FourLimits& candidateTargetRegion)
 
 inline bool Detector::IsAtBorderZone(const FourLimits& candidateTargetRegion) const
 {
-	if (candidateTargetRegion.left < 2
-		|| candidateTargetRegion.bottom > (Height - 3)
-		|| candidateTargetRegion.top < 2
-		|| candidateTargetRegion.right > (Width - 3))
+	if (candidateTargetRegion.left < 3
+		|| candidateTargetRegion.bottom > (Height - 4)
+		|| candidateTargetRegion.top < 3
+		|| candidateTargetRegion.right > (Width - 4))
 		return true;
 	return false;
 }
