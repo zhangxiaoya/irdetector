@@ -106,7 +106,7 @@ inline void ShowFrame::Show(std::string titleName, unsigned char* frame, const i
 inline void ShowFrame::DrawRectangles(unsigned short* frame, ObjectRect* allRects, int width, int height)
 {
 	cv::Mat img;
-	ToMat<unsigned short>(frame, width, height, img, CV_8UC1);
+	ToMat<unsigned short>(frame, width, height, img, CV_8UC3);
 
 	for (auto i = 0; i < width * height; ++i)
 	{

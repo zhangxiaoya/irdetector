@@ -411,8 +411,8 @@ inline void Detector::MergeObjects() const
 				break;
 			}
 		}
-//		ConvertFourLimitsToRect(allValidObjects, allObjectRects, width, height, validObjectsCount);
-//		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+//		ConvertFourLimitsToRect(allValidObjects, allObjectRects, Width, Height, validObjectsCount);
+//		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
 	}
 }
 
@@ -634,7 +634,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		FalseAlarmFilter();
 
 		// put all valid result to resultSegment
-		result->targetCount = lastResultCount >= 3 ? 3 : lastResultCount;
+		result->targetCount = lastResultCount >= 5 ? 5 : lastResultCount;
 
 		for (auto i = 0; i < result->targetCount; ++i)
 		{

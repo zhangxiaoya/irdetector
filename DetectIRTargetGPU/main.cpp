@@ -113,8 +113,8 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	readLock.unlock();
 
 	// 检测目标，并检测性能
-//	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
-	CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
+	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+//	CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
 
 //	LARGE_INTEGER t1, t2, tc;
 //	QueryPerformanceFrequency(&tc);
@@ -281,13 +281,13 @@ int main(int argc, char* argv[])
 	const auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-//		RunOnNetwork();
+		RunOnNetwork();
 
 //		CheckConrrectness(WIDTH, HEIGHT);
 
 //		CheckPerformance(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 
-		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+//		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 	}
 
 	// 销毁检测子
