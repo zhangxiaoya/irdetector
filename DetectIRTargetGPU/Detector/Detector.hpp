@@ -527,7 +527,12 @@ inline void Detector::RemoveInValidObjects()
 	validObjectsCount = 0;
 	for (auto i = 0; i < Width * Height; ++i)
 	{
-		if (allObjects[i].top != -1 && ((allObjects[i].right - allObjects[i].left + 1) > 3 || (allObjects[i].bottom - allObjects[i].top + 1 > 3)))
+		if(allObjects[i].top == -1)
+			continue;
+		if((allObjects[i].right - allObjects[i].left) > TARGET_WIDTH_MAX_LIMIT || (allObjects[i].bottom - allObjects[i].top) > TARGET_HEIGHT_MAX_LIMIT)
+			continue;
+		if((allObjects[i].right - allObjects[i].left) < 1 || (allObjects[i].bottom - allObjects[i].top) < 1)
+			continue;
 		{
 			allValidObjects[validObjectsCount] = allObjects[i];
 			validObjectsCount++;
@@ -667,7 +672,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		// Merge all objects
 		MergeObjects();
 
-		MergeObjects();
+//		MergeObjects();
 
 		// Remove objects with low contrast
 //		RemoveObjectWithLowContrast();

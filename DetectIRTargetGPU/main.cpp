@@ -287,9 +287,9 @@ int main(int argc, char* argv[])
 
 //		CheckPerformance(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 
-//		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 
-		CheckSearching(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+//		CheckSearching(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 	}
 
 	// Ïú»Ù¼ì²â×Ó
