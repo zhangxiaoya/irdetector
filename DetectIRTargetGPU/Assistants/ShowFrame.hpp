@@ -7,7 +7,7 @@
 #include <iomanip>
 #include "../Headers/GlobalMainHeaders.h"
 #include "../Models/ObjectRect.h"
-#include "../Models/ResultSegment.hpp"
+#include "../Models/DetectResultSegment.hpp"
 
 class ShowFrame
 {
@@ -22,9 +22,9 @@ public:
 
 	static void DrawRectangles(unsigned short* frame, ObjectRect* allRects, int width, int height);
 
-	static void DrawRectangles(unsigned short* frame, ResultSegment* allRects, int width, int height, int delay = 0);
+	static void DrawRectangles(unsigned short* frame, DetectResultSegment* allRects, int width, int height, int delay = 0);
 
-	static void DrawRectangles(cv::Mat& frame, ResultSegment* allRects);
+	static void DrawRectangles(cv::Mat& frame, DetectResultSegment* allRects);
 
 	template<typename T>
 	static void ToTxt(T* frame, std::string fileName, const int width,  const int height);
@@ -106,7 +106,7 @@ inline void ShowFrame::Show(std::string titleName, unsigned char* frame, const i
 inline void ShowFrame::DrawRectangles(unsigned short* frame, ObjectRect* allRects, int width, int height)
 {
 	cv::Mat img;
-	ToMat<unsigned short>(frame, width, height, img, CV_8UC1);
+	ToMat<unsigned short>(frame, width, height, img, CV_8UC3);
 
 	for (auto i = 0; i < width * height; ++i)
 	{
@@ -121,25 +121,25 @@ inline void ShowFrame::DrawRectangles(unsigned short* frame, ObjectRect* allRect
 	cv::waitKey(1);
 }
 
-inline void ShowFrame::DrawRectangles(unsigned short* frame, ResultSegment* allRects, int width, int height, int delay)
+inline void ShowFrame::DrawRectangles(unsigned short* frame, DetectResultSegment* allRects, int width, int height, int delay)
 {
 	cv::Mat img;
 	ToMat<unsigned short>(frame, width, height, img, CV_8UC3);
 
 	for (auto i = 0; i < allRects->targetCount; ++i)
 	{
-		rectangle(img, cv::Point(allRects->targets[i].topLeftX, allRects->targets[i].topleftY), cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1), cv::Scalar(255, 255, 0));
+		rectangle(img, cv::Point(allRects->targets[i].topLeftX, allRects->targets[i].topLeftY), cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1), cv::Scalar(255, 255, 0));
 	}
 
 	imshow("after draw", img);
 	cv::waitKey(delay);
 }
 
-inline void ShowFrame::DrawRectangles(cv::Mat& frame, ResultSegment* allRects)
+inline void ShowFrame::DrawRectangles(cv::Mat& frame, DetectResultSegment* allRects)
 {
 	for (auto i = 0; i < allRects->targetCount; ++i)
 	{
-		rectangle(frame, cv::Point(allRects->targets[i].topLeftX, allRects->targets[i].topleftY), cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1), cv::Scalar(255, 255, 0));
+		rectangle(frame, cv::Point(allRects->targets[i].topLeftX, allRects->targets[i].topLeftY), cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1), cv::Scalar(255, 255, 0));
 	}
 }
 
