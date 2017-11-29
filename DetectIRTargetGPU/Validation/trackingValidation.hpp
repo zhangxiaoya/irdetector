@@ -77,8 +77,7 @@ inline void TrackingValidation::VailidationAll()
 {
 	if (CheckFileReader()) return;
 
-	auto monitor1 = new Monitor(Width, Height, DilationRadius, DiscretizationScale);
-	this->monitor = monitor1;
+	this->monitor = new Monitor(Width, Height, DilationRadius, DiscretizationScale);
 
 	const auto frameCount = fileReader->GetFrameCount();
 	auto dataPoint = fileReader->GetDataPoint();
@@ -87,20 +86,14 @@ inline void TrackingValidation::VailidationAll()
 	char iterationText[200];
 
 	DetectResultSegment result;
+	auto delay = 1;
 
 	for (unsigned i = 0; i<frameCount; ++i)
 	{
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);
 
-		auto delay = 1;
-		//if (i > 43 && i < 46)
-		//	delay = 500;
-		// if (i > 640)
-		// 	delay = 2000;
-
-		this->monitor->Process(dataPoint[i], &result);
-//		CheckPerf(detector->DetectTargets(dataPoint[i], &result), "whole");
+		CheckPerf(this->monitor->Process(dataPoint[i], &result), "whole tracking process");
 
 		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, delay);
 	}

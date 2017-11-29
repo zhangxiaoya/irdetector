@@ -29,7 +29,7 @@ public:
 
 	bool InitSpace();
 
-	void DetectTargets(unsigned short* frame, DetectResultSegment* result);
+	void DetectTargets(unsigned short* frame, DetectResultSegment* result, FourLimits** allCandidatesTargets = nullptr, int* allCandidateTargetsCount = nullptr);
 
 	void SetRemoveFalseAlarmParameters(bool checkStandardDeviationFlag,
 	                                   bool checkSurroundingBoundaryFlag,
@@ -60,6 +60,12 @@ private:
 protected:
 	bool ReleaseSpace();
 
+	void InitForbiddenZones();
+
+	bool IsInForbiddenZone(const FourLimits& candidateTargetRegion) const;
+
+	bool IsAtBorderZone(const FourLimits& candidateTargetRegion) const;
+
 private:
 	int Width;
 	int Height;
@@ -86,6 +92,9 @@ private:
 	FourLimits* allValidObjects;
 	ObjectRect* allObjectRects;
 	FourLimitsWithScore* insideObjects;
+
+	FourLimits ForbiddenZones[10];
+	int ForbiddenZoneCount;
 
 	int validObjectsCount;
 	int lastResultCount;
@@ -123,6 +132,7 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  allValidObjects(nullptr),
 	  allObjectRects(nullptr),
 	  insideObjects(nullptr),
+	  ForbiddenZoneCount(0),
 	  validObjectsCount(0),
 	  lastResultCount(0),
 	  TARGET_WIDTH_MAX_LIMIT(20),
@@ -134,6 +144,7 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  CHECK_COVERAGE_FLAG(false),
 	  CHECK_STANDARD_DEVIATION_FLAG(false)
 {
+	InitForbiddenZones();
 }
 
 inline Detector::~Detector()
@@ -229,6 +240,10 @@ inline bool Detector::ReleaseSpace()
 	{
 		delete[] allValidObjects;
 	}
+	if(this->insideObjects != nullptr)
+	{
+		delete[] insideObjects;
+	}
 
 	if (status == true)
 	{
@@ -239,6 +254,39 @@ inline bool Detector::ReleaseSpace()
 		logPrinter.PrintLogs("Release space failed!", Error);
 	}
 	return status;
+}
+
+// Manul set Forbidden Zone, sine the bad-point of camera
+inline void Detector::InitForbiddenZones()
+{
+	ForbiddenZoneCount = 1;
+
+	ForbiddenZones[0].top = 101;
+	ForbiddenZones[0].bottom = 106;
+	ForbiddenZones[0].left = 289;
+	ForbiddenZones[0].right = 295;
+}
+
+inline bool Detector::IsInForbiddenZone(const FourLimits& candidateTargetRegion) const
+{
+	double centerX = (candidateTargetRegion.left + candidateTargetRegion.right) / 2.0;
+	double centerY = (candidateTargetRegion.top + candidateTargetRegion.bottom) / 2.0;
+	for (auto i = 0; i < ForbiddenZoneCount; ++i)
+	{
+		if (centerX > ForbiddenZones[i].left && centerX < ForbiddenZones[i].right && centerY > ForbiddenZones[i].top && centerY < ForbiddenZones[i].bottom)
+			return true;
+	}
+	return false;
+}
+
+inline bool Detector::IsAtBorderZone(const FourLimits& candidateTargetRegion) const
+{
+	if (candidateTargetRegion.left < 3
+		|| candidateTargetRegion.bottom > (Height - 4)
+		|| candidateTargetRegion.top < 3
+		|| candidateTargetRegion.right > (Width - 4))
+		return true;
+	return false;
 }
 
 inline bool Detector::InitSpace()
@@ -262,6 +310,7 @@ inline bool Detector::InitSpace()
 	allObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * Width * Height));
 	allObjectRects = static_cast<ObjectRect*>(malloc(sizeof(ObjectRect) * Width * Height));
 	allValidObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * Width * Height));
+	insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * Width * Height));
 	return isInitSpaceReady;
 }
 
@@ -406,8 +455,8 @@ inline void Detector::MergeObjects() const
 				break;
 			}
 		}
-//		ConvertFourLimitsToRect(allValidObjects, allObjectRects, width, height, validObjectsCount);
-//		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
+//		ConvertFourLimitsToRect(allValidObjects, allObjectRects, Width, Height, validObjectsCount);
+//		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
 	}
 }
 
@@ -478,7 +527,12 @@ inline void Detector::RemoveInValidObjects()
 	validObjectsCount = 0;
 	for (auto i = 0; i < Width * Height; ++i)
 	{
-		if (allObjects[i].top != -1 && ((allObjects[i].right - allObjects[i].left + 1) > 3 || (allObjects[i].bottom - allObjects[i].top + 1 > 3)))
+		if(allObjects[i].top == -1)
+			continue;
+		if((allObjects[i].right - allObjects[i].left) > TARGET_WIDTH_MAX_LIMIT || (allObjects[i].bottom - allObjects[i].top) > TARGET_HEIGHT_MAX_LIMIT)
+			continue;
+		if((allObjects[i].right - allObjects[i].left) < 1 || (allObjects[i].bottom - allObjects[i].top) < 1)
+			continue;
 		{
 			allValidObjects[validObjectsCount] = allObjects[i];
 			validObjectsCount++;
@@ -496,6 +550,16 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 			i++;
 			continue;
 		}
+		if(IsInForbiddenZone(allValidObjects[i]) == true)
+		{
+			i++;
+			continue;
+		}
+		if(IsAtBorderZone(allValidObjects[i]) == true)
+		{
+			i++;
+			continue;
+		}
 		allValidObjects[newValidaObjectCount] = allValidObjects[i];
 		++i;
 		newValidaObjectCount++;
@@ -505,7 +569,6 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 
 inline void Detector::FalseAlarmFilter()
 {
-	this->insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * validObjectsCount));
 	lastResultCount = 0;
 
 	for (auto i = 0; i < validObjectsCount; ++i)
@@ -561,7 +624,7 @@ inline void Detector::FalseAlarmFilter()
 		std::sort(this->insideObjects, this->insideObjects + lastResultCount, CompareResult);
 }
 
-inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* result)
+inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* result, FourLimits** allCandidatesTargets, int* allCandidateTargetsCount)
 {
 	CopyFrameData(frame);
 
@@ -609,7 +672,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		// Merge all objects
 		MergeObjects();
 
-		MergeObjects();
+//		MergeObjects();
 
 		// Remove objects with low contrast
 //		RemoveObjectWithLowContrast();
@@ -620,11 +683,17 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		// Copy frame header
 		memcpy(result->header, frame, 16);
 
+		// return all candidate targets before remove false alarm
+		if (allCandidatesTargets != nullptr)
+			*allCandidatesTargets = this->allValidObjects;
+		if (allCandidateTargetsCount != nullptr)
+			*allCandidateTargetsCount = this->validObjectsCount;
+
 		// Filter all candiates
 		FalseAlarmFilter();
 
 		// put all valid result to resultSegment
-		result->targetCount = lastResultCount >= 3 ? 3 : lastResultCount;
+		result->targetCount = lastResultCount >= 5 ? 5 : lastResultCount;
 
 		for (auto i = 0; i < result->targetCount; ++i)
 		{

@@ -3,6 +3,7 @@
 #include "CorrectnessValidation.hpp"
 #include "PerformanceValidation.hpp"
 #include "trackingValidation.hpp"
+#include "SearchValidation.hpp"
 
 /****************************************************************************************/
 /*                          Test Algrithm Core Performance                              */
@@ -43,6 +44,14 @@ void CheckTracking(const int width, const int height, const int dilationRadius, 
 	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\8\\ir_file_20170925_220915_mubiaojingzhi.bin";
 
 	TrackingValidation validator(width, height,sizeof(unsigned short), dilationRadius, discretizationScale);
+	validator.InitDataReader(validation_file_name);
+	validator.VailidationAll();
+}
+
+void CheckSearching(const int width, const int height, const int dilationRadius, const int discretizationScale)
+{
+	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\10\\ir_file_20171119_143848--h100-500m-630m--mubiaojingxiangyidong--danquansousuo.bin";
+	SearchValidation validator(width, height, sizeof(unsigned short), dilationRadius, discretizationScale);
 	validator.InitDataReader(validation_file_name);
 	validator.VailidationAll();
 }
