@@ -1,5 +1,4 @@
 ﻿#include "NetworkTransfer.h"
-#include <iostream>
 #include "../Monitor/Filter.hpp"
 #include "../Models/DetectResultSegment.hpp"
 
@@ -139,7 +138,6 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 
 	// 每段数据长度
 	auto quarterBufferSize = ReveiceDataBufferlen / packageCount;
-	auto segmentIndex = 0;
 
 	// 循环接收多次（分包数量）
 	for (auto i = 0; i < packageCount; ++i)
@@ -186,7 +184,6 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 					i = 0;
 				}
 			}
-			segmentIndex = static_cast<int>(partBuffer[1]);
 			// 将除去帧号和段号的数据部分复制到图像帧数据对应的位置
 			memcpy(frameData + i * (quarterBufferSize - 2), partBuffer + 2, sizeof(unsigned char) * (quarterBufferSize - 2));
 			// 并输出当前接收到的帧号和段号
