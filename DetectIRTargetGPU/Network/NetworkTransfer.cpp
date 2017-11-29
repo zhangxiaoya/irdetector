@@ -6,20 +6,20 @@
 #pragma comment(lib, "ws2_32.lib")
 
 // Definition of all variables used in network
-int HostPortForRemoteDataServer = 8889;            // 接收数据端口
-int HostPortForRemoteResultServer = 8889;          // 发送结果端口
+int HostPortForRemoteDataServer = 8889; // 接收数据端口
+int HostPortForRemoteResultServer = 8889; // 发送结果端口
 char RemoteResultServerHostIP[] = "192.168.2.111"; // 发送结果主机地址
-SOCKET RemoteDataServerSocket = 0;                 // 接收数据SOCKET
-SOCKET RemoteResultServerSocket = 0;               // 发送结果SOCKET
-sockaddr_in RemoteDataServerSocketAddress;		   // 接收数据Socket地址
-sockaddr_in RemoteResultServerSocketAddress;	   // 发送结果Socket地址
-int RemoteDataServerSocketAddressLen = 0;          // 接收数据Socket地址长度
-int RemoteResultServerSocketAddressLen = 0;        // 发送结果Socket地址长度
+SOCKET RemoteDataServerSocket = 0; // 接收数据SOCKET
+SOCKET RemoteResultServerSocket = 0; // 发送结果SOCKET
+sockaddr_in RemoteDataServerSocketAddress; // 接收数据Socket地址
+sockaddr_in RemoteResultServerSocketAddress; // 发送结果Socket地址
+int RemoteDataServerSocketAddressLen = 0; // 接收数据Socket地址长度
+int RemoteResultServerSocketAddressLen = 0; // 发送结果Socket地址长度
 
-auto SocketLen = 500 * 1024 * 1024;                // Socket缓冲区大小
+auto SocketLen = 500 * 1024 * 1024; // Socket缓冲区大小
 
-int ReveiceDataBufferlen = 0;                      // 接收数据缓冲区大小
-unsigned char* ReceiveDataBuffer;                  // 接收
+int ReveiceDataBufferlen = 0; // 接收数据缓冲区大小
+unsigned char* ReceiveDataBuffer; // 接收
 
 const int packageCount = 4;
 
@@ -28,9 +28,9 @@ const int packageCount = 4;
 /************************************************************************/
 bool InitNetworkEnvironment()
 {
-	WSADATA wsaData;                              // 记录网络环境初始化结果
-	auto sockVersion = MAKEWORD(2, 2);            // Socket版本号
-	if (WSAStartup(sockVersion, &wsaData) != 0)   // 初始化Socket网络编程环境
+	WSADATA wsaData; // 记录网络环境初始化结果
+	auto sockVersion = MAKEWORD(2, 2); // Socket版本号
+	if (WSAStartup(sockVersion, &wsaData) != 0) // 初始化Socket网络编程环境
 	{
 		// 若初始化网络编程环境出错，输出错误信息
 		logPrinter.PrintLogs("Init network failed!", Error);
@@ -61,7 +61,7 @@ bool InitSocketForDataServer()
 	//设置socket缓冲区大小
 	setsockopt(RemoteDataServerSocket, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<const char*>(&SocketLen), sizeof(SocketLen));
 
-    // Socket地址长度
+	// Socket地址长度
 	RemoteDataServerSocketAddressLen = sizeof(RemoteDataServerSocketAddress);
 
 	// 绑定Socket地址和Socket，用于接收数据
@@ -129,8 +129,8 @@ bool InitNetworks()
 /************************************************************************/
 bool GetOneFrameFromNetwork(unsigned char* frameData)
 {
-//	 打印开始接收数据消息
-	std::cout << "Receiving one frame data from remote device ...\n";
+	//	打印开始接收数据消息
+//	printf("Receiving one frame data from remote device ...\n");
 
 	// 记录当前帧的帧号
 	unsigned char frameIndex = 0;
@@ -144,7 +144,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 	// 循环接收多次（分包数量）
 	for (auto i = 0; i < packageCount; ++i)
 	{
-	    auto partBuffer = ReceiveDataBuffer + i * quarterBufferSize;
+		auto partBuffer = ReceiveDataBuffer + i * quarterBufferSize;
 		// 接收一次数据
 		memset(partBuffer, 0, sizeof(partBuffer));
 		const auto receivedStatus = recvfrom(
@@ -171,17 +171,15 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 						subIndex[static_cast<int>(partBuffer[1])] = true;
 					else // 如果已经接收到了，输出错误信息
 					{
-						std::cout << "Invalid data order, duplicated segment!" << std::endl;
-						std::cout << "Segment " << static_cast<int>(partBuffer[1]) << " had received more than once!" << std::endl;
+						printf("Invalid data order, duplicated segment!");
+						printf("Segment %d had received more than once!", static_cast<int>(partBuffer[1]));
 						i--; // 多接收一个数据段
 					}
 				}
 				else // 如果帧号不一致，输出错误信息
 				{
-					std::cout << "Invalid frame order： "
-						<< "Expected frame index is " << static_cast<int>(frameIndex)
-						<< " , but actualy index is " << static_cast<int>(partBuffer[0]) << std::endl;
-					std::cout << "Resetting .....>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+					printf("Invalid frame order： \nExpected frame index is %d , \nbut actualy index is %d ", static_cast<int>(frameIndex), static_cast<int>(partBuffer[0]));
+					printf("Resetting .....>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
 					frameIndex = static_cast<unsigned char>(partBuffer[0]);
 					for (auto idx = 0; idx < packageCount; ++idx)
 						subIndex[idx] = false;
@@ -190,13 +188,12 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 			}
 			segmentIndex = static_cast<int>(partBuffer[1]);
 			// 将除去帧号和段号的数据部分复制到图像帧数据对应的位置
-			memcpy(frameData + i * (quarterBufferSize-2), partBuffer + 2, sizeof(unsigned char) * (quarterBufferSize-2));
+			memcpy(frameData + i * (quarterBufferSize - 2), partBuffer + 2, sizeof(unsigned char) * (quarterBufferSize - 2));
 			// 并输出当前接收到的帧号和段号
-
 		}
 		else if (receivedStatus == 10) // 长度为10的任意数据表示发送结束，输出提示信息，并返回false
 		{
-			std::cout << "Finish receive data from client!\n";
+			printf("Finish receive data from client!\n");
 			return false;
 		}
 		else // 如果既不是数据部分，也不是数据结束符，输出错误代码
@@ -205,7 +202,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 			return false;
 		}
 	}
-	std::cout << "Frame index is " << static_cast<int>(frameIndex) << std::endl;
+//	printf("Frame index is %d\n", static_cast<int>(frameIndex));
 	return true;
 }
 
@@ -215,10 +212,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 bool SendResultToRemoteServer(DetectResultSegment& result)
 {
 	// 打印日志消息
-	std::cout << "Sending result to remote server \n";
-
-	//////信号量 wait
-
+//	printf("Sending result to remote server \n");
 
 	// 发送结果数据到远端服务器
 	auto sendStatus = sendto(
@@ -232,7 +226,7 @@ bool SendResultToRemoteServer(DetectResultSegment& result)
 	// 如果出错，打印消息代码
 	if (sendStatus == SOCKET_ERROR)
 	{
-		std::cout << WSAGetLastError() << std::endl;
+		printf("%d\n", WSAGetLastError());
 		return false;
 	}
 	return true;
@@ -243,10 +237,10 @@ bool SendResultToRemoteServer(DetectResultSegment& result)
 /************************************************************************/
 bool DestroyNetWork()
 {
-	delete[] ReceiveDataBuffer;            // 销毁临时缓冲区
+	delete[] ReceiveDataBuffer; // 销毁临时缓冲区
 
-	closesocket(RemoteDataServerSocket);   // 关闭结束数据的Socket
+	closesocket(RemoteDataServerSocket); // 关闭结束数据的Socket
 	closesocket(RemoteResultServerSocket); // 关闭发送结果数据的Socket
-	WSACleanup();                          // 清理网络环境
+	WSACleanup(); // 清理网络环境
 	return true;
 }

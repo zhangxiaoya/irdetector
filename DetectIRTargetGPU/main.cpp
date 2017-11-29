@@ -4,7 +4,6 @@
 #include "Network/NetworkTransfer.h"
 
 #include <windows.h>
-#include <iostream>
 #include <mutex>
 #include <thread>
 #include "Models/FrameDataRingBufferStruct.hpp"
@@ -58,7 +57,7 @@ bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while ((buffer->write_position + 1) % BufferSize == buffer->read_position)
 	{
-		std::cout << "Image Data Producer is waiting for an empty slot...\n";
+//		printf("Image Data Producer is waiting for an empty slot...\n");
 		buffer->buffer_not_full.wait(lock);
 	}
 
@@ -98,7 +97,7 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 			return false;
 		}
 
-		std::cout << "Detector Consumer is waiting for items...\n";
+//		printf("Detector Consumer is waiting for items...\n");
 		buffer->buffer_not_empty.wait(readLock);
 	}
 
@@ -116,44 +115,31 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
 //	CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
 
-//	LARGE_INTEGER t1, t2, tc;
-//	QueryPerformanceFrequency(&tc);
-//	QueryPerformanceCounter(&t1);
-//	detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer);
-//	QueryPerformanceCounter(&t2);
-//	const auto timeC = (t2.QuadPart - t1.QuadPart) * 1.0 / tc.QuadPart;
-//	printf("Operation of %20s Use Time:%f\n", "Total process", timeC);
-//	if (timeC >= 0.006)
-//		printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-
-	if(IsSendResultToServer)
+	// 并发存储检测结果到缓冲区
+	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
+	while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
 	{
-		// 并发存储检测结果到缓冲区
-		std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
-		while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
-		{
-			std::cout << "Result Send Producer is waiting for an empty slot...\n";
-			resultBuffer->buffer_not_full.wait(writerLock);
-		}
-
-		// Copy data received from network to ring buffer and update ring buffer header pointer
-		memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItemSendToServer, ResultItemSize);
-		resultBuffer->write_position++;
-
-		// Reset data header pointer when to the end of buffer
-		if (resultBuffer->write_position == BufferSize)
-			resultBuffer->write_position = 0;
-
-		// Notify Detect thread
-		resultBuffer->buffer_not_empty.notify_all();
-		writerLock.unlock();
+//		printf("Result Send Producer is waiting for an empty slot...\n");
+		resultBuffer->buffer_not_full.wait(writerLock);
 	}
 
+	// Copy data received from network to ring buffer and update ring buffer header pointer
+	memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItemSendToServer, ResultItemSize);
+	resultBuffer->write_position++;
+
+	// Reset data header pointer when to the end of buffer
+	if (resultBuffer->write_position == BufferSize)
+		resultBuffer->write_position = 0;
+
+	// Notify Detect thread
+	resultBuffer->buffer_not_empty.notify_all();
+	writerLock.unlock();
+
 	// 临时显示结果
-	ShowFrame::ToMat(FrameDataInprocessing, WIDTH, HEIGHT, CVFrame);
-	ShowFrame::DrawRectangles(CVFrame, &ResultItemSendToServer);
-	cv::imshow("Result", CVFrame);
-	cv::waitKey(1);
+	// ShowFrame::ToMat(FrameDataInprocessing, WIDTH, HEIGHT, CVFrame);
+	// ShowFrame::DrawRectangles(CVFrame, &ResultItemSendToServer);
+	// cv::imshow("Result", CVFrame);
+	// cv::waitKey(1);
 
 	// 返回一次线程执行状态
 	return true;
@@ -170,7 +156,7 @@ bool OutputData(DetectResultRingBufferStruct* buffer)
 		if (buffer->finish_flag == true)
 			return false;
 
-		std::cout << "Result send thread is waiting for result items...\n";
+//		printf("Result send thread is waiting for result items...\n");
 		buffer->buffer_not_empty.wait(lock);
 	}
 
@@ -281,13 +267,13 @@ int main(int argc, char* argv[])
 	const auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-//		RunOnNetwork();
+		RunOnNetwork();
 
 //		CheckConrrectness(WIDTH, HEIGHT);
 
 //		CheckPerformance(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 
-		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+//		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 
 //		CheckSearching(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 	}
