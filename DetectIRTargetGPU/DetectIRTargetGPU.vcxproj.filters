@@ -138,6 +138,21 @@
     <ClInclude Include="Network\NetworkTransfer.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="Models\Confidences.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Monitor\Tracker.hpp">
+      <Filter>Monitor</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\TargetPosition.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Validation\trackingValidation.hpp">
+      <Filter>Validation</Filter>
+    </ClInclude>
+    <ClInclude Include="Validation\SearchValidation.hpp">
+      <Filter>Validation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -147,14 +162,14 @@
     <ClCompile Include="Detector\Detector.hpp">
       <Filter>Detector</Filter>
     </ClCompile>
-    <ClCompile Include="Models\ResultSegment.hpp">
-      <Filter>Models</Filter>
-    </ClCompile>
     <ClCompile Include="Validation\Validation.cpp">
       <Filter>Validation</Filter>
     </ClCompile>
     <ClCompile Include="Network\NetworkTransfer.cpp">
       <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Models\DetectResultSegment.hpp">
+      <Filter>Models</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

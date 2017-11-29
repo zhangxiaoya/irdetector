@@ -4,20 +4,20 @@
 #include "Network/NetworkTransfer.h"
 
 #include <windows.h>
-#include <iostream>
 #include <mutex>
 #include <thread>
 #include "Models/FrameDataRingBufferStruct.hpp"
 #include "Models/DetectResultRingBufferStruct.hpp"
 #include "Validation/Validation.h"
+#include "Monitor/Monitor.hpp"
 
 const bool IsSendResultToServer = true; // 是否发送结果到服务端(测试用)
 
 /****************************************************************************************/
 /* 参数定义： 图像信息全局变量声明与定义                                                   */
 /****************************************************************************************/
-extern const unsigned int WIDTH = 320 * 2;   // 图像宽度
-extern const unsigned int HEIGHT = 256 * 2;  // 图像高度
+extern const unsigned int WIDTH = 320;   // 图像宽度
+extern const unsigned int HEIGHT = 256;  // 图像高度
 extern const unsigned int BYTESIZE = 2;  // 每个像素字节数
 
 /****************************************************************************************/
@@ -34,10 +34,11 @@ static const int ImageSize = WIDTH * HEIGHT;                       // 每一帧图像
 unsigned char FrameData[FrameDataSize];                            // 每一帧图像临时缓冲
 unsigned short FrameDataInprocessing[ImageSize] = {0};             // 每一帧图像临时缓冲
 unsigned short FrameDataToShow[ImageSize] = {0};                   // 每一帧显示结果图像临时缓冲
-ResultSegment ResultItemSendToServer;                              // 每一帧图像检测结果
-ResultSegment ResultItemToShow;                                    // 每一帧图像显示结果
-static const int ResultItemSize = sizeof(ResultSegment);           // 每一帧图像检测结果大小
+DetectResultSegment ResultItemSendToServer;                              // 每一帧图像检测结果
+DetectResultSegment ResultItemToShow;                                    // 每一帧图像显示结果
+static const int ResultItemSize = sizeof(DetectResultSegment);           // 每一帧图像检测结果大小
 Detector* detector = new Detector(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);  // 初始化检测器
+Monitor* monitor = new Monitor(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);     // init monitor
 cv::Mat CVFrame(HEIGHT, WIDTH, CV_8UC1);
 
 /****************************************************************************************/
@@ -56,7 +57,7 @@ bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while ((buffer->write_position + 1) % BufferSize == buffer->read_position)
 	{
-		std::cout << "Image Data Producer is waiting for an empty slot...\n";
+//		printf("Image Data Producer is waiting for an empty slot...\n");
 		buffer->buffer_not_full.wait(lock);
 	}
 
@@ -96,7 +97,7 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 			return false;
 		}
 
-		std::cout << "Detector Consumer is waiting for items...\n";
+//		printf("Detector Consumer is waiting for items...\n");
 		buffer->buffer_not_empty.wait(readLock);
 	}
 
@@ -111,46 +112,34 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	readLock.unlock();
 
 	// 检测目标，并检测性能
-//	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+//	CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
 
-	LARGE_INTEGER t1, t2, tc;
-	QueryPerformanceFrequency(&tc);
-	QueryPerformanceCounter(&t1);
-	detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer);
-	QueryPerformanceCounter(&t2);
-	const auto timeC = (t2.QuadPart - t1.QuadPart) * 1.0 / tc.QuadPart;
-	printf("Operation of %20s Use Time:%f\n", "Total process", timeC);
-	if (timeC >= 0.006)
-		printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-
-	if(IsSendResultToServer)
+	// 并发存储检测结果到缓冲区
+	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
+	while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
 	{
-		// 并发存储检测结果到缓冲区
-		std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
-		while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
-		{
-			std::cout << "Result Send Producer is waiting for an empty slot...\n";
-			resultBuffer->buffer_not_full.wait(writerLock);
-		}
-
-		// Copy data received from network to ring buffer and update ring buffer header pointer
-		memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItemSendToServer, ResultItemSize);
-		resultBuffer->write_position++;
-
-		// Reset data header pointer when to the end of buffer
-		if (resultBuffer->write_position == BufferSize)
-			resultBuffer->write_position = 0;
-
-		// Notify Detect thread
-		resultBuffer->buffer_not_empty.notify_all();
-		writerLock.unlock();
+//		printf("Result Send Producer is waiting for an empty slot...\n");
+		resultBuffer->buffer_not_full.wait(writerLock);
 	}
 
+	// Copy data received from network to ring buffer and update ring buffer header pointer
+	memcpy(resultBuffer->item_buffer + resultBuffer->write_position * ResultItemSize, &ResultItemSendToServer, ResultItemSize);
+	resultBuffer->write_position++;
+
+	// Reset data header pointer when to the end of buffer
+	if (resultBuffer->write_position == BufferSize)
+		resultBuffer->write_position = 0;
+
+	// Notify Detect thread
+	resultBuffer->buffer_not_empty.notify_all();
+	writerLock.unlock();
+
 	// 临时显示结果
-//	ShowFrame::ToMat(FrameDataInprocessing, WIDTH, HEIGHT, CVFrame);
-//	ShowFrame::DrawRectangles(CVFrame, &ResultItemSendToServer);
-//	cv::imshow("Result", CVFrame);
-//	cv::waitKey(1);
+	// ShowFrame::ToMat(FrameDataInprocessing, WIDTH, HEIGHT, CVFrame);
+	// ShowFrame::DrawRectangles(CVFrame, &ResultItemSendToServer);
+	// cv::imshow("Result", CVFrame);
+	// cv::waitKey(1);
 
 	// 返回一次线程执行状态
 	return true;
@@ -167,7 +156,7 @@ bool OutputData(DetectResultRingBufferStruct* buffer)
 		if (buffer->finish_flag == true)
 			return false;
 
-		std::cout << "Result send thread is waiting for result items...\n";
+//		printf("Result send thread is waiting for result items...\n");
 		buffer->buffer_not_empty.wait(lock);
 	}
 
@@ -278,15 +267,20 @@ int main(int argc, char* argv[])
 	const auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-//		RunOnNetwork();
+		RunOnNetwork();
 
-		CheckConrrectness(WIDTH, HEIGHT);
+//		CheckConrrectness(WIDTH, HEIGHT);
 
-		CheckPerformance(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+//		CheckPerformance(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+
+//		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+
+//		CheckSearching(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
 	}
 
 	// 销毁检测子
 	delete detector;
+	delete monitor;
 
 	// 释放CUDA设备
 	CUDAInit::cudaDeviceRelease();

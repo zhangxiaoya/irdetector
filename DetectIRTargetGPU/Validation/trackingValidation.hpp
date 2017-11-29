@@ -6,18 +6,19 @@
 #include "../CCL/MeshCCLOnCPU.hpp"
 #include "../Checkers/CheckPerf.h"
 #include "../Detector/Detector.hpp"
+#include "../Monitor/Monitor.hpp"
 
-class PerformanceValidation
+class TrackingValidation
 {
 public:
-	explicit PerformanceValidation(const int width,
-	                               const int height,
-	                               const int pixelSize,
-	                               const int dilationRadius,
-	                               const int discretizationScale,
-	                               BinaryFileReader* file_reader = nullptr)
+	TrackingValidation(const int width,
+	                            const int height,
+	                            const int pixelSize,
+	                            const int dilationRadius,
+	                            const int discretizationScale,
+	                            BinaryFileReader* file_reader = NULL)
 		: fileReader(file_reader),
-		  detector(nullptr),
+		  monitor(NULL),
 		  Width(width),
 		  Height(height),
 		  PixelSize(pixelSize),
@@ -26,7 +27,7 @@ public:
 	{
 	}
 
-	~PerformanceValidation()
+	~TrackingValidation()
 	{
 		delete fileReader;
 	}
@@ -39,7 +40,7 @@ private:
 	bool CheckFileReader() const;
 
 	BinaryFileReader* fileReader;
-	Detector* detector;
+	Monitor* monitor;
 
 	int Width;
 	int Height;
@@ -50,9 +51,9 @@ private:
 	LogPrinter logPrinter;
 };
 
-inline void PerformanceValidation::InitDataReader(const std::string validationFileName)
+inline void TrackingValidation::InitDataReader(const std::string validationFileName)
 {
-	if(fileReader != nullptr)
+	if (fileReader != nullptr)
 	{
 		delete fileReader;
 		fileReader = nullptr;
@@ -61,9 +62,9 @@ inline void PerformanceValidation::InitDataReader(const std::string validationFi
 	fileReader->ReadBinaryFileToHostMemory();
 }
 
-inline bool PerformanceValidation::CheckFileReader() const
+inline bool TrackingValidation::CheckFileReader() const
 {
-	if(fileReader == nullptr)
+	if (fileReader == NULL)
 	{
 		logPrinter.PrintLogs("File Reader is Not Ready!", Error);
 		system("Pause");
@@ -72,30 +73,28 @@ inline bool PerformanceValidation::CheckFileReader() const
 	return false;
 }
 
-inline void PerformanceValidation::VailidationAll()
+inline void TrackingValidation::VailidationAll()
 {
 	if (CheckFileReader()) return;
 
-	this->detector = new Detector(Width, Height, DilationRadius, DiscretizationScale);
-	detector->InitSpace();
-	detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
+	this->monitor = new Monitor(Width, Height, DilationRadius, DiscretizationScale);
 
 	const auto frameCount = fileReader->GetFrameCount();
 	auto dataPoint = fileReader->GetDataPoint();
 
-	logPrinter.PrintLogs("Test the visual effect of detect result ... ", Info);
+	logPrinter.PrintLogs("Test the tracking effect of detect result ... ", Info);
 	char iterationText[200];
 
 	DetectResultSegment result;
-	detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
+	auto delay = 1;
 
-	for(unsigned i = 0;i<frameCount;++i)
+	for (unsigned i = 0; i<frameCount; ++i)
 	{
 		sprintf_s(iterationText, 200, "Checking for frame %04d ...", i);
 		logPrinter.PrintLogs(iterationText, Info);
 
-		CheckPerf(detector->DetectTargets(dataPoint[i], &result, nullptr, nullptr), "whole");
+		CheckPerf(this->monitor->Process(dataPoint[i], &result), "whole tracking process");
 
-		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, 1);
+		ShowFrame::DrawRectangles(dataPoint[i], &result, Width, Height, delay);
 	}
 }
