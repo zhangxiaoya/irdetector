@@ -22,3 +22,13 @@
 #ifndef IMAGE_SIZE
 #define IMAGE_SIZE (IMAGE_WIDTH * IMAGE_HEIGHT)
 #endif
+
+// 分段传送图像，每段数据大小
+#ifndef SEGMENT_SIZE
+#define SEGMENT_SIZE (320 * 64)
+#endif
+
+// 每一帧图像数据段的个数
+#ifndef SEGMENT_COUNT
+#define SEGMENT_COUNT (IMAGE_WIDTH * IMAGE_HEIGHT / SEGMENT_SIZE)
+#endif
