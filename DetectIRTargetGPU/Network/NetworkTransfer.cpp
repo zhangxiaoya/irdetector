@@ -2,12 +2,13 @@
 #include "../Monitor/Filter.hpp"
 #include "../Models/DetectResultSegment.hpp"
 #include "../Headers/FrameParameters.h"
+#include "../Headers/NetworkParameters.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
-// Definition of all variables used in network
-int HostPortForRemoteDataServer = 8889;      // 接收数据端口
-int HostPortForRemoteResultServer = 8889;    // 发送结果端口
+/************************************************************************/
+/*         Definition of all variables used in network                  */
+/************************************************************************/
 char RemoteResultServerHostIP[] = "192.168.2.111"; // 发送结果主机地址
 SOCKET RemoteDataServerSocket = 0;   // 接收数据SOCKET
 SOCKET RemoteResultServerSocket = 0; // 发送结果SOCKET
@@ -16,7 +17,7 @@ sockaddr_in RemoteResultServerSocketAddress; // 发送结果Socket地址
 int RemoteDataServerSocketAddressLen = 0;    // 接收数据Socket地址长度
 int RemoteResultServerSocketAddressLen = 0;  // 发送结果Socket地址长度
 
-auto SocketLen = 500 * 1024 * 1024; // Socket缓冲区大小
+auto SocketLen = SOCKET_BUFFER_LENGTH;       // Socket缓冲区大小
 
 int ReveiceDataBufferlen = 0;     // 接收数据缓冲区大小
 unsigned char* ReceiveDataBuffer; // 接收
@@ -53,7 +54,7 @@ bool InitSocketForDataServer()
 
 	// 初始化Socket地址和协议族等信息
 	RemoteDataServerSocketAddress.sin_family = AF_INET; // 协议族
-	RemoteDataServerSocketAddress.sin_port = htons(HostPortForRemoteDataServer); // 端口号
+	RemoteDataServerSocketAddress.sin_port = htons(HOSTPORT_OF_REMOTE_DATA_SERVER); // 端口号
 	RemoteDataServerSocketAddress.sin_addr.S_un.S_addr = htonl(INADDR_ANY); // 网络地址
 
 	//设置socket缓冲区大小
@@ -88,8 +89,8 @@ bool InitSocketForResultServer()
 	}
 
 	// 初始化Socket地址和协议族等信息
-	RemoteResultServerSocketAddress.sin_family = AF_INET; // 协议族
-	RemoteResultServerSocketAddress.sin_port = htons(HostPortForRemoteResultServer); // 端口号
+	RemoteResultServerSocketAddress.sin_family = AF_INET;                                       // 协议族
+	RemoteResultServerSocketAddress.sin_port = htons(HOSTPORT_OF_REMOTE_RESULT_SERVER);         // 端口号
 	RemoteResultServerSocketAddress.sin_addr.S_un.S_addr = inet_addr(RemoteResultServerHostIP); // 网络地址
 
 	// Socket地址长度

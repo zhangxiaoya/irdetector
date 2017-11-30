@@ -162,6 +162,9 @@
     <ClInclude Include="Network\NetworkHelper.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\NetworkParameters.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
