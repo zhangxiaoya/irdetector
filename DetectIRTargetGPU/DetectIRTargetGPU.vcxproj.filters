@@ -153,6 +153,12 @@
     <ClInclude Include="Validation\SearchValidation.hpp">
       <Filter>Validation</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\FrameParameters.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\PreProcessParameters.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

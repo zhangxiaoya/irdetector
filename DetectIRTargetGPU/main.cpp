@@ -10,47 +10,31 @@
 #include "Models/DetectResultRingBufferStruct.hpp"
 #include "Validation/Validation.h"
 #include "Monitor/Monitor.hpp"
-
-const bool IsSendResultToServer = true; // 是否发送结果到服务端(测试用)
-
-/****************************************************************************************/
-/* 参数定义： 图像信息全局变量声明与定义                                                   */
-/****************************************************************************************/
-extern const unsigned int WIDTH = 320 * 2;   // 图像宽度
-extern const unsigned int HEIGHT = 256 * 2;  // 图像高度
-extern const unsigned int BYTESIZE = 2;  // 每个像素字节数
-
-static const int FrameDataSize = WIDTH * HEIGHT * BYTESIZE;        // 每个图像帧数据大小
-static const int ImageSize = WIDTH * HEIGHT;                       // 每一帧图像像素大小
-
-/****************************************************************************************/
-/* 参数定义：预处理阶段参数                                                               */
-/****************************************************************************************/
-const int DilationRadius = 1;            // 滤波器半径
-const int DiscretizationScale = 15;      // 离散化尺度
+#include "Headers/FrameParameters.h"
+#include "Headers/PreProcessParameters.h"
 
 /****************************************************************************************/
 /* 其他参数定义                                                                          */
 /****************************************************************************************/
-unsigned char FrameData[FrameDataSize];                            // 每一帧图像临时缓冲
-unsigned short FrameDataInprocessing[ImageSize] = {0};             // 每一帧图像临时缓冲
-unsigned short FrameDataToShow[ImageSize] = {0};                   // 每一帧显示结果图像临时缓冲
+unsigned char FrameData[FRAME_DATA_SIZE];                            // 每一帧图像临时缓冲
+unsigned short FrameDataInprocessing[IMAGE_SIZE] = {0};             // 每一帧图像临时缓冲
+unsigned short FrameDataToShow[IMAGE_SIZE] = {0};                   // 每一帧显示结果图像临时缓冲
 DetectResultSegment ResultItemSendToServer;                              // 每一帧图像检测结果
 static const int ResultItemSize = sizeof(DetectResultSegment);           // 每一帧图像检测结果大小
-cv::Mat CVFrame(HEIGHT, WIDTH, CV_8UC1);
+cv::Mat CVFrame(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC1);
 
 /****************************************************************************************/
 /* 检测器定义                                                                          */
 /****************************************************************************************/
-Detector* detector = new Detector(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);  // 初始化检测器
-Monitor* monitor = new Monitor(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);     // 初始化Monitor
+Detector* detector = new Detector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);  // 初始化检测器
+Monitor* monitor = new Monitor(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);     // 初始化Monitor
 
 /****************************************************************************************/
 /* 参数定义：缓冲区全局变量声明与定义                                                      */
 /****************************************************************************************/
 static const int BufferSize = 10;                                              // 线程同步缓冲区大小
-FrameDataRingBufferStruct Buffer(FrameDataSize, BufferSize);                   // 数据接收线程环形缓冲区初始化
-DetectResultRingBufferStruct ResultBuffer(WIDTH, HEIGHT, BufferSize);          // 结果发送线程环形缓冲区初始化
+FrameDataRingBufferStruct Buffer(FRAME_DATA_SIZE, BufferSize);                   // 数据接收线程环形缓冲区初始化
+DetectResultRingBufferStruct ResultBuffer(IMAGE_WIDTH, IMAGE_HEIGHT, BufferSize);          // 结果发送线程环形缓冲区初始化
 
 /****************************************************************************************/
 /* 函数定义：从网络读取数据操作（读取一帧）                                                 */
@@ -77,7 +61,7 @@ bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 
 	// 把接受到的数据放在缓冲区，并且修改缓冲队列指针
 	// Copy data received from network to ring buffer and update ring buffer header pointer
-	memcpy(buffer->item_buffer + buffer->write_position * FrameDataSize, FrameData, FrameDataSize);
+	memcpy(buffer->item_buffer + buffer->write_position * FRAME_DATA_SIZE, FrameData, FRAME_DATA_SIZE);
 	buffer->write_position++;
 
 	// 环形缓冲指针判断，防止指针访问越界
@@ -97,7 +81,7 @@ bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 /****************************************************************************************/
 void ShowLastResult(int shouLastResultDelay)
 {
-	ShowFrame::ToMat(FrameDataInprocessing, WIDTH, HEIGHT, CVFrame);
+	ShowFrame::ToMat(FrameDataInprocessing, IMAGE_WIDTH, IMAGE_HEIGHT, CVFrame);
 	ShowFrame::DrawRectangles(CVFrame, &ResultItemSendToServer);
 	cv::imshow("Result", CVFrame);
 	cv::waitKey(shouLastResultDelay);
@@ -125,7 +109,7 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	}
 
 	// 从缓冲区中取出需要处理的数据，并存储在临时图像存储区中
-	memcpy(FrameDataInprocessing, buffer->item_buffer + buffer->read_position * FrameDataSize, FrameDataSize);
+	memcpy(FrameDataInprocessing, buffer->item_buffer + buffer->read_position * FRAME_DATA_SIZE, FRAME_DATA_SIZE);
 
 	// 修改缓冲区标志
 	buffer->read_position++;
@@ -297,13 +281,13 @@ int main(int argc, char* argv[])
 	{
 		RunOnNetwork();
 
-//		CheckConrrectness(WIDTH, HEIGHT);
+//		CheckConrrectness(IMAGE_WITDH, IMAGE_HEIGHT);
 
-//		CheckPerformance(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+//		CheckPerformance(IMAGE_WIDTH, IMAGE_HEIGHT, DilationRadius, DiscretizationScale);
 
-//		CheckTracking(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+//		CheckTracking(IMAGE_WIDTH, IMAGE_HEIGHT, DilationRadius, DiscretizationScale);
 
-//		CheckSearching(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);
+//		CheckSearching(IMAGE_WIDTH, IMAGE_HEIGHT, DilationRadius, DiscretizationScale);
 	}
 
 	// 销毁检测子

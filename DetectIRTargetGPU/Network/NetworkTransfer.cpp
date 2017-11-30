@@ -1,6 +1,7 @@
 ﻿#include "NetworkTransfer.h"
 #include "../Monitor/Filter.hpp"
 #include "../Models/DetectResultSegment.hpp"
+#include "../Headers/FrameParameters.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -116,7 +117,7 @@ bool InitNetworks()
 	if (InitSocketForResultServer() == false) return false;
 
 	// 定义缓冲区长度
-	ReveiceDataBufferlen = WIDTH * HEIGHT * BYTESIZE + 2 * packageCount;
+	ReveiceDataBufferlen = IMAGE_WIDTH * IMAGE_HEIGHT * PIXEL_SIZE + 2 * packageCount;
 	// 申请缓冲区
 	ReceiveDataBuffer = new unsigned char[ReveiceDataBufferlen];
 
