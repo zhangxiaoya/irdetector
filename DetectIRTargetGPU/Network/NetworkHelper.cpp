@@ -31,9 +31,8 @@ Monitor* monitor = new Monitor(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIU
 /****************************************************************************************/
 /* 参数定义：缓冲区全局变量声明与定义                                                      */
 /****************************************************************************************/
-static const int BufferSize = 10;                                              // 线程同步缓冲区大小
-FrameDataRingBufferStruct Buffer(FRAME_DATA_SIZE, BufferSize);                   // 数据接收线程环形缓冲区初始化
-DetectResultRingBufferStruct ResultBuffer(IMAGE_WIDTH, IMAGE_HEIGHT, BufferSize);          // 结果发送线程环形缓冲区初始化
+FrameDataRingBufferStruct Buffer(FRAME_DATA_SIZE, RING_BUFFER_SIZE);                    // 数据接收线程环形缓冲区初始化
+DetectResultRingBufferStruct ResultBuffer(IMAGE_WIDTH, IMAGE_HEIGHT, RING_BUFFER_SIZE); // 结果发送线程环形缓冲区初始化
 
 /****************************************************************************************/
 /* 函数定义：显示结果（测试用）                                                           */
@@ -63,7 +62,7 @@ bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 	// Check buffer is full or not, if full automatic unlock mutex
 	// 检查环形缓冲区是否已经满了，如果满了，则解锁，让消费缓冲区内容的线程读取换冲区内的数据
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
-	while ((buffer->write_position + 1) % BufferSize == buffer->read_position)
+	while ((buffer->write_position + 1) % RING_BUFFER_SIZE == buffer->read_position)
 	{
 		// 可以删除打印日志，降低没必要的时间消耗
 		// printf("Image Data Producer is waiting for an empty slot...\n");
@@ -85,7 +84,7 @@ bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 
 	// 环形缓冲指针判断，防止指针访问越界
 	// Reset data header pointer when to the end of buffer
-	if (buffer->write_position == BufferSize)
+	if (buffer->write_position == RING_BUFFER_SIZE)
 		buffer->write_position = 0;
 
 	// 通知其他消费线程，已经有数据存在缓冲区，并解锁缓冲区
@@ -123,7 +122,7 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	buffer->read_position++;
 
 	// 
-	if (buffer->read_position >= BufferSize)
+	if (buffer->read_position >= RING_BUFFER_SIZE)
 		buffer->read_position = 0;
 
 	// 环形缓冲指针判断，防止指针访问越界
@@ -137,7 +136,7 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 
 	// 并发存储检测结果到缓冲区
 	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
-	while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
+	while ((resultBuffer->write_position + 1) % RING_BUFFER_SIZE == resultBuffer->read_position)
 	{
 		// 注释打印日志，避免不不要的时间开销
 		// printf("Result Send Producer is waiting for an empty slot...\n");
@@ -149,7 +148,7 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	resultBuffer->write_position++;
 
 	// Reset data header pointer when to the end of buffer
-	if (resultBuffer->write_position == BufferSize)
+	if (resultBuffer->write_position == RING_BUFFER_SIZE)
 		resultBuffer->write_position = 0;
 
 	// Notify Detect thread
@@ -185,7 +184,7 @@ bool OutputData(DetectResultRingBufferStruct* buffer)
 
 	buffer->read_position++;
 
-	if (buffer->read_position >= BufferSize)
+	if (buffer->read_position >= RING_BUFFER_SIZE)
 		buffer->read_position = 0;
 
 	buffer->buffer_not_full.notify_all();

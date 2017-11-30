@@ -26,7 +26,6 @@ extern Monitor* monitor;     // 初始化Monitor
 /****************************************************************************************/
 /* 参数定义：缓冲区全局变量声明与定义                                                      */
 /****************************************************************************************/
-extern const int BufferSize;                           // 线程同步缓冲区大小
 extern FrameDataRingBufferStruct Buffer;               // 数据接收线程环形缓冲区初始化
 extern DetectResultRingBufferStruct ResultBuffer;      // 结果发送线程环形缓冲区初始化
 

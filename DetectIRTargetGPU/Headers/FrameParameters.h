@@ -32,3 +32,8 @@
 #ifndef SEGMENT_COUNT
 #define SEGMENT_COUNT (IMAGE_WIDTH * IMAGE_HEIGHT / SEGMENT_SIZE)
 #endif
+
+// 环形缓冲区的大小
+#ifndef RING_BUFFER_SIZE
+#define RING_BUFFER_SIZE (10)
+#endif
