@@ -54,13 +54,16 @@ DetectResultRingBufferStruct ResultBuffer(WIDTH, HEIGHT, BufferSize);          /
 bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 {
 	// Check buffer is full or not, if full automatic unlock mutex
+	// 检查环形缓冲区是否已经满了，如果满了，则解锁，让消费缓冲区内容的线程读取换冲区内的数据
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while ((buffer->write_position + 1) % BufferSize == buffer->read_position)
 	{
-//		printf("Image Data Producer is waiting for an empty slot...\n");
+		// 可以删除打印日志，降低没必要的时间消耗
+		// printf("Image Data Producer is waiting for an empty slot...\n");
 		buffer->buffer_not_full.wait(lock);
 	}
 
+	// 从网络获取一帧图像数据，若获取的结果是结束标志（10个字节的任意数据），修改缓冲结束标志为true，终止接受网络数据线程
 	// Check finish stream end flag
 	if (GetOneFrameFromNetwork(FrameData) == false)
 	{
@@ -68,14 +71,17 @@ bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 		return false;
 	}
 
+	// 把接受到的数据放在缓冲区，并且修改缓冲队列指针
 	// Copy data received from network to ring buffer and update ring buffer header pointer
 	memcpy(buffer->item_buffer + buffer->write_position * FrameDataSize, FrameData, FrameDataSize);
 	buffer->write_position++;
 
+	// 环形缓冲指针判断，防止指针访问越界
 	// Reset data header pointer when to the end of buffer
 	if (buffer->write_position == BufferSize)
 		buffer->write_position = 0;
 
+	// 通知其他消费线程，已经有数据存在缓冲区，并解锁缓冲区
 	// Notify Detect thread
 	buffer->buffer_not_empty.notify_all();
 	lock.unlock();
@@ -83,43 +89,62 @@ bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 }
 
 /****************************************************************************************/
+/* 函数定义：显示结果（测试用）                                                           */
+/****************************************************************************************/
+void ShowLastResult(int shouLastResultDelay)
+{
+	ShowFrame::ToMat(FrameDataInprocessing, WIDTH, HEIGHT, CVFrame);
+	ShowFrame::DrawRectangles(CVFrame, &ResultItemSendToServer);
+	cv::imshow("Result", CVFrame);
+	cv::waitKey(shouLastResultDelay);
+}
+
+/****************************************************************************************/
 /* 函数定义：检测一帧数据，并且把结果放在缓冲区                                             */
 /****************************************************************************************/
 bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruct* resultBuffer)
 {
-	// 并发读取图像数据
+	// Check buffer is empty or not, if empty automatic unlock mutex
+	// 检查缓冲区是否为空，如果为空，则解锁缓冲区
 	std::unique_lock<std::mutex> readLock(buffer->bufferMutex);
 	while (buffer->write_position == buffer->read_position)
 	{
+		// 判断是缓冲结束标志，若是缓冲区结束表示为true，则结束线程
 		if (buffer->finish_flag == true)
 		{
 			resultBuffer->finish_flag = true;
 			return false;
 		}
-
-//		printf("Detector Consumer is waiting for items...\n");
+		// 注释打印日志，避免不必要的时间开销
+		// printf("Detector Consumer is waiting for items...\n");
 		buffer->buffer_not_empty.wait(readLock);
 	}
 
+	// 从缓冲区中取出需要处理的数据，并存储在临时图像存储区中
 	memcpy(FrameDataInprocessing, buffer->item_buffer + buffer->read_position * FrameDataSize, FrameDataSize);
 
+	// 修改缓冲区标志
 	buffer->read_position++;
 
+	// 
 	if (buffer->read_position >= BufferSize)
 		buffer->read_position = 0;
 
+	// 环形缓冲指针判断，防止指针访问越界
 	buffer->buffer_not_full.notify_all();
 	readLock.unlock();
 
 	// 检测目标，并检测性能
 	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
-//	CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
+	// 检测并跟踪目标，检测整个过程的时间系能
+	// CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
 
 	// 并发存储检测结果到缓冲区
 	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
 	while ((resultBuffer->write_position + 1) % BufferSize == resultBuffer->read_position)
 	{
-//		printf("Result Send Producer is waiting for an empty slot...\n");
+		// 注释打印日志，避免不不要的时间开销
+		// printf("Result Send Producer is waiting for an empty slot...\n");
 		resultBuffer->buffer_not_full.wait(writerLock);
 	}
 
@@ -136,10 +161,8 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	writerLock.unlock();
 
 	// 临时显示结果
-	 ShowFrame::ToMat(FrameDataInprocessing, WIDTH, HEIGHT, CVFrame);
-	 ShowFrame::DrawRectangles(CVFrame, &ResultItemSendToServer);
-	 cv::imshow("Result", CVFrame);
-	 cv::waitKey(1);
+	auto shouLastResultDelay = 1;
+	ShowLastResult(shouLastResultDelay);
 
 	// 返回一次线程执行状态
 	return true;
@@ -150,6 +173,7 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 /****************************************************************************************/
 bool OutputData(DetectResultRingBufferStruct* buffer)
 {
+	// 检查数据结果缓冲区
 	std::unique_lock<std::mutex> lock(buffer->bufferMutex);
 	while (buffer->write_position == buffer->read_position)
 	{
