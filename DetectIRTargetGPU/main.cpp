@@ -20,6 +20,9 @@ extern const unsigned int WIDTH = 320 * 2;   // 图像宽度
 extern const unsigned int HEIGHT = 256 * 2;  // 图像高度
 extern const unsigned int BYTESIZE = 2;  // 每个像素字节数
 
+static const int FrameDataSize = WIDTH * HEIGHT * BYTESIZE;        // 每个图像帧数据大小
+static const int ImageSize = WIDTH * HEIGHT;                       // 每一帧图像像素大小
+
 /****************************************************************************************/
 /* 参数定义：预处理阶段参数                                                               */
 /****************************************************************************************/
@@ -29,17 +32,18 @@ const int DiscretizationScale = 15;      // 离散化尺度
 /****************************************************************************************/
 /* 其他参数定义                                                                          */
 /****************************************************************************************/
-static const int FrameDataSize = WIDTH * HEIGHT * BYTESIZE;        // 每个图像帧数据大小
-static const int ImageSize = WIDTH * HEIGHT;                       // 每一帧图像像素大小
 unsigned char FrameData[FrameDataSize];                            // 每一帧图像临时缓冲
 unsigned short FrameDataInprocessing[ImageSize] = {0};             // 每一帧图像临时缓冲
 unsigned short FrameDataToShow[ImageSize] = {0};                   // 每一帧显示结果图像临时缓冲
 DetectResultSegment ResultItemSendToServer;                              // 每一帧图像检测结果
-DetectResultSegment ResultItemToShow;                                    // 每一帧图像显示结果
 static const int ResultItemSize = sizeof(DetectResultSegment);           // 每一帧图像检测结果大小
-Detector* detector = new Detector(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);  // 初始化检测器
-Monitor* monitor = new Monitor(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);     // init monitor
 cv::Mat CVFrame(HEIGHT, WIDTH, CV_8UC1);
+
+/****************************************************************************************/
+/* 检测器定义                                                                          */
+/****************************************************************************************/
+Detector* detector = new Detector(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);  // 初始化检测器
+Monitor* monitor = new Monitor(WIDTH, HEIGHT, DilationRadius, DiscretizationScale);     // 初始化Monitor
 
 /****************************************************************************************/
 /* 参数定义：缓冲区全局变量声明与定义                                                      */
