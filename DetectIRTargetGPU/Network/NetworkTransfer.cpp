@@ -20,7 +20,7 @@ auto SocketLen = 500 * 1024 * 1024; // Socket缓冲区大小
 int ReveiceDataBufferlen = 0; // 接收数据缓冲区大小
 unsigned char* ReceiveDataBuffer; // 接收
 
-const int packageCount = 4;
+const int packageCount = 4 * 4;
 
 /************************************************************************/
 /*                            Network Initial                           */
@@ -185,7 +185,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 				}
 			}
 			// 将除去帧号和段号的数据部分复制到图像帧数据对应的位置
-			memcpy(frameData + i * (quarterBufferSize - 2), partBuffer + 2, sizeof(unsigned char) * (quarterBufferSize - 2));
+			memcpy(frameData + i * (quarterBufferSize - 2), partBuffer + 3, sizeof(unsigned char) * (quarterBufferSize - 2));
 			// 并输出当前接收到的帧号和段号
 		}
 		else if (receivedStatus == 10) // 长度为10的任意数据表示发送结束，输出提示信息，并返回false
