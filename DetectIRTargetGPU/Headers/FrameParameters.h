@@ -1,11 +1,11 @@
 // 图像宽度
 #ifndef IMAGE_WIDTH
-#define IMAGE_WIDTH (320 * 2)
+#define IMAGE_WIDTH (320)
 #endif
 
 // 图像高度
 #ifndef IMAGE_HEIGHT
-#define IMAGE_HEIGHT (256 * 2)
+#define IMAGE_HEIGHT (256)
 #endif
 
 // 单个像素大小
@@ -30,7 +30,7 @@
 
 // 每一帧图像数据段的个数
 #ifndef SEGMENT_COUNT
-#define SEGMENT_COUNT (IMAGE_WIDTH * IMAGE_HEIGHT / SEGMENT_SIZE)
+#define SEGMENT_COUNT ((IMAGE_WIDTH * IMAGE_HEIGHT) / SEGMENT_SIZE)
 #endif
 
 // 环形缓冲区的大小

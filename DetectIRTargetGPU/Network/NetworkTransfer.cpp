@@ -185,7 +185,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 				}
 			}
 			// 将除去帧号和段号的数据部分复制到图像帧数据对应的位置
-			memcpy(frameData + i * (quarterBufferSize - 2), partBuffer + 3, sizeof(unsigned char) * (quarterBufferSize - 2));
+			memcpy(frameData + i * (quarterBufferSize - 2), partBuffer + 2, sizeof(unsigned char) * (quarterBufferSize - 2));
 		}
 		else if (receivedStatus == 10)
 		{

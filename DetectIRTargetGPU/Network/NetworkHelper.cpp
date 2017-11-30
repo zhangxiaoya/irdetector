@@ -121,7 +121,6 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	// 修改缓冲区标志
 	buffer->read_position++;
 
-	// 
 	if (buffer->read_position >= RING_BUFFER_SIZE)
 		buffer->read_position = 0;
 
