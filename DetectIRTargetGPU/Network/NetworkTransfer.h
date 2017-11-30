@@ -10,13 +10,9 @@ bool SendResultToRemoteServer(DetectResultSegment& result);
 
 bool DestroyNetWork();
 
-// Socket环境全局变量声明
-extern int HostPortForRemoteDataServer;
-
-extern const unsigned int WIDTH;
-extern const unsigned int HEIGHT;
-extern const unsigned int BYTESIZE;
-
+/************************************************************************/
+/*                          Socket环境全局变量声明                       */
+/************************************************************************/
 extern int ReveiceDataBufferlen;
 extern SOCKET RemoteDataServerSocket;
 extern sockaddr_in RemoteDataServerSocketAddress;

@@ -153,6 +153,18 @@
     <ClInclude Include="Validation\SearchValidation.hpp">
       <Filter>Validation</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\FrameParameters.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\PreProcessParameters.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\NetworkHelper.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\NetworkParameters.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -170,6 +182,9 @@
     </ClCompile>
     <ClCompile Include="Models\DetectResultSegment.hpp">
       <Filter>Models</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\NetworkHelper.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
