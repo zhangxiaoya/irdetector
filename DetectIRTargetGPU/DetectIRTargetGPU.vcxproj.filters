@@ -165,6 +165,9 @@
     <ClInclude Include="Headers\NetworkParameters.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Monitor\Searcher.hpp">
+      <Filter>Monitor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
