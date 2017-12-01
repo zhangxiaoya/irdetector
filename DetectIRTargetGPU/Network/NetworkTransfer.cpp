@@ -123,6 +123,19 @@ bool InitNetworks()
 	return true;
 }
 
+void RevertShortValueOrder(unsigned short& pixelValue)
+{
+	pixelValue = (pixelValue << 8) | (pixelValue >> 8);
+}
+
+void LittleEndianToBigEndian(unsigned char* frameData)
+{
+	for (auto i = 0; i < IMAGE_SIZE; i ++)
+	{
+		RevertShortValueOrder(reinterpret_cast<unsigned short*>(frameData)[i]);
+	}
+}
+
 /************************************************************************/
 /*                        Received One Frame Data                       */
 /************************************************************************/
@@ -200,6 +213,8 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 			return false;
 		}
 	}
+
+	LittleEndianAndBigEndianChange(LittleEndianToBigEndian(frameData));
 	return true;
 }
 
