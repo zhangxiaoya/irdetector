@@ -11,3 +11,17 @@
 #ifndef SOCKET_BUFFER_LENGTH
 #define SOCKET_BUFFER_LENGTH (500 * 1024 * 1024)
 #endif
+
+#ifndef NEED_CHANGE_LITTEL_ENDIAN_AND_BIG_ENDIAN
+#define NEED_CHANGE_LITTEL_ENDIAN_AND_BIG_ENDIAN true
+#endif
+
+#ifndef LittleEndianAndBigEndianChange
+#define LittleEndianAndBigEndianChange(call)              \
+{                                                         \
+	if(NEED_CHANGE_LITTEL_ENDIAN_AND_BIG_ENDIAN == true)  \
+	{                                                     \
+		call;                                             \
+	}                                                     \
+}
+#endif
