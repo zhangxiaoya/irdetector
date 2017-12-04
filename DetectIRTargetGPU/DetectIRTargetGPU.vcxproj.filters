@@ -171,6 +171,9 @@
     <ClInclude Include="Models\CandidateTargets.hpp">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\SearcherParameters.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

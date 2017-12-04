@@ -178,6 +178,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Headers\GlobalMainHeaders.h" />
     <ClInclude Include="Headers\NetworkParameters.h" />
     <ClInclude Include="Headers\PreProcessParameters.h" />
+    <ClInclude Include="Headers\SearcherParameters.h" />
     <ClInclude Include="Init\Init.hpp" />
     <ClInclude Include="LevelDiscretization\LevelDiscretizationKernel.cuh" />
     <ClInclude Include="LevelDiscretization\LevelDiscretizationOnCPU.hpp" />

@@ -11,6 +11,7 @@
 #include "../Models/DetectResultRingBufferStruct.hpp"
 #include "../Checkers/CheckPerf.h"
 #include "NetworkTransfer.h"
+#include "../Monitor/Searcher.hpp"
 
 /****************************************************************************************/
 /* 其他参数定义                                                                          */
@@ -27,6 +28,8 @@ cv::Mat CVFrame(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC1);
 /****************************************************************************************/
 Detector* detector = new Detector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);  // 初始化检测器
 Monitor* monitor = new Monitor(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);     // 初始化Monitor
+
+Searcher* searcher = new Searcher(IMAGE_WIDTH, IMAGE_HEIGHT, PIXEL_SIZE, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE); // 初始化搜索算法
 
 /****************************************************************************************/
 /* 参数定义：缓冲区全局变量声明与定义                                                      */
@@ -52,6 +55,7 @@ inline void RelaseSource()
 {
 	delete detector;
 	delete monitor;
+	delete searcher;
 }
 
 /****************************************************************************************/
@@ -129,9 +133,10 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	readLock.unlock();
 
 	// 检测目标，并检测性能
-	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+//	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
 	// 检测并跟踪目标，检测整个过程的时间系能
 	// CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
+	searcher->SearchOneRound(FrameDataInprocessing);
 
 	// 并发存储检测结果到缓冲区
 	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
@@ -155,8 +160,8 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	writerLock.unlock();
 
 	// 临时显示结果
-	auto shouLastResultDelay = 1;
-	ShowLastResult(shouLastResultDelay);
+//	auto shouLastResultDelay = 1;
+//	ShowLastResult(shouLastResultDelay);
 
 	// 返回一次线程执行状态
 	return true;

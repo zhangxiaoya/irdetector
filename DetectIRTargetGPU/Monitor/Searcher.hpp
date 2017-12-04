@@ -101,7 +101,8 @@ inline Searcher::Searcher(const int width,
 	PixelSize(pixelSize),
 	DilationRadius(dilationRadius),
 	DiscretizationScale(discretizationScale),
-	candidateTargetCount(0)
+	candidateTargetCount(0),
+	frameIndex(0)
 {
 	Init();
 }
@@ -148,16 +149,19 @@ inline void Searcher::Release()
 inline bool Searcher::CheckIfHaveGroundObject(int frame_index) const
 {
 	// 测试文件使用
-	int beg = 364;
-	int end = 445;
+//	int beg = 364;
+//	int end = 445;
 
-	while (beg < 3467)
-	{
-		if (frame_index >= beg && frame_index < end)
-			return true;
-		beg += 171;
-		end += 171;
-	}
+//	while (beg < 3467)
+//	{
+//		if (frame_index >= beg && frame_index < end)
+//			return true;
+//		beg += 171;
+//		end += 171;
+//	}
+
+	if (frame_index >= 64 && frame_index < 145)
+		return true;
 	return false;
 }
 
@@ -202,6 +206,9 @@ inline void Searcher::GetLastResultAfterOneRound()
 		targetCount++;
 	}
 
+	char windowsName[100];
+	std::string windowsNameFormat = "Last Result Frame %d";
+
 	for (auto i = 0; i< frameCount; ++i)
 	{
 		auto initImage = false;
@@ -216,35 +223,38 @@ inline void Searcher::GetLastResultAfterOneRound()
 				rectangle(imgs[i], cv::Point(AllCandidateTargets[j].left - 5, AllCandidateTargets[j].top - 5), cv::Point(AllCandidateTargets[j].right + 5, AllCandidateTargets[j].bottom + 5), cv::Scalar(255, 255, 0));
 		}
 		std::cout << "index is " << std::setw(4) << flag[i] << std::endl;
-		imshow("after draw", imgs[i]);
-		cv::waitKey(0);
+
+		sprintf(windowsName, windowsNameFormat.c_str(), i);
+		imshow(windowsName, imgs[i]);
+
+		cv::waitKey(1000);
 	}
 }
 
 inline void Searcher::SearchOneRound(unsigned short* frameData)
 {
-	frameIndex = 0;
-	candidateTargetCount = 0;
-
-	while (frameIndex < FRAME_COUNT_ONE_ROUND)
+	if (CheckIfHaveGroundObject(frameIndex) == true)
 	{
-		if (CheckIfHaveGroundObject(frameIndex) == true)
-		{
-			continue;
-		}
-
-		memcpy(FramesInOneRound[frameIndex], frameData, Width * Height * PixelSize);
-
-		DetectResultSegment result;
-
-		detector->DetectTargets(FramesInOneRound[frameIndex], &result, nullptr, nullptr);
-
-		CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[frameIndex], result, frameIndex);
-
 		frameIndex++;
+		return;
 	}
 
-	GetLastResultAfterOneRound();
+	memcpy(FramesInOneRound[frameIndex], frameData, Width * Height * PixelSize);
+
+	DetectResultSegment result;
+
+	detector->DetectTargets(FramesInOneRound[frameIndex], &result, nullptr, nullptr);
+
+	CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[frameIndex], result, frameIndex);
+
+	frameIndex++;
+
+	if (frameIndex == FRAME_COUNT_ONE_ROUND)
+	{
+		GetLastResultAfterOneRound();
+		candidateTargetCount = 0;
+		frameIndex = 0;
+	}
 }
 
 inline double Searcher::CalculateSCR(unsigned short* frame, const TargetPosition& target)
