@@ -340,43 +340,50 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 			auto label = labelsOnHost[r * width + c];
 			if (allObjects[label].top == -1)
 				allObjects[label].top = r;
+			if (allObjects[label].bottom < r)
+				allObjects[label].bottom = r;
+			if(allObjects[label].left == -1)
+				allObjects[label].left = c;
+			else if (allObjects[label].left > c)
+				allObjects[label].left = c;
+			if (allObjects[label].right < c)
+				allObjects[label].right = c;
 		}
 	}
 	// bottom
-	for (auto r = height - 1; r >= 0; --r)
-	{
-		for (auto c = 0; c < width; ++c)
-		{
-			auto label = labelsOnHost[r * width + c];
-			if (allObjects[label].bottom == -1)
-				allObjects[label].bottom = r;
-			if (allObjects[label].bottom - allObjects[label].top + 1 < 2)
-				allObjects[label].top = -1;
-		}
-	}
-
+//	for (auto r = height - 1; r >= 0; --r)
+//	{
+//		for (auto c = 0; c < width; ++c)
+//		{
+//			auto label = labelsOnHost[r * width + c];
+//			if (allObjects[label].bottom == -1)
+//				allObjects[label].bottom = r;
+//			if (allObjects[label].bottom - allObjects[label].top + 1 < 2)
+//				allObjects[label].top = -1;
+//		}
+//	}
 	// left
-	for (auto c = 0; c < width; ++c)
-	{
-		for (auto r = 0; r < height; ++r)
-		{
-			auto label = labelsOnHost[r * width + c];
-			if (allObjects[label].left == -1)
-				allObjects[label].left = c;
-		}
-	}
+//	for (auto c = 0; c < width; ++c)
+//	{
+//		for (auto r = 0; r < height; ++r)
+//		{
+//			auto label = labelsOnHost[r * width + c];
+//			if (allObjects[label].left == -1)
+//				allObjects[label].left = c;
+//		}
+//	}
 	// right
-	for (auto c = width - 1; c >= 0; --c)
-	{
-		for (auto r = 0; r < height; ++r)
-		{
-			auto label = labelsOnHost[r * width + c];
-			if (allObjects[label].right == -1)
-				allObjects[label].right = c;
-			if (allObjects[label].right - allObjects[label].left + 1 < 2)
-				allObjects[label].top = -1;
-		}
-	}
+//	for (auto c = width - 1; c >= 0; --c)
+//	{
+//		for (auto r = 0; r < height; ++r)
+//		{
+//			auto label = labelsOnHost[r * width + c];
+//			if (allObjects[label].right == -1)
+//				allObjects[label].right = c;
+//			if (allObjects[label].right - allObjects[label].left + 1 < 2)
+//				allObjects[label].top = -1;
+//		}
+//	}
 }
 
 inline void Detector::ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height, int validObjectCount)

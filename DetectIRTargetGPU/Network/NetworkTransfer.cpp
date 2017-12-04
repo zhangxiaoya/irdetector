@@ -1,27 +1,26 @@
 ﻿#include "NetworkTransfer.h"
-#include <iostream>
 #include "../Monitor/Filter.hpp"
 #include "../Models/DetectResultSegment.hpp"
+#include "../Headers/FrameParameters.h"
+#include "../Headers/NetworkParameters.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
-// Definition of all variables used in network
-int HostPortForRemoteDataServer = 8889; // 接收数据端口
-int HostPortForRemoteResultServer = 8889; // 发送结果端口
+/************************************************************************/
+/*         Definition of all variables used in network                  */
+/************************************************************************/
 char RemoteResultServerHostIP[] = "192.168.2.111"; // 发送结果主机地址
-SOCKET RemoteDataServerSocket = 0; // 接收数据SOCKET
+SOCKET RemoteDataServerSocket = 0;   // 接收数据SOCKET
 SOCKET RemoteResultServerSocket = 0; // 发送结果SOCKET
-sockaddr_in RemoteDataServerSocketAddress; // 接收数据Socket地址
+sockaddr_in RemoteDataServerSocketAddress;   // 接收数据Socket地址
 sockaddr_in RemoteResultServerSocketAddress; // 发送结果Socket地址
-int RemoteDataServerSocketAddressLen = 0; // 接收数据Socket地址长度
-int RemoteResultServerSocketAddressLen = 0; // 发送结果Socket地址长度
+int RemoteDataServerSocketAddressLen = 0;    // 接收数据Socket地址长度
+int RemoteResultServerSocketAddressLen = 0;  // 发送结果Socket地址长度
 
-auto SocketLen = 500 * 1024 * 1024; // Socket缓冲区大小
+auto SocketLen = SOCKET_BUFFER_LENGTH;       // Socket缓冲区大小
 
-int ReveiceDataBufferlen = 0; // 接收数据缓冲区大小
+int ReveiceDataBufferlen = 0;     // 接收数据缓冲区大小
 unsigned char* ReceiveDataBuffer; // 接收
-
-const int packageCount = 4;
 
 /************************************************************************/
 /*                            Network Initial                           */
@@ -55,7 +54,7 @@ bool InitSocketForDataServer()
 
 	// 初始化Socket地址和协议族等信息
 	RemoteDataServerSocketAddress.sin_family = AF_INET; // 协议族
-	RemoteDataServerSocketAddress.sin_port = htons(HostPortForRemoteDataServer); // 端口号
+	RemoteDataServerSocketAddress.sin_port = htons(HOSTPORT_OF_REMOTE_DATA_SERVER); // 端口号
 	RemoteDataServerSocketAddress.sin_addr.S_un.S_addr = htonl(INADDR_ANY); // 网络地址
 
 	//设置socket缓冲区大小
@@ -90,8 +89,8 @@ bool InitSocketForResultServer()
 	}
 
 	// 初始化Socket地址和协议族等信息
-	RemoteResultServerSocketAddress.sin_family = AF_INET; // 协议族
-	RemoteResultServerSocketAddress.sin_port = htons(HostPortForRemoteResultServer); // 端口号
+	RemoteResultServerSocketAddress.sin_family = AF_INET;                                       // 协议族
+	RemoteResultServerSocketAddress.sin_port = htons(HOSTPORT_OF_REMOTE_RESULT_SERVER);         // 端口号
 	RemoteResultServerSocketAddress.sin_addr.S_un.S_addr = inet_addr(RemoteResultServerHostIP); // 网络地址
 
 	// Socket地址长度
@@ -117,11 +116,24 @@ bool InitNetworks()
 	if (InitSocketForResultServer() == false) return false;
 
 	// 定义缓冲区长度
-	ReveiceDataBufferlen = WIDTH * HEIGHT * BYTESIZE + 2 * packageCount;
+	ReveiceDataBufferlen = IMAGE_WIDTH * IMAGE_HEIGHT * PIXEL_SIZE + 2 * SEGMENT_COUNT;
 	// 申请缓冲区
 	ReceiveDataBuffer = new unsigned char[ReveiceDataBufferlen];
 
 	return true;
+}
+
+void RevertShortValueOrder(unsigned short& pixelValue)
+{
+	pixelValue = (pixelValue << 8) | (pixelValue >> 8);
+}
+
+void LittleEndianToBigEndian(unsigned char* frameData)
+{
+	for (auto i = 0; i < IMAGE_SIZE; i ++)
+	{
+		RevertShortValueOrder(reinterpret_cast<unsigned short*>(frameData)[i]);
+	}
 }
 
 /************************************************************************/
@@ -129,20 +141,16 @@ bool InitNetworks()
 /************************************************************************/
 bool GetOneFrameFromNetwork(unsigned char* frameData)
 {
-	//	打印开始接收数据消息
-//	printf("Receiving one frame data from remote device ...\n");
-
 	// 记录当前帧的帧号
 	unsigned char frameIndex = 0;
 	// 记录每一帧每一段的是否已经接收
-	bool subIndex[packageCount] = {false};
+	bool subIndex[SEGMENT_COUNT] = {false};
 
 	// 每段数据长度
-	auto quarterBufferSize = ReveiceDataBufferlen / packageCount;
-	auto segmentIndex = 0;
+	auto quarterBufferSize = ReveiceDataBufferlen / SEGMENT_COUNT;
 
 	// 循环接收多次（分包数量）
-	for (auto i = 0; i < packageCount; ++i)
+	for (auto i = 0; i < SEGMENT_COUNT; ++i)
 	{
 		auto partBuffer = ReceiveDataBuffer + i * quarterBufferSize;
 		// 接收一次数据
@@ -169,40 +177,44 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 					// 如果帧号一致，检测数据段是不是已经接收过了，如果没有接收过，修改对应的标志
 					if (subIndex[static_cast<int>(partBuffer[1])] == false)
 						subIndex[static_cast<int>(partBuffer[1])] = true;
-					else // 如果已经接收到了，输出错误信息
+					else
 					{
+						// 如果已经接收到了，输出错误信息
 						printf("Invalid data order, duplicated segment!");
 						printf("Segment %d had received more than once!", static_cast<int>(partBuffer[1]));
-						i--; // 多接收一个数据段
+						// 多接收一个数据段
+						i--;
 					}
 				}
-				else // 如果帧号不一致，输出错误信息
+				else
 				{
+					// 如果帧号不一致，输出错误信息
 					printf("Invalid frame order： \nExpected frame index is %d , \nbut actualy index is %d ", static_cast<int>(frameIndex), static_cast<int>(partBuffer[0]));
 					printf("Resetting .....>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
 					frameIndex = static_cast<unsigned char>(partBuffer[0]);
-					for (auto idx = 0; idx < packageCount; ++idx)
+					for (auto idx = 0; idx < SEGMENT_COUNT; ++idx)
 						subIndex[idx] = false;
 					i = 0;
 				}
 			}
-			segmentIndex = static_cast<int>(partBuffer[1]);
 			// 将除去帧号和段号的数据部分复制到图像帧数据对应的位置
 			memcpy(frameData + i * (quarterBufferSize - 2), partBuffer + 2, sizeof(unsigned char) * (quarterBufferSize - 2));
-			// 并输出当前接收到的帧号和段号
 		}
-		else if (receivedStatus == 10) // 长度为10的任意数据表示发送结束，输出提示信息，并返回false
+		else if (receivedStatus == 10)
 		{
+			// 长度为10的任意数据表示发送结束，输出提示信息，并返回false
 			printf("Finish receive data from client!\n");
 			return false;
 		}
-		else // 如果既不是数据部分，也不是数据结束符，输出错误代码
+		else
 		{
+			// 如果既不是数据部分，也不是数据结束符，输出错误代码
 			printf("Received data error:%d\n", WSAGetLastError());
 			return false;
 		}
 	}
-//	printf("Frame index is %d\n", static_cast<int>(frameIndex));
+
+	LittleEndianAndBigEndianChange(LittleEndianToBigEndian(frameData));
 	return true;
 }
 
@@ -211,9 +223,6 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 /************************************************************************/
 bool SendResultToRemoteServer(DetectResultSegment& result)
 {
-	// 打印日志消息
-//	printf("Sending result to remote server \n");
-
 	// 发送结果数据到远端服务器
 	auto sendStatus = sendto(
 		RemoteResultServerSocket,
@@ -237,10 +246,9 @@ bool SendResultToRemoteServer(DetectResultSegment& result)
 /************************************************************************/
 bool DestroyNetWork()
 {
-	delete[] ReceiveDataBuffer; // 销毁临时缓冲区
-
-	closesocket(RemoteDataServerSocket); // 关闭结束数据的Socket
+	delete[] ReceiveDataBuffer;            // 销毁临时缓冲区
+	closesocket(RemoteDataServerSocket);   // 关闭结束数据的Socket
 	closesocket(RemoteResultServerSocket); // 关闭发送结果数据的Socket
-	WSACleanup(); // 清理网络环境
+	WSACleanup();                          // 清理网络环境
 	return true;
 }
