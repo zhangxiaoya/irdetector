@@ -628,7 +628,7 @@ inline void Detector::FalseAlarmFilter()
 		}
 	}
 
-	if (lastResultCount >= 5)
+	if (lastResultCount >= MAX_DETECTED_TARGET_COUNT)
 		std::sort(this->insideObjects, this->insideObjects + lastResultCount, CompareResult);
 }
 
@@ -701,7 +701,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		FalseAlarmFilter();
 
 		// put all valid result to resultSegment
-		result->targetCount = lastResultCount >= 5 ? 5 : lastResultCount;
+		result->targetCount = lastResultCount >= MAX_DETECTED_TARGET_COUNT ? MAX_DETECTED_TARGET_COUNT : lastResultCount;
 
 		for (auto i = 0; i < result->targetCount; ++i)
 		{
