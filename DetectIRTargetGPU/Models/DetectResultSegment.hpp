@@ -6,12 +6,12 @@ struct DetectResultSegment
 {
 	unsigned char header[FRAME_HEADER_LENGTH];
 	int targetCount;
-	TargetPosition targets[5];
+	TargetPosition targets[MAX_DETECTED_TARGET_COUNT];
 };
 
 
 struct DetectResultWithTrackerStatus
 {
 	DetectResultSegment* detectResultPointers;
-	bool hasTracker[5];
+	bool hasTracker[MAX_DETECTED_TARGET_COUNT];
 };

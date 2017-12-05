@@ -1,27 +1,34 @@
+// 双字节像素，最大像素值
 #ifndef MAX_PIXEL_VALUE
 #define MAX_PIXEL_VALUE (65535)
 #endif // !MAX_PIXEL_VALUE
 
+// 图像帧头长度
 #ifndef FRAME_HEADER_LENGTH
 #define FRAME_HEADER_LENGTH (16)
 #endif // !FRAME_HEADER_LENGTH
 
+// 每一帧图像最多检测到的目标数量
 #ifndef MAX_DETECTED_TARGET_COUNT
 #define MAX_DETECTED_TARGET_COUNT (5)
 #endif // !MAX_DETECTED_TARGET_COUNT
 
+// 目标尺寸最大宽度
 #ifndef TARGET_WIDTH_MAX_LIMIT
 #define TARGET_WIDTH_MAX_LIMIT (20)
 #endif // !TARGET_WIDTH_MAX_LIMIT
 
+// 目标尺寸最大高度
 #ifndef TARGET_HEIGHT_MAX_LIMIT
 #define TARGET_HEIGHT_MAX_LIMIT (20)
 #endif // !TARGET_HEIGHT_MAX_LIMIT
 
+// 去除虚警时，最低对比度
 #ifndef FALSE_ALARM_FILTER_MIN_CONTRAST
 #define FALSE_ALARM_FILTER_MIN_CONTRAST (1.002)
 #endif // !FALSE_ALARM_FILTER_MIN_CONTRAST
 
+// 图像检索禁区最大数量
 #ifndef MAX_FORBIDDEN_ZONE_COUNT
 #define MAX_FORBIDDEN_ZONE_COUNT (10)
 #endif // !MAX_FORBIDDEN_ZONE_COUNT
