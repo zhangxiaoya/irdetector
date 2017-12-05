@@ -1,13 +1,16 @@
 #include "DetectorParameters.h"
 
+// 旋转一圈图像帧数
 #ifndef FRAME_COUNT_ONE_ROUND
 #define FRAME_COUNT_ONE_ROUND (171)
 #endif
 
+// 旋转一圈，最多检测到的目标数量
 #ifndef SEARCH_TARGET_COUNT_ONE_ROUND
 #define SEARCH_TARGET_COUNT_ONE_ROUND (MAX_DETECTED_TARGET_COUNT * FRAME_COUNT_ONE_ROUND)
 #endif
 
+// 最可能出现目标的帧数
 #ifndef FRAME_COUNT_WHICH_MOST_LIKELY_HAVE_TARGETS
 #define FRAME_COUNT_WHICH_MOST_LIKELY_HAVE_TARGETS (3)
 #endif

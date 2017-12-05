@@ -135,9 +135,9 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	// 检测目标，并检测性能
 	// CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
 	// 检测并跟踪目标，检测整个过程的时间系能
-	 CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
+	// CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
 	// 单圈搜索检测目标
-	// CheckPerf(searcher->SearchOneRound(FrameDataInprocessing), "Total cost while single round search");
+	 CheckPerf(searcher->SearchOneRound(FrameDataInprocessing), "Total cost while single round search");
 
 	// 并发存储检测结果到缓冲区
 	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);

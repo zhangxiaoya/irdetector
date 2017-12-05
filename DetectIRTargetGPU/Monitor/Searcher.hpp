@@ -238,7 +238,7 @@ inline void Searcher::GetLastResultAfterOneRound()
 /********************************************************************************/
 inline void Searcher::SearchOneRound(unsigned short* frameData)
 {
-	printf("Searching Frame %04d\n", FrameIndex);
+	// printf("Searching Frame %04d\n", FrameIndex);
 	// 检查帧号是否包含背景信息（测试用）
 	if (CheckIfHaveGroundObject(FrameIndex) == true)
 	{
