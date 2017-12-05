@@ -54,6 +54,11 @@ protected:
 	double CalculateSCR(unsigned short* frame, const TargetPosition& target);
 
 	/********************************************************************************/
+	/* 计算候选目标局部差值函数声明                                                 */
+	/********************************************************************************/
+	double CalculateLocalDiff(unsigned short* frame, const TargetPosition& target);
+
+	/********************************************************************************/
 	/* 计算检测目标最大值函数声明                                                     */
 	/********************************************************************************/
 	double CalculateMaxValue(unsigned short* frame, const TargetPosition& target) const;
@@ -200,6 +205,8 @@ inline void Searcher::GetLastResultAfterOneRound()
 		frameCount++;
 		targetCount++;
 	}
+
+	// 再从剩下的检测结果中，选择在当前的几帧图像中，但是分值比较低的，也有可能是目标
 
 	char windowsName[100];
 	std::string windowsNameFormat = "Last Result Frame %d";
@@ -362,6 +369,64 @@ inline double Searcher::CalculateSCR(unsigned short* frame, const TargetPosition
 	return abs(avgTarget - avgSurrouding) / stdDivation;
 }
 
+inline double Searcher::CalculateLocalDiff(unsigned short* frame, const TargetPosition& target)
+{
+	int objectWidth = target.bottomRightX - target.topLeftX;
+	int objectHeight = target.bottomRightY - target.topLeftY;
+
+	int widthPadding = objectWidth;
+	int heightPadding = objectHeight;
+
+	double maxTarget = CalculateMaxValue(frame, target);
+	double avgSurrouding = 0.0;
+
+	// target surrounding average gray value
+	double sum = 0.0;
+	int surroundingTop = target.topLeftY - heightPadding;
+	surroundingTop = surroundingTop < 0 ? 0 : surroundingTop;
+	int surroundingLeft = target.topLeftX - widthPadding;
+	surroundingLeft = surroundingLeft < 0 ? 0 : surroundingLeft;
+	int surroundingRight = target.bottomRightX + widthPadding;
+	surroundingRight = surroundingRight > Width ? Width : surroundingRight;
+	int surroundingBottom = target.bottomRightY + heightPadding;
+	surroundingBottom = surroundingBottom > Height ? Height : surroundingBottom;
+
+	for (int r = surroundingTop; r < target.topLeftY; ++r)
+	{
+		double sumRow = 0.0;
+		for (int c = surroundingLeft; c < surroundingRight; ++c)
+		{
+			sumRow += static_cast<double>(frame[r * Width + c]);
+		}
+		sum += sumRow / (surroundingRight - surroundingLeft);
+	}
+	for (int r = target.bottomRightY; r < surroundingBottom; ++r)
+	{
+		double sumRow = 0.0;
+		for (int c = surroundingLeft; c < surroundingRight; ++c)
+		{
+			sumRow += static_cast<double>(frame[r * Width + c]);
+		}
+		sum += sumRow / (surroundingRight - surroundingLeft);
+	}
+	for (int r = target.topLeftY; r < target.bottomRightY; ++r)
+	{
+		double sumRow = 0.0;
+		for (int c = surroundingLeft; c < target.topLeftX; ++c)
+		{
+			sumRow += static_cast<double>(frame[r * Width + c]);
+		}
+		for (int c = target.bottomRightX; c < surroundingRight; ++c)
+		{
+			sumRow += static_cast<double>(frame[r * Width + c]);
+		}
+		sum += sumRow / ((target.topLeftX - surroundingLeft) + (surroundingRight - target.bottomRightX));
+	}
+	avgSurrouding = sum / (surroundingBottom - surroundingTop);
+
+	return maxTarget - avgSurrouding;
+}
+
 inline double Searcher::CalculateMaxValue(unsigned short* frame, const TargetPosition& target) const
 {
 	double max = 0.0;
@@ -385,7 +450,8 @@ inline void Searcher::CalculateScoreForDetectedTargetsAndPushToCandidateQueue(un
 		AllCandidateTargets[CandidateTargetCount].top = result.targets[i].topLeftY;
 		AllCandidateTargets[CandidateTargetCount].bottom = result.targets[i].bottomRightY;
 		AllCandidateTargets[CandidateTargetCount].frameIndex = frameIndex;
-		AllCandidateTargets[CandidateTargetCount].score = CalculateMaxValue(frame, result.targets[i]);
+		// AllCandidateTargets[CandidateTargetCount].score = CalculateMaxValue(frame, result.targets[i]);
+		AllCandidateTargets[CandidateTargetCount].score = CalculateLocalDiff(frame, result.targets[i]);
 		CandidateTargetCount++;
 	}
 }
