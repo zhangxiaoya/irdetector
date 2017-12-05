@@ -3,6 +3,7 @@
 #include <cuda_runtime_api.h>
 #include "../Checkers/CheckCUDAReturnStatus.h"
 #include "../Headers/GlobalMainHeaders.h"
+#include "../Headers/DetectorParameters.h"
 #include "../Dilations/DilatetionKernel.cuh"
 #include "../LevelDiscretization/LevelDiscretizationKernel.cuh"
 #include "../CCL/MeshCCLKernelD.cuh"
@@ -319,7 +320,7 @@ inline void Detector::CopyFrameData(unsigned short* frame)
 	this->isFrameDataReady = true;
 
 	memcpy(this->originalFrameOnHost, frame, sizeof(unsigned short) * Width * Height);
-	memset(this->originalFrameOnHost, 65535, 16);
+	memset(this->originalFrameOnHost, MAX_PIXEL_VALUE, FRAME_HEADER_LENGTH);
 	memset(this->allObjects, -1, sizeof(FourLimits) * Width * Height);
 	memset(this->allObjectRects, 0, sizeof(ObjectRect) * Width * Height);
 
@@ -688,7 +689,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		RemoveInvalidObjectAfterMerge();
 
 		// Copy frame header
-		memcpy(result->header, frame, 16);
+		memcpy(result->header, frame, FRAME_HEADER_LENGTH);
 
 		// return all candidate targets before remove false alarm
 		if (allCandidatesTargets != nullptr)

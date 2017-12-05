@@ -1,9 +1,10 @@
 #pragma once
 #include "TargetPosition.hpp"
+#include "../Headers/DetectorParameters.h"
 
 struct DetectResultSegment
 {
-	unsigned char header[16];
+	unsigned char header[FRAME_HEADER_LENGTH];
 	int targetCount;
 	TargetPosition targets[5];
 };
