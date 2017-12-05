@@ -100,8 +100,8 @@ private:
 	int validObjectsCount;
 	int lastResultCount;
 
-	int TARGET_WIDTH_MAX_LIMIT;
-	int TARGET_HEIGHT_MAX_LIMIT;
+	int TargetWidthMaxLimit;
+	int TargetHeightMaxLimit;
 
 	Filter filters;
 
@@ -136,8 +136,8 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  ForbiddenZoneCount(0),
 	  validObjectsCount(0),
 	  lastResultCount(0),
-	  TARGET_WIDTH_MAX_LIMIT(20),
-	  TARGET_HEIGHT_MAX_LIMIT(20),
+	  TargetWidthMaxLimit(TARGET_WIDTH_MAX_LIMIT),
+	  TargetHeightMaxLimit(TARGET_HEIGHT_MAX_LIMIT),
 	  CHECK_ORIGIN_FLAG(false),
 	  CHECK_DECRETIZATED_FLAG(false),
 	  CHECK_SURROUNDING_BOUNDARY_FLAG(false),
@@ -456,8 +456,8 @@ inline void Detector::MergeObjects() const
 
 			}
 
-			if ((allValidObjects[i].bottom - allValidObjects[i].top + 1) > TARGET_HEIGHT_MAX_LIMIT ||
-				(allValidObjects[i].right - allValidObjects[i].left + 1) > TARGET_WIDTH_MAX_LIMIT)
+			if ((allValidObjects[i].bottom - allValidObjects[i].top + 1) > TargetHeightMaxLimit ||
+				(allValidObjects[i].right - allValidObjects[i].left + 1) > TargetWidthMaxLimit)
 			{
 				allValidObjects[i].top = -1;
 				break;
@@ -537,7 +537,7 @@ inline void Detector::RemoveInValidObjects()
 	{
 		if(allObjects[i].top == -1)
 			continue;
-		if((allObjects[i].right - allObjects[i].left) > TARGET_WIDTH_MAX_LIMIT || (allObjects[i].bottom - allObjects[i].top) > TARGET_HEIGHT_MAX_LIMIT)
+		if((allObjects[i].right - allObjects[i].left) > TargetWidthMaxLimit || (allObjects[i].bottom - allObjects[i].top) > TargetHeightMaxLimit)
 			continue;
 		if((allObjects[i].right - allObjects[i].left) < 1 || (allObjects[i].bottom - allObjects[i].top) < 1)
 			continue;
