@@ -620,7 +620,7 @@ inline void Detector::FalseAlarmFilter()
 		{
 			this->insideObjects[lastResultCount].object = object;
 			auto contrast = filters.GetContrast();
-			if(contrast < 1.002)
+			if(contrast < FALSE_ALARM_FILTER_MIN_CONTRAST)
 				continue;
 //			this->insideObjects[lastResultCount].score = score + static_cast<int>(filters.GetCenterValue());
 			this->insideObjects[lastResultCount].score = score + contrast;
