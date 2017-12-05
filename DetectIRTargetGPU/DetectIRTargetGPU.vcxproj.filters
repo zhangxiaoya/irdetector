@@ -180,6 +180,9 @@
     <ClInclude Include="Models\TraceItem.hpp">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Models\Trace.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
