@@ -94,7 +94,7 @@ private:
 	ObjectRect* allObjectRects;
 	FourLimitsWithScore* insideObjects;
 
-	FourLimits ForbiddenZones[10];
+	FourLimits ForbiddenZones[MAX_FORBIDDEN_ZONE_COUNT];
 	int ForbiddenZoneCount;
 
 	int validObjectsCount;
