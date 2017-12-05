@@ -7,6 +7,9 @@
 #include "../Checkers/CheckPerf.h"
 #include "../Headers/SearcherParameters.h"
 
+/********************************************************************************/
+/* 旋转搜索类定义                                                                */
+/********************************************************************************/
 class Searcher
 {
 public:
@@ -149,17 +152,6 @@ inline void Searcher::Release()
 inline bool Searcher::CheckIfHaveGroundObject(int frame_index) const
 {
 	// 测试文件使用
-//	int beg = 364;
-//	int end = 445;
-
-//	while (beg < 3467)
-//	{
-//		if (frame_index >= beg && frame_index < end)
-//			return true;
-//		beg += 171;
-//		end += 171;
-//	}
-
 	if (frame_index >= 64 && frame_index < 145)
 		return true;
 	return false;
@@ -231,14 +223,19 @@ inline void Searcher::GetLastResultAfterOneRound()
 	}
 }
 
+/********************************************************************************/
+/* 外部接口函数定义                                                              */
+/********************************************************************************/
 inline void Searcher::SearchOneRound(unsigned short* frameData)
 {
+	// 检查帧号是否包含背景信息（测试用）
 	if (CheckIfHaveGroundObject(frameIndex) == true)
 	{
 		frameIndex++;
 		return;
 	}
 
+	// 复制
 	memcpy(FramesInOneRound[frameIndex], frameData, Width * Height * PixelSize);
 
 	DetectResultSegment result;
