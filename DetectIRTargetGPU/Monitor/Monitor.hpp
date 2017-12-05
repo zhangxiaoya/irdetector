@@ -663,7 +663,7 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 		}
 		result->targetCount = trackingTargetCount;
 	}
-	std::cout << "All target candidates count is " << allCandidateTargetsCount << std::endl;
+	//std::cout << "All target candidates count is " << allCandidateTargetsCount << std::endl;
 	return true;
 }
 
