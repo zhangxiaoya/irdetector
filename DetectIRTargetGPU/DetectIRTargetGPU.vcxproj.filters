@@ -177,6 +177,9 @@
     <ClInclude Include="Headers\DetectorParameters.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Models\TraceItem.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
