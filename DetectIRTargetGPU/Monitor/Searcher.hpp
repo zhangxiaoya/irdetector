@@ -88,9 +88,9 @@ private:
 	// 一圈检测目标存储队列
 	CandidateTarget AllCandidateTargets[SEARCH_TARGET_COUNT_ONE_ROUND];
 	// 存储队列中目标个数
-	int candidateTargetCount;
+	int CandidateTargetCount;
 	// 帧数指示器，每一圈重置
-	int frameIndex;
+	int FrameIndex;
 
 	// 单帧检测临时存储结果
 	DetectResultSegment resultOfSingleFrame;
@@ -107,8 +107,8 @@ inline Searcher::Searcher(const int width,
 	PixelSize(pixelSize),
 	DilationRadius(dilationRadius),
 	DiscretizationScale(discretizationScale),
-	candidateTargetCount(0),
-	frameIndex(0)
+	CandidateTargetCount(0),
+	FrameIndex(0)
 {
 	Init();
 }
@@ -166,7 +166,7 @@ inline bool Searcher::CheckIfHaveGroundObject(int frame_index) const
 inline void Searcher::GetLastResultAfterOneRound()
 {
 	// 候选队列中的所有检测到的目标，按照分值排序
-	std::sort(this->AllCandidateTargets, AllCandidateTargets + candidateTargetCount, CompareCandidates);
+	std::sort(this->AllCandidateTargets, AllCandidateTargets + CandidateTargetCount, CompareCandidates);
 
 	// 初始化帧显示标记（测试用）
 	int flag[FRAME_COUNT_WHICH_MOST_LIKELY_HAVE_TARGETS] = { -1 };
@@ -232,26 +232,26 @@ inline void Searcher::GetLastResultAfterOneRound()
 inline void Searcher::SearchOneRound(unsigned short* frameData)
 {
 	// 检查帧号是否包含背景信息（测试用）
-	if (CheckIfHaveGroundObject(frameIndex) == true)
+	if (CheckIfHaveGroundObject(FrameIndex) == true)
 	{
-		frameIndex++;
+		FrameIndex++;
 		return;
 	}
 
 	// 复制
-	memcpy(FramesInOneRound[frameIndex], frameData, Width * Height * PixelSize);
+	memcpy(FramesInOneRound[FrameIndex], frameData, Width * Height * PixelSize);
 
-	detector->DetectTargets(FramesInOneRound[frameIndex], &resultOfSingleFrame, nullptr, nullptr);
+	detector->DetectTargets(FramesInOneRound[FrameIndex], &resultOfSingleFrame, nullptr, nullptr);
 
-	CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[frameIndex], resultOfSingleFrame, frameIndex);
+	CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[FrameIndex], resultOfSingleFrame, FrameIndex);
 
-	frameIndex++;
+	FrameIndex++;
 
-	if (frameIndex == FRAME_COUNT_ONE_ROUND)
+	if (FrameIndex == FRAME_COUNT_ONE_ROUND)
 	{
 		GetLastResultAfterOneRound();
-		candidateTargetCount = 0;
-		frameIndex = 0;
+		CandidateTargetCount = 0;
+		FrameIndex = 0;
 	}
 }
 
@@ -379,13 +379,13 @@ inline void Searcher::CalculateScoreForDetectedTargetsAndPushToCandidateQueue(un
 {
 	for (auto i = 0; i< result.targetCount; i++)
 	{
-		AllCandidateTargets[candidateTargetCount].left = result.targets[i].topLeftX;
-		AllCandidateTargets[candidateTargetCount].right = result.targets[i].bottomRightX;
-		AllCandidateTargets[candidateTargetCount].top = result.targets[i].topLeftY;
-		AllCandidateTargets[candidateTargetCount].bottom = result.targets[i].bottomRightY;
-		AllCandidateTargets[candidateTargetCount].frameIndex = frameIndex;
-		AllCandidateTargets[candidateTargetCount].score = CalculateMaxValue(frame, result.targets[i]);
-		candidateTargetCount++;
+		AllCandidateTargets[CandidateTargetCount].left = result.targets[i].topLeftX;
+		AllCandidateTargets[CandidateTargetCount].right = result.targets[i].bottomRightX;
+		AllCandidateTargets[CandidateTargetCount].top = result.targets[i].topLeftY;
+		AllCandidateTargets[CandidateTargetCount].bottom = result.targets[i].bottomRightY;
+		AllCandidateTargets[CandidateTargetCount].frameIndex = frameIndex;
+		AllCandidateTargets[CandidateTargetCount].score = CalculateMaxValue(frame, result.targets[i]);
+		CandidateTargetCount++;
 	}
 }
 
