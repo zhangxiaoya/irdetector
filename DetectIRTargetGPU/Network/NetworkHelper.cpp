@@ -133,10 +133,11 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	readLock.unlock();
 
 	// 检测目标，并检测性能
-//	CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+	// CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
 	// 检测并跟踪目标，检测整个过程的时间系能
-	// CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
-	searcher->SearchOneRound(FrameDataInprocessing);
+	 CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
+	// 单圈搜索检测目标
+	// CheckPerf(searcher->SearchOneRound(FrameDataInprocessing), "Total cost while single round search");
 
 	// 并发存储检测结果到缓冲区
 	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
@@ -160,8 +161,8 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	writerLock.unlock();
 
 	// 临时显示结果
-//	auto shouLastResultDelay = 1;
-//	ShowLastResult(shouLastResultDelay);
+	// auto shouLastResultDelay = 1;
+	// ShowLastResult(shouLastResultDelay);
 
 	// 返回一次线程执行状态
 	return true;
