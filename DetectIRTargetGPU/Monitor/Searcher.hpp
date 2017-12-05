@@ -208,6 +208,7 @@ inline void Searcher::GetLastResultAfterOneRound()
 
 	// 再从剩下的检测结果中，选择在当前的几帧图像中，但是分值比较低的，也有可能是目标
 
+	// 临时画出结果（调试用）
 	char windowsName[100];
 	std::string windowsNameFormat = "Last Result Frame %d";
 
