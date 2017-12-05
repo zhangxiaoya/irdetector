@@ -91,6 +91,9 @@ private:
 	int candidateTargetCount;
 	// 帧数指示器，每一圈重置
 	int frameIndex;
+
+	// 单帧检测临时存储结果
+	DetectResultSegment resultOfSingleFrame;
 };
 
 inline Searcher::Searcher(const int width,
@@ -238,11 +241,9 @@ inline void Searcher::SearchOneRound(unsigned short* frameData)
 	// 复制
 	memcpy(FramesInOneRound[frameIndex], frameData, Width * Height * PixelSize);
 
-	DetectResultSegment result;
+	detector->DetectTargets(FramesInOneRound[frameIndex], &resultOfSingleFrame, nullptr, nullptr);
 
-	detector->DetectTargets(FramesInOneRound[frameIndex], &result, nullptr, nullptr);
-
-	CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[frameIndex], result, frameIndex);
+	CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[frameIndex], resultOfSingleFrame, frameIndex);
 
 	frameIndex++;
 
