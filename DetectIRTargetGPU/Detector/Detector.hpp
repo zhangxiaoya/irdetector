@@ -44,6 +44,8 @@ private:
 
 	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
+	bool CheckCross(const DetectedTarget& objectFirst, const DetectedTarget& objectSecond) const;
+
 	void MergeObjects() const;
 
 	void RemoveObjectWithLowContrast() const;
@@ -90,6 +92,7 @@ private:
 	ObjectRect* allObjectRects;
 	FourLimitsWithScore* insideObjects;
 	DetectedTarget* allObjectWithProp;
+	DetectedTarget* allValidObjectsWithProp;
 
 	FourLimits ForbiddenZones[MAX_FORBIDDEN_ZONE_COUNT];
 	int ForbiddenZoneCount;
@@ -131,6 +134,7 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  allObjectRects(nullptr),
 	  insideObjects(nullptr),
 	  allObjectWithProp(nullptr),
+	  allValidObjectsWithProp(nullptr),
 	  ForbiddenZoneCount(0),
 	  validObjectsCount(0),
 	  lastResultCount(0),
@@ -247,6 +251,10 @@ inline bool Detector::ReleaseSpace()
 	{
 		delete[] allObjectWithProp;
 	}
+	if (this->allValidObjectsWithProp != nullptr)
+	{
+		delete[] allValidObjectsWithProp;
+	}
 
 	if (status == true)
 	{
@@ -315,6 +323,7 @@ inline bool Detector::InitSpace()
 	allValidObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * Width * Height));
 	insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * Width * Height));
 	allObjectWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) *Width * Height));
+	allValidObjectsWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) * Width * Height));
 	return isInitSpaceReady;
 }
 
@@ -450,6 +459,18 @@ inline bool Detector::CheckCross(const FourLimits& objectFirst, const FourLimits
 	return false;
 }
 
+inline bool Detector::CheckCross(const DetectedTarget& objectFirst, const DetectedTarget& objectSecond) const
+{
+	auto centerXDiff = std::abs(objectFirst.centerX - objectSecond.centerX);
+	auto centerYDiff = std::abs(objectSecond.centerY - objectSecond.centerY);
+
+	if (centerXDiff <= ((objectFirst.width + objectSecond.height) / 2 + 1) && centerYDiff <= ((objectFirst.height + objectSecond.height) / 2 + 1))
+	{
+		return true;
+	}
+	return false;
+}
+
 inline void Detector::MergeObjects() const
 {
 	for (auto i = 0; i < validObjectsCount; ++i)
@@ -563,7 +584,9 @@ inline void Detector::RemoveInValidObjects()
 			continue;
 		if(allObjectWithProp[i].height < 1 || allObjectWithProp[i].width < 1)
 			continue;
+
 		allValidObjects[validObjectsCount] = allObjects[i];
+		allValidObjectsWithProp[validObjectsCount] = allObjectWithProp[i];
 		validObjectsCount++;
 	}
 }
