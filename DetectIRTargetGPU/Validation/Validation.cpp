@@ -41,9 +41,9 @@ void CheckTracking(const int width, const int height, const int dilationRadius, 
 {
 //	const auto validation_file_name = "C:\\Users\\007\\Desktop\\D\\Data\\IR\\Legacy\\ir_file_20170925_220915_mubiaojingzhi.bin";
 //	const auto validation_file_name = "C:\\Users\\007\\Desktop\\D\\Data\\IR\\15\\ir_file_20171115_211021-keji.bin";
-//	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\8\\ir_file_2 0170925_220915_mubiaojingzhi.bin";
+	const auto validation_file_name = "D:\\Cabins\\Projects\\Project1\\8\\ir_file_20170925_220915_mubiaojingzhi.bin";
 
-	const auto validation_file_name = "C:\\Users\\007\\Desktop\\WorkStation\\ir_file_20170925_220915_mubiaojingzhi.bin";
+//	const auto validation_file_name = "C:\\Users\\007\\Desktop\\WorkStation\\ir_file_20170925_220915_mubiaojingzhi.bin";
 
 	TrackingValidation validator(width, height,sizeof(unsigned short), dilationRadius, discretizationScale);
 	validator.InitDataReader(validation_file_name);
