@@ -1,11 +1,11 @@
 // 图像宽度
 #ifndef IMAGE_WIDTH
-#define IMAGE_WIDTH (320)
+#define IMAGE_WIDTH (320 * 2)
 #endif
 
 // 图像高度
 #ifndef IMAGE_HEIGHT
-#define IMAGE_HEIGHT (256)
+#define IMAGE_HEIGHT (256 * 2)
 #endif
 
 // 单个像素大小

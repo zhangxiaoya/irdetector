@@ -180,8 +180,8 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 					else
 					{
 						// 如果已经接收到了，输出错误信息
-						printf("Invalid data order, duplicated segment!");
-						printf("Segment %d had received more than once!", static_cast<int>(partBuffer[1]));
+						printf("Invalid data order, duplicated segment!\n");
+						printf("Segment %d had received more than once!\n", static_cast<int>(partBuffer[1]));
 						// 多接收一个数据段
 						i--;
 					}
