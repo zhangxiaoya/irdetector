@@ -40,7 +40,7 @@ private:
 
 	void GetAllObjects(int* labelsOnHost, FourLimits* allObjects, int width, int height);
 
-	static void ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height, int validObjectCount = 0);
+	void ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height, int validObjectCount = 0);
 
 	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
@@ -559,14 +559,12 @@ inline void Detector::RemoveInValidObjects()
 	{
 		if(allObjects[i].top == -1)
 			continue;
-		if((allObjects[i].right - allObjects[i].left) > TargetWidthMaxLimit || (allObjects[i].bottom - allObjects[i].top) > TargetHeightMaxLimit)
+		if(allObjectWithProp[i].height > TargetHeightMaxLimit || allObjectWithProp[i].width > TargetWidthMaxLimit)
 			continue;
-		if((allObjects[i].right - allObjects[i].left) < 1 || (allObjects[i].bottom - allObjects[i].top) < 1)
+		if(allObjectWithProp[i].height < 1 || allObjectWithProp[i].width < 1)
 			continue;
-		{
-			allValidObjects[validObjectsCount] = allObjects[i];
-			validObjectsCount++;
-		}
+		allValidObjects[validObjectsCount] = allObjects[i];
+		validObjectsCount++;
 	}
 }
 
