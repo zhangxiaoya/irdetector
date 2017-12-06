@@ -1,6 +1,7 @@
 #ifndef __UTIL__
 #define __UTIL__
 #include "../Models/FourLimits.h"
+#include "../Models/FourLimitsWithScore.hpp"
 
 class Util
 {
@@ -10,6 +11,8 @@ public:
 	static void CalCulateCenterValue(unsigned short* discretization_result_on_host, unsigned short& center_value, int width, const int center_x, const int center_y);
 
 	static void CalculateSurroundingValue(unsigned short* frame_of_original_image, const FourLimits& object, unsigned short& surrounding_average_value_of_origin_image, int width, int height);
+
+	static bool CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b);	
 };
 
 inline void Util::CalculateAverage(unsigned short* frame, const FourLimits& object, unsigned short& averageValue, const int width)
@@ -56,5 +59,10 @@ inline void Util::CalculateSurroundingValue(unsigned short* frame_of_original_im
 	auto boxRightBottomY = centerY + surroundingBoxHeight / 2 < height ? centerY + surroundingBoxHeight / 2 : height - 1;
 
 	CalculateAverage(frame_of_original_image, FourLimits(boxLeftTopY, boxRightBottomY, boxLeftTopX, boxRightBottomX), surrounding_average_value_of_origin_image, width);
+}
+
+inline bool Util::CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b)
+{
+	return a.score - b.score > 0.0000001;
 }
 #endif

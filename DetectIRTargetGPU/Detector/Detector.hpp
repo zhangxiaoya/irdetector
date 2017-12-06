@@ -16,11 +16,6 @@
 #include "../Models/DetectResultSegment.hpp"
 #include "../Models/FourLimitsWithScore.hpp"
 
-inline bool CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b)
-{
-	return a.score - b.score > 0.0000001;
-}
-
 class Detector
 {
 public:
@@ -629,7 +624,7 @@ inline void Detector::FalseAlarmFilter()
 	}
 
 	if (lastResultCount >= MAX_DETECTED_TARGET_COUNT)
-		std::sort(this->insideObjects, this->insideObjects + lastResultCount, CompareResult);
+		std::sort(this->insideObjects, this->insideObjects + lastResultCount, Util::CompareResult);
 }
 
 inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* result, FourLimits** allCandidatesTargets, int* allCandidateTargetsCount)
