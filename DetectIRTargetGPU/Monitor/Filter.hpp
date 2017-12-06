@@ -5,6 +5,7 @@
 #include "../Common/Util.h"
 #include <cmath>
 #include "../Headers/GlobalMainHeaders.h"
+#include "../Models/DetectedTarget.hpp"
 
 class Filter
 {
@@ -22,6 +23,8 @@ public:
 	bool CheckInsideBoundaryDescendGradient(unsigned short* originalFrameOnHost, int width, const FourLimits& object) const;
 
 	bool CheckStandardDeviation(unsigned short* originalFrameOnHost, int width, const FourLimits& object) const;
+
+	bool CheckStandardDeviation(unsigned short* originalFrameOnHost, int width, const DetectedTarget& object) const;
 
 	void InitObjectParameters(unsigned short* frameOfOriginalImage, unsigned short* frameOfPreprocessedImage, const FourLimits& object, int width, int height);
 
@@ -299,6 +302,29 @@ inline bool Filter::CheckStandardDeviation(unsigned short* originalFrameOnHost, 
 	}
 	auto objectWidth = object.right - object.left + 1;
 	auto objectHeight = object.bottom - object.top + 1;
+	auto standardDeviation = sqrt(sum / (objectWidth * objectHeight));
+
+	auto k = 2;
+	auto adaptiveThreshold = standardDeviation * k + averageValueOfOriginalImage;
+
+	if (adaptiveThreshold >= 150)
+		return true;
+
+	return false;
+}
+
+inline bool Filter::CheckStandardDeviation(unsigned short* originalFrameOnHost, int width, const DetectedTarget& object) const
+{
+	uint64_t sum = 0;
+	for (auto r = object.fourLimits.top; r <= object.fourLimits.bottom; ++r)
+	{
+		for (auto c = object.fourLimits.left; c <= object.fourLimits.right; ++c)
+		{
+			sum += (originalFrameOnHost[r * width + c] - averageValueOfOriginalImage) * (originalFrameOnHost[r * width + c] - averageValueOfOriginalImage);
+		}
+	}
+	auto objectWidth = object.fourLimits.right - object.fourLimits.left + 1;
+	auto objectHeight = object.fourLimits.bottom - object.fourLimits.top + 1;
 	auto standardDeviation = sqrt(sum / (objectWidth * objectHeight));
 
 	auto k = 2;
