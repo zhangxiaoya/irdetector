@@ -3,6 +3,7 @@
 #include <cuda_runtime_api.h>
 #include "../Checkers/CheckCUDAReturnStatus.h"
 #include "../Headers/GlobalMainHeaders.h"
+#include "../Headers/DetectorParameters.h"
 #include "../Dilations/DilatetionKernel.cuh"
 #include "../LevelDiscretization/LevelDiscretizationKernel.cuh"
 #include "../CCL/MeshCCLKernelD.cuh"
@@ -93,14 +94,14 @@ private:
 	ObjectRect* allObjectRects;
 	FourLimitsWithScore* insideObjects;
 
-	FourLimits ForbiddenZones[10];
+	FourLimits ForbiddenZones[MAX_FORBIDDEN_ZONE_COUNT];
 	int ForbiddenZoneCount;
 
 	int validObjectsCount;
 	int lastResultCount;
 
-	int TARGET_WIDTH_MAX_LIMIT;
-	int TARGET_HEIGHT_MAX_LIMIT;
+	int TargetWidthMaxLimit;
+	int TargetHeightMaxLimit;
 
 	Filter filters;
 
@@ -135,8 +136,8 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  ForbiddenZoneCount(0),
 	  validObjectsCount(0),
 	  lastResultCount(0),
-	  TARGET_WIDTH_MAX_LIMIT(20),
-	  TARGET_HEIGHT_MAX_LIMIT(20),
+	  TargetWidthMaxLimit(TARGET_WIDTH_MAX_LIMIT),
+	  TargetHeightMaxLimit(TARGET_HEIGHT_MAX_LIMIT),
 	  CHECK_ORIGIN_FLAG(false),
 	  CHECK_DECRETIZATED_FLAG(false),
 	  CHECK_SURROUNDING_BOUNDARY_FLAG(false),
@@ -319,7 +320,7 @@ inline void Detector::CopyFrameData(unsigned short* frame)
 	this->isFrameDataReady = true;
 
 	memcpy(this->originalFrameOnHost, frame, sizeof(unsigned short) * Width * Height);
-	memset(this->originalFrameOnHost, 65535, 16);
+	memset(this->originalFrameOnHost, MAX_PIXEL_VALUE, FRAME_HEADER_LENGTH);
 	memset(this->allObjects, -1, sizeof(FourLimits) * Width * Height);
 	memset(this->allObjectRects, 0, sizeof(ObjectRect) * Width * Height);
 
@@ -455,8 +456,8 @@ inline void Detector::MergeObjects() const
 
 			}
 
-			if ((allValidObjects[i].bottom - allValidObjects[i].top + 1) > TARGET_HEIGHT_MAX_LIMIT ||
-				(allValidObjects[i].right - allValidObjects[i].left + 1) > TARGET_WIDTH_MAX_LIMIT)
+			if ((allValidObjects[i].bottom - allValidObjects[i].top + 1) > TargetHeightMaxLimit ||
+				(allValidObjects[i].right - allValidObjects[i].left + 1) > TargetWidthMaxLimit)
 			{
 				allValidObjects[i].top = -1;
 				break;
@@ -536,7 +537,7 @@ inline void Detector::RemoveInValidObjects()
 	{
 		if(allObjects[i].top == -1)
 			continue;
-		if((allObjects[i].right - allObjects[i].left) > TARGET_WIDTH_MAX_LIMIT || (allObjects[i].bottom - allObjects[i].top) > TARGET_HEIGHT_MAX_LIMIT)
+		if((allObjects[i].right - allObjects[i].left) > TargetWidthMaxLimit || (allObjects[i].bottom - allObjects[i].top) > TargetHeightMaxLimit)
 			continue;
 		if((allObjects[i].right - allObjects[i].left) < 1 || (allObjects[i].bottom - allObjects[i].top) < 1)
 			continue;
@@ -619,7 +620,7 @@ inline void Detector::FalseAlarmFilter()
 		{
 			this->insideObjects[lastResultCount].object = object;
 			auto contrast = filters.GetContrast();
-			if(contrast < 1.002)
+			if(contrast < FALSE_ALARM_FILTER_MIN_CONTRAST)
 				continue;
 //			this->insideObjects[lastResultCount].score = score + static_cast<int>(filters.GetCenterValue());
 			this->insideObjects[lastResultCount].score = score + contrast;
@@ -627,7 +628,7 @@ inline void Detector::FalseAlarmFilter()
 		}
 	}
 
-	if (lastResultCount >= 5)
+	if (lastResultCount >= MAX_DETECTED_TARGET_COUNT)
 		std::sort(this->insideObjects, this->insideObjects + lastResultCount, CompareResult);
 }
 
@@ -688,7 +689,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		RemoveInvalidObjectAfterMerge();
 
 		// Copy frame header
-		memcpy(result->header, frame, 16);
+		memcpy(result->header, frame, FRAME_HEADER_LENGTH);
 
 		// return all candidate targets before remove false alarm
 		if (allCandidatesTargets != nullptr)
@@ -700,7 +701,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		FalseAlarmFilter();
 
 		// put all valid result to resultSegment
-		result->targetCount = lastResultCount >= 5 ? 5 : lastResultCount;
+		result->targetCount = lastResultCount >= MAX_DETECTED_TARGET_COUNT ? MAX_DETECTED_TARGET_COUNT : lastResultCount;
 
 		for (auto i = 0; i < result->targetCount; ++i)
 		{

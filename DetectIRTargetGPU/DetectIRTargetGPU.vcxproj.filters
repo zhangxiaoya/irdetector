@@ -165,6 +165,24 @@
     <ClInclude Include="Headers\NetworkParameters.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Monitor\Searcher.hpp">
+      <Filter>Monitor</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\CandidateTargets.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\SearcherParameters.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\DetectorParameters.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\TraceItem.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\Trace.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

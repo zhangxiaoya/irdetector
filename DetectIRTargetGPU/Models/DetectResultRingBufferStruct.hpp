@@ -27,13 +27,13 @@ struct DetectResultRingBufferStruct
 	}
 
 	bool finish_flag;
-	DetectResultSegment* item_buffer;                      // ���λ���
-	unsigned short* frame_buffer;                    // ֡���ݻ�����
+	DetectResultSegment* item_buffer;
+	unsigned short* frame_buffer;
 	size_t read_position;
 	size_t write_position;
 	std::mutex bufferMutex;
-	std::condition_variable buffer_not_full;        // ��������, ָʾ��Ʒ��������Ϊ��.
-	std::condition_variable buffer_not_empty;       // ��������, ָʾ��Ʒ��������Ϊ��.
+	std::condition_variable buffer_not_full;
+	std::condition_variable buffer_not_empty;
 
 	unsigned Width;
 	unsigned Height;
