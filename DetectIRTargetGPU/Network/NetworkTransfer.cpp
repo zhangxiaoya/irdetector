@@ -189,7 +189,7 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 				else
 				{
 					// 如果帧号不一致，输出错误信息
-					printf("Invalid frame order： \nExpected frame index is %d , \nbut actualy index is %d ", static_cast<int>(frameIndex), static_cast<int>(partBuffer[0]));
+					printf("Invalid frame order： \nExpected frame index is %d , \nbut actualy index is %d \n", static_cast<int>(frameIndex), static_cast<int>(partBuffer[0]));
 					printf("Resetting .....>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
 					frameIndex = static_cast<unsigned char>(partBuffer[0]);
 					for (auto idx = 0; idx < SEGMENT_COUNT; ++idx)

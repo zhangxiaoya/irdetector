@@ -1,5 +1,7 @@
 #include "Init/Init.hpp"
 #include "Network/NetworkHelper.h"
+#include "Validation/Validation.h"
+#include "Headers/PreProcessParameters.h"
 
 int main(int argc, char* argv[])
 {
@@ -7,15 +9,15 @@ int main(int argc, char* argv[])
 	const auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-		RunOnNetwork();
+//		RunOnNetwork();
 
 //		CheckConrrectness(IMAGE_WITDH, IMAGE_HEIGHT);
 
-//		CheckPerformance(IMAGE_WIDTH, IMAGE_HEIGHT, DilationRadius, DiscretizationScale);
+//		CheckPerformance(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);
 
-//		CheckTracking(IMAGE_WIDTH, IMAGE_HEIGHT, DilationRadius, DiscretizationScale);
+		CheckTracking(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);
 
-//		CheckSearching(IMAGE_WIDTH, IMAGE_HEIGHT, DilationRadius, DiscretizationScale);
+//		CheckSearching(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);
 	}
 
 	//  Õ∑≈CUDA…Ë±∏

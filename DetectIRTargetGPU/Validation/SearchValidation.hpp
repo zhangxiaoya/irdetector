@@ -2,24 +2,10 @@
 #include "../DataReaderFromeFiles/BinaryFileReader.hpp"
 #include "../Models/LogLevel.hpp"
 #include "../LogPrinter/LogPrinter.hpp"
-#include "../Checkers/CheckCUDAReturnStatus.h"
-#include "../CCL/MeshCCLOnCPU.hpp"
 #include "../Checkers/CheckPerf.h"
 #include "../Detector/Detector.hpp"
+#include "../Models/CandidateTargets.hpp"
 
-struct CandidateTarget
-{
-	int top;
-	int bottom;
-	int left;
-	int right;
-	int frameIndex;
-	double score;
-
-	CandidateTarget(): top(-1), bottom(-1), left(-1), right(-1), frameIndex(-1), score(0.0)
-	{
-	}
-};
 
 bool CompareCandidates(CandidateTarget& a, CandidateTarget& b)
 {

@@ -642,7 +642,7 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 	UpdateTrackerForAllBlocks(frame);
 
 	// copy tracking result back
-	memcpy(result->header, detectResult.header, 16);
+	memcpy(result->header, detectResult.header, FRAME_HEADER_LENGTH);
 	result->targetCount = detectResult.targetCount;
 	if (IsTracking == false)
 	{
@@ -663,7 +663,7 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 		}
 		result->targetCount = trackingTargetCount;
 	}
-	std::cout << "All target candidates count is " << allCandidateTargetsCount << std::endl;
+	//std::cout << "All target candidates count is " << allCandidateTargetsCount << std::endl;
 	return true;
 }
 
