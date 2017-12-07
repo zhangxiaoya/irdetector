@@ -485,22 +485,18 @@ inline void Detector::RemoveObjectWithLowContrast()
 {
 	for (auto i = 0; i < validObjectsCount; ++i)
 	{
-		if (allObjects[i].top == -1)
+		if (allObjectWithProp[i].width == -1)
 			continue;
 
 		unsigned short averageValue = 0;
 		unsigned short centerValue = 0;
 
-		// auto objectWidth = allObjects[i].right - allObjects[i].left + 1;
-		// auto objectHeight = allObjects[i].bottom - allObjects[i].top + 1;
 		auto objectWidth = allObjectWithProp[i].width;
 		auto objectHeight = allObjectWithProp[i].height;
 
 		auto surroundBoxWidth = 3 * objectWidth;
 		auto surroundBoxHeight = 3 * objectHeight;
 
-		// auto centerX = (allObjects[i].right + allObjects[i].left) / 2;
-		// auto centerY = (allObjects[i].bottom + allObjects[i].top) / 2;
 		auto centerX = allObjectWithProp[i].centerX;
 		auto centerY = allObjectWithProp[i].centerY;
 
