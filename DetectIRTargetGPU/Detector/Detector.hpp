@@ -599,7 +599,8 @@ inline void Detector::FalseAlarmFilter()
 	for (auto i = 0; i < validObjectsCount; ++i)
 	{
 		auto score = 0;
-		auto object = allObjects[i];
+		//auto object = allObjects[i];
+		auto object = allObjectWithProp[i];
 		filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, object, Width, Height);
 
 		auto currentResult = (CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, Width, Height))
@@ -632,10 +633,10 @@ inline void Detector::FalseAlarmFilter()
 			score++;
 		}
 		if (currentResult != true)
-			object.top = -1;
+			object.width = -1;
 		else
 		{
-			this->insideObjects[lastResultCount].object = object;
+			this->insideObjects[lastResultCount].object = object.fourLimits;
 			auto contrast = filters.GetContrast();
 			if(contrast < FALSE_ALARM_FILTER_MIN_CONTRAST)
 				continue;
