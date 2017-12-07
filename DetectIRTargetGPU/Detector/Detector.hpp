@@ -413,9 +413,9 @@ inline bool Detector::CheckCross(const FourLimits& objectFirst, const FourLimits
 inline bool Detector::CheckCross(const DetectedTarget& objectFirst, const DetectedTarget& objectSecond) const
 {
 	auto centerXDiff = std::abs(objectFirst.centerX - objectSecond.centerX);
-	auto centerYDiff = std::abs(objectSecond.centerY - objectSecond.centerY);
+	auto centerYDiff = std::abs(objectFirst.centerY - objectSecond.centerY);
 
-	if (centerXDiff <= ((objectFirst.width + objectSecond.height) / 2 + 1) && centerYDiff <= ((objectFirst.height + objectSecond.height) / 2 + 1))
+	if (centerXDiff <= ((objectFirst.width + objectSecond.width) / 2 + 1) && centerYDiff <= ((objectFirst.height + objectSecond.height) / 2 + 1))
 	{
 		return true;
 	}
