@@ -585,6 +585,7 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 			continue;
 		}
 		allObjects[newValidaObjectCount] = allObjects[i];
+		allObjectWithProp[newValidaObjectCount] = allObjectWithProp[i];
 		++i;
 		newValidaObjectCount++;
 	}
