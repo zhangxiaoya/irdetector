@@ -721,7 +721,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 
 
 		// Merge all objects
-		MergeObjects();
+		//MergeObjects();
 
 //		MergeObjects();
 
@@ -729,7 +729,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 //		RemoveObjectWithLowContrast();
 
 		// Remove objects after merge
-		RemoveInvalidObjectAfterMerge();
+		//RemoveInvalidObjectAfterMerge();
 
 		// Copy frame header
 		memcpy(result->header, frame, FRAME_HEADER_LENGTH);
