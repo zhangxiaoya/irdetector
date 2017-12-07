@@ -473,6 +473,7 @@ inline bool Detector::CheckCross(const DetectedTarget& objectFirst, const Detect
 
 inline void Detector::MergeObjects() const
 {
+#pragma omp parallel
 	for (auto i = 0; i < validObjectsCount; ++i)
 	{
 		if (allValidObjects[i].top == -1)
@@ -523,12 +524,6 @@ inline void Detector::RemoveObjectWithLowContrast() const
 
 		auto objectWidth = allValidObjects[i].right - allValidObjects[i].left + 1;
 		auto objectHeight = allValidObjects[i].bottom - allValidObjects[i].top + 1;
-
-		if (objectHeight < 2 || objectWidth < 2 || objectHeight > 20 || objectWidth > 20)
-		{
-			allValidObjects[i].top = -1;
-			continue;
-		}
 
 		auto surroundBoxWidth = 3 * objectWidth;
 		auto surroundBoxHeight = 3 * objectHeight;
@@ -701,6 +696,9 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		// remove invalid objects
 		RemoveInValidObjects();
 
+		// Remove objects with low contrast
+		RemoveObjectWithLowContrast();
+
 //		auto frameIndex = reinterpret_cast<unsigned*>(frame);
 //
 //		auto temp = static_cast<double>((static_cast<double>(*frameIndex) / 1250)) + static_cast<double>(25);
@@ -721,7 +719,9 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 
 
 		// Merge all objects
-		//MergeObjects();
+		MergeObjects();
+		// Remove objects after merge
+		RemoveInvalidObjectAfterMerge();
 
 //		MergeObjects();
 

@@ -162,8 +162,8 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	writerLock.unlock();
 
 	// 临时显示结果
-	// auto shouLastResultDelay = 1;
-	// ShowLastResult(shouLastResultDelay);
+	auto shouLastResultDelay = 1;
+	ShowLastResult(shouLastResultDelay);
 
 	// 返回一次线程执行状态
 	return true;
