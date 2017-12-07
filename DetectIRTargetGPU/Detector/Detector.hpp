@@ -90,7 +90,7 @@ private:
 	FourLimits* allObjects;
 	ObjectRect* allObjectRects;
 	FourLimitsWithScore* insideObjects;
-	// DetectedTarget* allObjectWithProp;
+	DetectedTarget* allObjectWithProp;
 
 	FourLimits ForbiddenZones[MAX_FORBIDDEN_ZONE_COUNT];
 	int ForbiddenZoneCount;
@@ -130,7 +130,7 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  allObjects(nullptr),
 	  allObjectRects(nullptr),
 	  insideObjects(nullptr),
-	  // allObjectWithProp(nullptr),
+	  allObjectWithProp(nullptr),
 	  ForbiddenZoneCount(0),
 	  validObjectsCount(0),
 	  lastResultCount(0),
@@ -239,10 +239,10 @@ inline bool Detector::ReleaseSpace()
 	{
 		delete[] insideObjects;
 	}
-	// if(this->allObjectWithProp != nullptr)
-	// {
-	// 	delete[] allObjectWithProp;
-	// }
+	if(this->allObjectWithProp != nullptr)
+	{
+		delete[] allObjectWithProp;
+	}
 
 	if (status == true)
 	{
@@ -309,7 +309,7 @@ inline bool Detector::InitSpace()
 	allObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * Width * Height));
 	allObjectRects = static_cast<ObjectRect*>(malloc(sizeof(ObjectRect) * Width * Height));
 	insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * Width * Height));
-	// allObjectWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) *Width * Height));
+	allObjectWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) *Width * Height));
 	return isInitSpaceReady;
 }
 
