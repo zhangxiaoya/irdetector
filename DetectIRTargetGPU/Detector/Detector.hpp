@@ -550,12 +550,10 @@ inline void Detector::RemoveInValidObjects()
 	validObjectsCount = 0;
 	for (auto i = 0; i < oldValidObjectCount; ++i)
 	{
-		if(allObjects[i].top == -1)
+		if(allObjectWithProp[i].width == -1)
 			continue;
-		// if(allObjects[i].bottom - allObjects[i].top + 1 > TargetHeightMaxLimit || allObjects[i].right - allObjects[i].left + 1 > TargetWidthMaxLimit)
 		if (allObjectWithProp[i].height > TargetHeightMaxLimit || allObjectWithProp[i].width > TargetWidthMaxLimit)
 			continue;
-		// if(allObjects[i].bottom - allObjects[i].top + 1 < 1 || allObjects[i].right - allObjects[i].left + 1 < 1)
 		if (allObjectWithProp[i].height < 1 || allObjectWithProp[i].width < 1)
 			continue;
 
