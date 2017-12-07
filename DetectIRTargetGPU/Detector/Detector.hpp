@@ -337,29 +337,29 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 		for (auto c = 0; c < width; ++c)
 		{
 			auto label = labelsOnHost[r * width + c];
-			if (allObjects[label].top == -1)
+			if (allObjectWithProp[label].fourLimits.top == -1)
 			{
 				allObjects[label].top = r;
 				allObjectWithProp[label].fourLimits.top = r;
 			}
-			if (allObjects[label].bottom < r)
+			if (allObjectWithProp[label].fourLimits.bottom < r)
 			{
 				allObjects[label].bottom = r;
 				allObjectWithProp[label].fourLimits.bottom = r;
 				allObjectWithProp[label].height = allObjectWithProp[label].fourLimits.bottom - allObjectWithProp[label].fourLimits.top + 1;
 				allObjectWithProp[label].centerY = (allObjectWithProp[label].fourLimits.bottom + allObjectWithProp[label].fourLimits.top) / 2;
 			}
-			if(allObjects[label].left == -1)
+			if (allObjectWithProp[label].fourLimits.left == -1)
 			{
 				allObjects[label].left = c;
 				allObjectWithProp[label].fourLimits.left = c;
 			}
-			else if (allObjects[label].left > c)
+			else if (allObjectWithProp[label].fourLimits.left > c)
 			{
 				allObjects[label].left = c;
 				allObjectWithProp[label].fourLimits.left = c;
 			}
-			if (allObjects[label].right < c)
+			if (allObjectWithProp[label].fourLimits.right < c)
 			{
 				allObjects[label].right = c;
 				allObjectWithProp[label].fourLimits.right = c;
