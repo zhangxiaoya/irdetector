@@ -88,7 +88,6 @@ private:
 	bool* modificationFlagOnDevice;
 
 	FourLimits* allObjects;
-	FourLimits* allValidObjects;
 	ObjectRect* allObjectRects;
 	FourLimitsWithScore* insideObjects;
 	// DetectedTarget* allObjectWithProp;
@@ -130,7 +129,6 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  referenceOfLabelsOnDevice(nullptr),
 	  modificationFlagOnDevice(nullptr),
 	  allObjects(nullptr),
-	  allValidObjects(nullptr),
 	  allObjectRects(nullptr),
 	  insideObjects(nullptr),
 	  // allObjectWithProp(nullptr),
@@ -239,10 +237,6 @@ inline bool Detector::ReleaseSpace()
 	{
 		delete[] allObjectRects;
 	}
-	if (this->allValidObjects != nullptr)
-	{
-		delete[] allValidObjects;
-	}
 	if(this->insideObjects != nullptr)
 	{
 		delete[] insideObjects;
@@ -320,7 +314,6 @@ inline bool Detector::InitSpace()
 
 	allObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * Width * Height));
 	allObjectRects = static_cast<ObjectRect*>(malloc(sizeof(ObjectRect) * Width * Height));
-	allValidObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * Width * Height));
 	insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * Width * Height));
 	// allObjectWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) *Width * Height));
 	// allValidObjectsWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) * Width * Height));
@@ -753,7 +746,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 
 		// return all candidate targets before remove false alarm
 		if (allCandidatesTargets != nullptr)
-			*allCandidatesTargets = this->allValidObjects;
+			*allCandidatesTargets = this->allObjects;
 		if (allCandidateTargetsCount != nullptr)
 			*allCandidateTargetsCount = this->validObjectsCount;
 
