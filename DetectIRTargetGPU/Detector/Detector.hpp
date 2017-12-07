@@ -473,14 +473,18 @@ inline void Detector::RemoveObjectWithLowContrast()
 		unsigned short averageValue = 0;
 		unsigned short centerValue = 0;
 
-		auto objectWidth = allObjects[i].right - allObjects[i].left + 1;
-		auto objectHeight = allObjects[i].bottom - allObjects[i].top + 1;
+		// auto objectWidth = allObjects[i].right - allObjects[i].left + 1;
+		// auto objectHeight = allObjects[i].bottom - allObjects[i].top + 1;
+		auto objectWidth = allObjectWithProp[i].width;
+		auto objectHeight = allObjectWithProp[i].height;
 
 		auto surroundBoxWidth = 3 * objectWidth;
 		auto surroundBoxHeight = 3 * objectHeight;
 
-		auto centerX = (allObjects[i].right + allObjects[i].left) / 2;
-		auto centerY = (allObjects[i].bottom + allObjects[i].top) / 2;
+		// auto centerX = (allObjects[i].right + allObjects[i].left) / 2;
+		// auto centerY = (allObjects[i].bottom + allObjects[i].top) / 2;
+		auto centerX = allObjectWithProp[i].centerX;
+		auto centerY = allObjectWithProp[i].centerY;
 
 		auto leftTopX = centerX - surroundBoxWidth / 2;
 		if (leftTopX < 0)
@@ -515,6 +519,7 @@ inline void Detector::RemoveObjectWithLowContrast()
 		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(averageValue)) < 3)
 		{
 			allObjects[i].top = -1;
+			allObjectWithProp[i].width = -1;
 		}
 		// ConvertFourLimitsToRect(allValidObjects, allObjectRects, Width, Height, validObjectsCount);
 		// ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
