@@ -186,6 +186,9 @@
     <ClInclude Include="Models\DetectedTarget.hpp">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Monitor\MultiSearcher.hpp">
+      <Filter>Monitor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

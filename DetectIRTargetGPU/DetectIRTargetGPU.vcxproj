@@ -199,6 +199,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Models\TraceItem.hpp" />
     <ClInclude Include="Monitor\Filter.hpp" />
     <ClInclude Include="Monitor\Monitor.hpp" />
+    <ClInclude Include="Monitor\MultiSearcher.hpp" />
     <ClInclude Include="Monitor\Searcher.hpp" />
     <ClInclude Include="Monitor\Tracker.hpp" />
     <ClInclude Include="Network\NetworkHelper.h" />
