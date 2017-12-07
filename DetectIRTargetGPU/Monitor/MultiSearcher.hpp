@@ -257,16 +257,18 @@ inline void MultiSearcher::SearchOneRound(unsigned short* frameData)
 {
 	// printf("Searching Frame %04d\n", FrameIndex);
 	// 检查帧号是否包含背景信息（测试用）
-	if (CheckIfHaveGroundObject(FrameIndex) == true)
-	{
-		FrameIndex++;
-		return;
-	}
+	// if (CheckIfHaveGroundObject(FrameIndex) == true)
+	// {
+	// 	FrameIndex++;
+	// 	return;
+	// }
 
 	// 复制
 	memcpy(FramesInOneRound[FrameIndex], frameData, Width * Height * PixelSize);
 
-	detector->DetectTargets(FramesInOneRound[FrameIndex], &resultOfSingleFrame, nullptr, nullptr);
+	// detector->DetectTargets(FramesInOneRound[FrameIndex], &resultOfSingleFrame, nullptr, nullptr);
+
+	monitors[FrameIndex]->Process(FramesInOneRound[FrameIndex], &resultOfSingleFrame);
 
 	CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[FrameIndex], resultOfSingleFrame, FrameIndex);
 
@@ -274,8 +276,8 @@ inline void MultiSearcher::SearchOneRound(unsigned short* frameData)
 
 	if (FrameIndex == FRAME_COUNT_ONE_ROUND)
 	{
-		GetLastResultAfterOneRound();
-		CandidateTargetCount = 0;
+		// GetLastResultAfterOneRound();
+		// CandidateTargetCount = 0;
 		FrameIndex = 0;
 	}
 }
