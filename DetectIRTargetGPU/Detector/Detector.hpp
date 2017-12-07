@@ -321,6 +321,7 @@ inline void Detector::CopyFrameData(unsigned short* frame)
 	memset(this->originalFrameOnHost, MAX_PIXEL_VALUE, FRAME_HEADER_LENGTH);
 	memset(this->allObjects, -1, sizeof(FourLimits) * Width * Height);
 	memset(this->allObjectRects, 0, sizeof(ObjectRect) * Width * Height);
+	memset(this->allObjectWithProp, -1, sizeof(DetectedTarget) * Width * Height);
 
 	CheckCUDAReturnStatus(cudaMemcpy(this->originalFrameOnDevice, this->originalFrameOnHost, sizeof(unsigned short) * Width * Height, cudaMemcpyHostToDevice), isFrameDataReady);
 	if (isInitSpaceReady == false)
