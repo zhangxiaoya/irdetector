@@ -428,13 +428,12 @@ inline void Detector::MergeObjects()
 #pragma omp parallel
 	for (auto i = 0; i < validObjectsCount; ++i)
 	{
-		if (allObjects[i].top == -1)
+		if (allObjectWithProp[i].width == -1)
 			continue;
 		for (auto j = 0; j < validObjectsCount; ++j)
 		{
-			if (i == j || allObjects[j].top == -1)
+			if (i == j || allObjectWithProp[j].width == -1)
 				continue;
-			//if (CheckCross(allObjects[i], allObjects[j]))
 			if (CheckCross(allObjectWithProp[i], allObjectWithProp[j]))
 			{
 				if (allObjects[i].top > allObjects[j].top)
