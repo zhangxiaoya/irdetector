@@ -339,31 +339,31 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 			if (allObjects[label].top == -1)
 			{
 				allObjects[label].top = r;
-				// allObjectWithProp[label].fourLimits.top = r;
+				allObjectWithProp[label].fourLimits.top = r;
 			}
 			if (allObjects[label].bottom < r)
 			{
 				allObjects[label].bottom = r;
-				// allObjectWithProp[label].fourLimits.bottom = r;
-				// allObjectWithProp[label].height = allObjectWithProp[label].fourLimits.bottom - allObjectWithProp[label].fourLimits.top + 1;
-				// allObjectWithProp[label].centerY = (allObjectWithProp[label].fourLimits.bottom + allObjectWithProp[label].fourLimits.top) / 2;
+				allObjectWithProp[label].fourLimits.bottom = r;
+				allObjectWithProp[label].height = allObjectWithProp[label].fourLimits.bottom - allObjectWithProp[label].fourLimits.top + 1;
+				allObjectWithProp[label].centerY = (allObjectWithProp[label].fourLimits.bottom + allObjectWithProp[label].fourLimits.top) / 2;
 			}
 			if(allObjects[label].left == -1)
 			{
 				allObjects[label].left = c;
-				// allObjectWithProp[label].fourLimits.left = c;
+				allObjectWithProp[label].fourLimits.left = c;
 			}
 			else if (allObjects[label].left > c)
 			{
 				allObjects[label].left = c;
-				// allObjectWithProp[label].fourLimits.left = c;
+				allObjectWithProp[label].fourLimits.left = c;
 			}
 			if (allObjects[label].right < c)
 			{
 				allObjects[label].right = c;
-				// allObjectWithProp[label].fourLimits.right = c;
-				// allObjectWithProp[label].width = allObjectWithProp[label].fourLimits.right - allObjectWithProp[label].fourLimits.left + 1;
-				// allObjectWithProp[label].centerX = (allObjectWithProp[label].fourLimits.left + allObjectWithProp[label].fourLimits.right) / 2;
+				allObjectWithProp[label].fourLimits.right = c;
+				allObjectWithProp[label].width = allObjectWithProp[label].fourLimits.right - allObjectWithProp[label].fourLimits.left + 1;
+				allObjectWithProp[label].centerX = (allObjectWithProp[label].fourLimits.left + allObjectWithProp[label].fourLimits.right) / 2;
 			}
 		}
 	}
