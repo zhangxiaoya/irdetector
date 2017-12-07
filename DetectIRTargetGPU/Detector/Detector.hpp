@@ -46,9 +46,9 @@ private:
 
 	bool CheckCross(const DetectedTarget& objectFirst, const DetectedTarget& objectSecond) const;
 
-	void MergeObjects() const;
+	void MergeObjects();
 
-	void RemoveObjectWithLowContrast() const;
+	void RemoveObjectWithLowContrast();
 
 	void RemoveInValidObjects();
 
@@ -91,8 +91,8 @@ private:
 	FourLimits* allValidObjects;
 	ObjectRect* allObjectRects;
 	FourLimitsWithScore* insideObjects;
-	DetectedTarget* allObjectWithProp;
-	DetectedTarget* allValidObjectsWithProp;
+	// DetectedTarget* allObjectWithProp;
+	// DetectedTarget* allValidObjectsWithProp;
 
 	FourLimits ForbiddenZones[MAX_FORBIDDEN_ZONE_COUNT];
 	int ForbiddenZoneCount;
@@ -133,8 +133,8 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  allValidObjects(nullptr),
 	  allObjectRects(nullptr),
 	  insideObjects(nullptr),
-	  allObjectWithProp(nullptr),
-	  allValidObjectsWithProp(nullptr),
+	  // allObjectWithProp(nullptr),
+	  // allValidObjectsWithProp(nullptr),
 	  ForbiddenZoneCount(0),
 	  validObjectsCount(0),
 	  lastResultCount(0),
@@ -247,14 +247,14 @@ inline bool Detector::ReleaseSpace()
 	{
 		delete[] insideObjects;
 	}
-	if(this->allObjectWithProp != nullptr)
-	{
-		delete[] allObjectWithProp;
-	}
-	if (this->allValidObjectsWithProp != nullptr)
-	{
-		delete[] allValidObjectsWithProp;
-	}
+	// if(this->allObjectWithProp != nullptr)
+	// {
+	// 	delete[] allObjectWithProp;
+	// }
+	// if (this->allValidObjectsWithProp != nullptr)
+	// {
+	// 	delete[] allValidObjectsWithProp;
+	// }
 
 	if (status == true)
 	{
@@ -322,8 +322,8 @@ inline bool Detector::InitSpace()
 	allObjectRects = static_cast<ObjectRect*>(malloc(sizeof(ObjectRect) * Width * Height));
 	allValidObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * Width * Height));
 	insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * Width * Height));
-	allObjectWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) *Width * Height));
-	allValidObjectsWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) * Width * Height));
+	// allObjectWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) *Width * Height));
+	// allValidObjectsWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) * Width * Height));
 	return isInitSpaceReady;
 }
 
@@ -354,31 +354,31 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 			if (allObjects[label].top == -1)
 			{
 				allObjects[label].top = r;
-				allObjectWithProp[label].fourLimits.top = r;
+				// allObjectWithProp[label].fourLimits.top = r;
 			}
 			if (allObjects[label].bottom < r)
 			{
 				allObjects[label].bottom = r;
-				allObjectWithProp[label].fourLimits.bottom = r;
-				allObjectWithProp[label].height = allObjectWithProp[label].fourLimits.bottom - allObjectWithProp[label].fourLimits.top + 1;
-				allObjectWithProp[label].centerY = (allObjectWithProp[label].fourLimits.bottom + allObjectWithProp[label].fourLimits.top) / 2;
+				// allObjectWithProp[label].fourLimits.bottom = r;
+				// allObjectWithProp[label].height = allObjectWithProp[label].fourLimits.bottom - allObjectWithProp[label].fourLimits.top + 1;
+				// allObjectWithProp[label].centerY = (allObjectWithProp[label].fourLimits.bottom + allObjectWithProp[label].fourLimits.top) / 2;
 			}
 			if(allObjects[label].left == -1)
 			{
 				allObjects[label].left = c;
-				allObjectWithProp[label].fourLimits.left = c;
+				// allObjectWithProp[label].fourLimits.left = c;
 			}
 			else if (allObjects[label].left > c)
 			{
 				allObjects[label].left = c;
-				allObjectWithProp[label].fourLimits.left = c;
+				// allObjectWithProp[label].fourLimits.left = c;
 			}
 			if (allObjects[label].right < c)
 			{
 				allObjects[label].right = c;
-				allObjectWithProp[label].fourLimits.right = c;
-				allObjectWithProp[label].width = allObjectWithProp[label].fourLimits.right - allObjectWithProp[label].fourLimits.left + 1;
-				allObjectWithProp[label].centerX = (allObjectWithProp[label].fourLimits.left + allObjectWithProp[label].fourLimits.right) / 2;
+				// allObjectWithProp[label].fourLimits.right = c;
+				// allObjectWithProp[label].width = allObjectWithProp[label].fourLimits.right - allObjectWithProp[label].fourLimits.left + 1;
+				// allObjectWithProp[label].centerX = (allObjectWithProp[label].fourLimits.left + allObjectWithProp[label].fourLimits.right) / 2;
 			}
 		}
 	}
@@ -471,65 +471,71 @@ inline bool Detector::CheckCross(const DetectedTarget& objectFirst, const Detect
 	return false;
 }
 
-inline void Detector::MergeObjects() const
+inline void Detector::MergeObjects()
 {
 #pragma omp parallel
 	for (auto i = 0; i < validObjectsCount; ++i)
 	{
-		if (allValidObjects[i].top == -1)
+		if (allObjects[i].top == -1)
 			continue;
 		for (auto j = 0; j < validObjectsCount; ++j)
 		{
-			if (i == j || allValidObjects[j].top == -1)
+			if (i == j || allObjects[j].top == -1)
 				continue;
-			if (CheckCross(allValidObjects[i], allValidObjects[j]))
+			if (CheckCross(allObjects[i], allObjects[j]))
 			{
-				if (allValidObjects[i].top > allValidObjects[j].top)
-					allValidObjects[i].top = allValidObjects[j].top;
+				if (allObjects[i].top > allObjects[j].top)
+					allObjects[i].top = allObjects[j].top;
 
-				if (allValidObjects[i].left > allValidObjects[j].left)
-					allValidObjects[i].left = allValidObjects[j].left;
+				if (allObjects[i].left > allObjects[j].left)
+					allObjects[i].left = allObjects[j].left;
 
-				if (allValidObjects[i].right < allValidObjects[j].right)
-					allValidObjects[i].right = allValidObjects[j].right;
+				if (allObjects[i].right < allObjects[j].right)
+					allObjects[i].right = allObjects[j].right;
 
-				if (allValidObjects[i].bottom < allValidObjects[j].bottom)
-					allValidObjects[i].bottom = allValidObjects[j].bottom;
+				if (allObjects[i].bottom < allObjects[j].bottom)
+					allObjects[i].bottom = allObjects[j].bottom;
 
-				allValidObjects[j].top = -1;
+				allObjects[j].top = -1;
 
 			}
 
-			if ((allValidObjects[i].bottom - allValidObjects[i].top + 1) > TargetHeightMaxLimit ||
-				(allValidObjects[i].right - allValidObjects[i].left + 1) > TargetWidthMaxLimit)
+			if ((allObjects[i].bottom - allObjects[i].top + 1) > TargetHeightMaxLimit ||
+				(allObjects[i].right - allObjects[i].left + 1) > TargetWidthMaxLimit)
 			{
-				allValidObjects[i].top = -1;
+				allObjects[i].top = -1;
 				break;
 			}
 		}
-//		ConvertFourLimitsToRect(allValidObjects, allObjectRects, Width, Height, validObjectsCount);
-//		ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
+		// ConvertFourLimitsToRect(allObjects, allObjectRects, Width, Height, validObjectsCount);
+		// ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
 	}
 }
 
-inline void Detector::RemoveObjectWithLowContrast() const
+inline void Detector::RemoveObjectWithLowContrast()
 {
 	for (auto i = 0; i < validObjectsCount; ++i)
 	{
-		if (allValidObjects[i].top == -1)
+		if (allObjects[i].top == -1)
 			continue;
 
 		unsigned short averageValue = 0;
 		unsigned short centerValue = 0;
 
-		auto objectWidth = allValidObjects[i].right - allValidObjects[i].left + 1;
-		auto objectHeight = allValidObjects[i].bottom - allValidObjects[i].top + 1;
+		auto objectWidth = allObjects[i].right - allObjects[i].left + 1;
+		auto objectHeight = allObjects[i].bottom - allObjects[i].top + 1;
+
+		// auto objectWidth = allValidObjectsWithProp[i].width;
+		// auto objectHeight = allValidObjectsWithProp[i].height;
 
 		auto surroundBoxWidth = 3 * objectWidth;
 		auto surroundBoxHeight = 3 * objectHeight;
 
-		auto centerX = (allValidObjects[i].right + allValidObjects[i].left) / 2;
-		auto centerY = (allValidObjects[i].bottom + allValidObjects[i].top) / 2;
+		auto centerX = (allObjects[i].right + allObjects[i].left) / 2;
+		auto centerY = (allObjects[i].bottom + allObjects[i].top) / 2;
+
+		// auto centerX = allValidObjectsWithProp[i].centerX;
+		// auto centerY = allValidObjectsWithProp[i].centerY;
 
 		auto leftTopX = centerX - surroundBoxWidth / 2;
 		if (leftTopX < 0)
@@ -563,25 +569,30 @@ inline void Detector::RemoveObjectWithLowContrast() const
 
 		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(averageValue)) < 3)
 		{
-			allValidObjects[i].top = -1;
+			allObjects[i].top = -1;
+			// allValidObjectsWithProp[i].width = -1;
 		}
+		// ConvertFourLimitsToRect(allValidObjects, allObjectRects, Width, Height, validObjectsCount);
+		// ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
 	}
 }
 
 inline void Detector::RemoveInValidObjects()
 {
+	int oldValidObjectCount = validObjectsCount;
 	validObjectsCount = 0;
-	for (auto i = 0; i < Width * Height; ++i)
+	for (auto i = 0; i < oldValidObjectCount; ++i)
 	{
 		if(allObjects[i].top == -1)
 			continue;
-		if(allObjectWithProp[i].height > TargetHeightMaxLimit || allObjectWithProp[i].width > TargetWidthMaxLimit)
+		// if(allObjectWithProp[i].height > TargetHeightMaxLimit || allObjectWithProp[i].width > TargetWidthMaxLimit)
+		if(allObjects[i].bottom - allObjects[i].top + 1 > TargetHeightMaxLimit || allObjects[i].right - allObjects[i].left + 1 > TargetWidthMaxLimit)
 			continue;
-		if(allObjectWithProp[i].height < 1 || allObjectWithProp[i].width < 1)
+		if(allObjects[i].bottom - allObjects[i].top + 1 < 1 || allObjects[i].right - allObjects[i].left + 1 < 1)
 			continue;
 
-		allValidObjects[validObjectsCount] = allObjects[i];
-		allValidObjectsWithProp[validObjectsCount] = allObjectWithProp[i];
+		allObjects[validObjectsCount] = allObjects[i];
+		// allValidObjectsWithProp[validObjectsCount] = allObjectWithProp[i];
 		validObjectsCount++;
 	}
 }
@@ -591,22 +602,22 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 	auto newValidaObjectCount = 0;
 	for (auto i = 0; i < validObjectsCount;)
 	{
-		if (allValidObjects[i].top == -1)
+		if (allObjects[i].top == -1)
 		{
 			i++;
 			continue;
 		}
-		if(IsInForbiddenZone(allValidObjects[i]) == true)
+		if(IsInForbiddenZone(allObjects[i]) == true)
 		{
 			i++;
 			continue;
 		}
-		if(IsAtBorderZone(allValidObjects[i]) == true)
+		if(IsAtBorderZone(allObjects[i]) == true)
 		{
 			i++;
 			continue;
 		}
-		allValidObjects[newValidaObjectCount] = allValidObjects[i];
+		allValidObjects[newValidaObjectCount] = allObjects[i];
 		++i;
 		newValidaObjectCount++;
 	}
@@ -676,6 +687,9 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 
 	if (isFrameDataReady == true)
 	{
+		// assume all object(pixel) all valid
+		validObjectsCount = Width * Height;
+
 		// dilation on gpu
 //		DilationFilter(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, DilationRadius);
 		NaiveDilation(this->originalFrameOnDevice, this->dilationResultOnDevice, Width, Height, DilationRadius);
@@ -698,6 +712,9 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 
 		// Remove objects with low contrast
 		RemoveObjectWithLowContrast();
+
+		// remove invalid objects
+		RemoveInValidObjects();
 
 //		auto frameIndex = reinterpret_cast<unsigned*>(frame);
 //
