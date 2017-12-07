@@ -617,7 +617,7 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 			i++;
 			continue;
 		}
-		allValidObjects[newValidaObjectCount] = allObjects[i];
+		allObjects[newValidaObjectCount] = allObjects[i];
 		++i;
 		newValidaObjectCount++;
 	}
@@ -631,7 +631,7 @@ inline void Detector::FalseAlarmFilter()
 	for (auto i = 0; i < validObjectsCount; ++i)
 	{
 		auto score = 0;
-		auto object = allValidObjects[i];
+		auto object = allObjects[i];
 		filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, object, Width, Height);
 
 		auto currentResult = (CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, Width, Height, object))
