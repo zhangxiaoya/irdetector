@@ -10,8 +10,9 @@
 #include "../Models/FrameDataRingBufferStruct.hpp"
 #include "../Models/DetectResultRingBufferStruct.hpp"
 #include "../Checkers/CheckPerf.h"
-#include "NetworkTransfer.h"
 #include "../Monitor/Searcher.hpp"
+#include "NetworkTransfer.h"
+#pragma comment(lib, "winmm.lib")
 
 /****************************************************************************************/
 /* 其他参数定义                                                                          */
@@ -207,6 +208,10 @@ void InputDataTask()
 	while (true)
 	{
 		if (InputDataToBuffer(&Buffer) == false) break;
+
+		// timeBeginPeriod(1);
+		// Sleep(1);
+		// timeEndPeriod(1);
 	}
 }
 

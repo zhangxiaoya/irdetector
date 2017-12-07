@@ -28,6 +28,8 @@ public:
 
 	void InitObjectParameters(unsigned short* frameOfOriginalImage, unsigned short* frameOfPreprocessedImage, const FourLimits& object, int width, int height);
 
+	void InitObjectParameters(unsigned short* frameOfOriginalImage, unsigned short* frameOfPreprocessedImage, const DetectedTarget& object, int width, int height);
+
 public:
 	void SetConvexPartitionOfOriginalImage(int value);
 
@@ -349,6 +351,21 @@ inline void Filter::InitObjectParameters(unsigned short* frameOfOriginalImage, u
 	Util::CalCulateCenterValue(frameOfOriginalImage, centerValueOfOriginalImage, width, centerX, centerY);
 	Util::CalCulateCenterValue(frameOfPreprocessedImage, centerValueOfPreprocessedImage, width, centerX, centerY);
 	Util::CalculateSurroundingValue(frameOfOriginalImage, object, surroundingAverageValueOfOriginImage, width, height);
+}
+
+inline void Filter::InitObjectParameters(unsigned short* frameOfOriginalImage, unsigned short* frameOfPreprocessedImage, const DetectedTarget& object, int width, int height)
+{
+	centerX = object.centerX;
+	centerY = object.centerY;
+
+	objectWidth = object.width;
+	objectHeight = object.height;
+
+	Util::CalculateAverage(frameOfOriginalImage, object.fourLimits, averageValueOfOriginalImage, width);
+	Util::CalculateAverage(frameOfPreprocessedImage, object.fourLimits, averageValueOfPreprocessedImage, width);
+	Util::CalCulateCenterValue(frameOfOriginalImage, centerValueOfOriginalImage, width, centerX, centerY);
+	Util::CalCulateCenterValue(frameOfPreprocessedImage, centerValueOfPreprocessedImage, width, centerX, centerY);
+	Util::CalculateSurroundingValue(frameOfOriginalImage, object.fourLimits, surroundingAverageValueOfOriginImage, width, height);
 }
 
 inline void Filter::SetConvexPartitionOfOriginalImage(int value)
