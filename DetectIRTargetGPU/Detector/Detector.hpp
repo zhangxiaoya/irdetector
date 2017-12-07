@@ -433,7 +433,8 @@ inline void Detector::MergeObjects()
 		{
 			if (i == j || allObjects[j].top == -1)
 				continue;
-			if (CheckCross(allObjects[i], allObjects[j]))
+			//if (CheckCross(allObjects[i], allObjects[j]))
+			if (CheckCross(allObjectWithProp[i], allObjectWithProp[j]))
 			{
 				if (allObjects[i].top > allObjects[j].top)
 					allObjects[i].top = allObjects[j].top;
@@ -447,14 +448,30 @@ inline void Detector::MergeObjects()
 				if (allObjects[i].bottom < allObjects[j].bottom)
 					allObjects[i].bottom = allObjects[j].bottom;
 
+				if (allObjectWithProp[i].fourLimits.top > allObjectWithProp[j].fourLimits.top)
+					allObjectWithProp[i].fourLimits.top = allObjectWithProp[j].fourLimits.top;
+
+				if (allObjectWithProp[i].fourLimits.left > allObjectWithProp[j].fourLimits.left)
+					allObjectWithProp[i].fourLimits.left = allObjectWithProp[j].fourLimits.left;
+
+				if (allObjectWithProp[i].fourLimits.right < allObjectWithProp[j].fourLimits.right)
+					allObjectWithProp[i].fourLimits.right = allObjectWithProp[j].fourLimits.right;
+
+				if (allObjectWithProp[i].fourLimits.bottom < allObjectWithProp[j].fourLimits.bottom)
+					allObjectWithProp[i].fourLimits.bottom = allObjectWithProp[j].fourLimits.bottom;
+
 				allObjects[j].top = -1;
+				allObjectWithProp[j].width = -1;
 
 			}
 
-			if ((allObjects[i].bottom - allObjects[i].top + 1) > TargetHeightMaxLimit ||
-				(allObjects[i].right - allObjects[i].left + 1) > TargetWidthMaxLimit)
+			//if ((allObjects[i].bottom - allObjects[i].top + 1) > TargetHeightMaxLimit ||
+			//	(allObjects[i].right - allObjects[i].left + 1) > TargetWidthMaxLimit)
+			if(allObjectWithProp[i].height > TargetHeightMaxLimit ||
+				allObjectWithProp[i].width > TargetWidthMaxLimit)
 			{
 				allObjects[i].top = -1;
+				allObjectWithProp[i].width = -1;
 				break;
 			}
 		}
