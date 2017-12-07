@@ -91,7 +91,6 @@ private:
 	ObjectRect* allObjectRects;
 	FourLimitsWithScore* insideObjects;
 	// DetectedTarget* allObjectWithProp;
-	// DetectedTarget* allValidObjectsWithProp;
 
 	FourLimits ForbiddenZones[MAX_FORBIDDEN_ZONE_COUNT];
 	int ForbiddenZoneCount;
@@ -132,7 +131,6 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  allObjectRects(nullptr),
 	  insideObjects(nullptr),
 	  // allObjectWithProp(nullptr),
-	  // allValidObjectsWithProp(nullptr),
 	  ForbiddenZoneCount(0),
 	  validObjectsCount(0),
 	  lastResultCount(0),
@@ -245,10 +243,6 @@ inline bool Detector::ReleaseSpace()
 	// {
 	// 	delete[] allObjectWithProp;
 	// }
-	// if (this->allValidObjectsWithProp != nullptr)
-	// {
-	// 	delete[] allValidObjectsWithProp;
-	// }
 
 	if (status == true)
 	{
@@ -316,7 +310,6 @@ inline bool Detector::InitSpace()
 	allObjectRects = static_cast<ObjectRect*>(malloc(sizeof(ObjectRect) * Width * Height));
 	insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * Width * Height));
 	// allObjectWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) *Width * Height));
-	// allValidObjectsWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) * Width * Height));
 	return isInitSpaceReady;
 }
 
@@ -338,7 +331,6 @@ inline void Detector::CopyFrameData(unsigned short* frame)
 
 inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, int width, int height)
 {
-	// top
 	for (auto r = 0; r < height; ++r)
 	{
 		for (auto c = 0; c < width; ++c)
@@ -375,40 +367,6 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 			}
 		}
 	}
-	// bottom
-//	for (auto r = height - 1; r >= 0; --r)
-//	{
-//		for (auto c = 0; c < width; ++c)
-//		{
-//			auto label = labelsOnHost[r * width + c];
-//			if (allObjects[label].bottom == -1)
-//				allObjects[label].bottom = r;
-//			if (allObjects[label].bottom - allObjects[label].top + 1 < 2)
-//				allObjects[label].top = -1;
-//		}
-//	}
-	// left
-//	for (auto c = 0; c < width; ++c)
-//	{
-//		for (auto r = 0; r < height; ++r)
-//		{
-//			auto label = labelsOnHost[r * width + c];
-//			if (allObjects[label].left == -1)
-//				allObjects[label].left = c;
-//		}
-//	}
-	// right
-//	for (auto c = width - 1; c >= 0; --c)
-//	{
-//		for (auto r = 0; r < height; ++r)
-//		{
-//			auto label = labelsOnHost[r * width + c];
-//			if (allObjects[label].right == -1)
-//				allObjects[label].right = c;
-//			if (allObjects[label].right - allObjects[label].left + 1 < 2)
-//				allObjects[label].top = -1;
-//		}
-//	}
 }
 
 inline void Detector::ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height, int validObjectCount)
@@ -518,17 +476,11 @@ inline void Detector::RemoveObjectWithLowContrast()
 		auto objectWidth = allObjects[i].right - allObjects[i].left + 1;
 		auto objectHeight = allObjects[i].bottom - allObjects[i].top + 1;
 
-		// auto objectWidth = allValidObjectsWithProp[i].width;
-		// auto objectHeight = allValidObjectsWithProp[i].height;
-
 		auto surroundBoxWidth = 3 * objectWidth;
 		auto surroundBoxHeight = 3 * objectHeight;
 
 		auto centerX = (allObjects[i].right + allObjects[i].left) / 2;
 		auto centerY = (allObjects[i].bottom + allObjects[i].top) / 2;
-
-		// auto centerX = allValidObjectsWithProp[i].centerX;
-		// auto centerY = allValidObjectsWithProp[i].centerY;
 
 		auto leftTopX = centerX - surroundBoxWidth / 2;
 		if (leftTopX < 0)
@@ -563,7 +515,6 @@ inline void Detector::RemoveObjectWithLowContrast()
 		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(averageValue)) < 3)
 		{
 			allObjects[i].top = -1;
-			// allValidObjectsWithProp[i].width = -1;
 		}
 		// ConvertFourLimitsToRect(allValidObjects, allObjectRects, Width, Height, validObjectsCount);
 		// ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
@@ -578,14 +529,12 @@ inline void Detector::RemoveInValidObjects()
 	{
 		if(allObjects[i].top == -1)
 			continue;
-		// if(allObjectWithProp[i].height > TargetHeightMaxLimit || allObjectWithProp[i].width > TargetWidthMaxLimit)
 		if(allObjects[i].bottom - allObjects[i].top + 1 > TargetHeightMaxLimit || allObjects[i].right - allObjects[i].left + 1 > TargetWidthMaxLimit)
 			continue;
 		if(allObjects[i].bottom - allObjects[i].top + 1 < 1 || allObjects[i].right - allObjects[i].left + 1 < 1)
 			continue;
 
 		allObjects[validObjectsCount] = allObjects[i];
-		// allValidObjectsWithProp[validObjectsCount] = allObjectWithProp[i];
 		validObjectsCount++;
 	}
 }
@@ -684,7 +633,6 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		validObjectsCount = Width * Height;
 
 		// dilation on gpu
-//		DilationFilter(this->originalFrameOnDevice, this->dilationResultOnDevice, width, height, DilationRadius);
 		NaiveDilation(this->originalFrameOnDevice, this->dilationResultOnDevice, Width, Height, DilationRadius);
 
 		// level disretization on gpu
@@ -709,37 +657,10 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		// remove invalid objects
 		RemoveInValidObjects();
 
-//		auto frameIndex = reinterpret_cast<unsigned*>(frame);
-//
-//		auto temp = static_cast<double>((static_cast<double>(*frameIndex) / 1250)) + static_cast<double>(25);
-//		if (temp >= 360.0)
-//			temp -= 360.0;
-//		if (temp < 0)
-//			temp += 360.0;
-
-//		std::cout <<"---------------------------------------------------->"<< temp << std::endl;
-//		if(temp > 4.0 && temp < 6.0)
-//		{
-//			// convert all obejct to rect
-//			ConvertFourLimitsToRect(allObjects, allObjectRects, width, height);
-//
-//			// show result
-//			ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, width, height);
-//		}
-
-
 		// Merge all objects
 		MergeObjects();
 		// Remove objects after merge
 		RemoveInvalidObjectAfterMerge();
-
-//		MergeObjects();
-
-		// Remove objects with low contrast
-//		RemoveObjectWithLowContrast();
-
-		// Remove objects after merge
-		//RemoveInvalidObjectAfterMerge();
 
 		// Copy frame header
 		memcpy(result->header, frame, FRAME_HEADER_LENGTH);
