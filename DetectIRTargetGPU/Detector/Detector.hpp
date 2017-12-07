@@ -339,29 +339,24 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 			auto label = labelsOnHost[r * width + c];
 			if (allObjectWithProp[label].fourLimits.top == -1)
 			{
-				allObjects[label].top = r;
 				allObjectWithProp[label].fourLimits.top = r;
 			}
 			if (allObjectWithProp[label].fourLimits.bottom < r)
 			{
-				allObjects[label].bottom = r;
 				allObjectWithProp[label].fourLimits.bottom = r;
 				allObjectWithProp[label].height = allObjectWithProp[label].fourLimits.bottom - allObjectWithProp[label].fourLimits.top + 1;
 				allObjectWithProp[label].centerY = (allObjectWithProp[label].fourLimits.bottom + allObjectWithProp[label].fourLimits.top) / 2;
 			}
 			if (allObjectWithProp[label].fourLimits.left == -1)
 			{
-				allObjects[label].left = c;
 				allObjectWithProp[label].fourLimits.left = c;
 			}
 			else if (allObjectWithProp[label].fourLimits.left > c)
 			{
-				allObjects[label].left = c;
 				allObjectWithProp[label].fourLimits.left = c;
 			}
 			if (allObjectWithProp[label].fourLimits.right < c)
 			{
-				allObjects[label].right = c;
 				allObjectWithProp[label].fourLimits.right = c;
 				allObjectWithProp[label].width = allObjectWithProp[label].fourLimits.right - allObjectWithProp[label].fourLimits.left + 1;
 				allObjectWithProp[label].centerX = (allObjectWithProp[label].fourLimits.left + allObjectWithProp[label].fourLimits.right) / 2;
@@ -436,18 +431,6 @@ inline void Detector::MergeObjects()
 				continue;
 			if (CheckCross(allObjectWithProp[i], allObjectWithProp[j]))
 			{
-				if (allObjects[i].top > allObjects[j].top)
-					allObjects[i].top = allObjects[j].top;
-
-				if (allObjects[i].left > allObjects[j].left)
-					allObjects[i].left = allObjects[j].left;
-
-				if (allObjects[i].right < allObjects[j].right)
-					allObjects[i].right = allObjects[j].right;
-
-				if (allObjects[i].bottom < allObjects[j].bottom)
-					allObjects[i].bottom = allObjects[j].bottom;
-
 				if (allObjectWithProp[i].fourLimits.top > allObjectWithProp[j].fourLimits.top)
 					allObjectWithProp[i].fourLimits.top = allObjectWithProp[j].fourLimits.top;
 
@@ -460,17 +443,13 @@ inline void Detector::MergeObjects()
 				if (allObjectWithProp[i].fourLimits.bottom < allObjectWithProp[j].fourLimits.bottom)
 					allObjectWithProp[i].fourLimits.bottom = allObjectWithProp[j].fourLimits.bottom;
 
-				allObjects[j].top = -1;
 				allObjectWithProp[j].width = -1;
 
 			}
 
-			//if ((allObjects[i].bottom - allObjects[i].top + 1) > TargetHeightMaxLimit ||
-			//	(allObjects[i].right - allObjects[i].left + 1) > TargetWidthMaxLimit)
 			if(allObjectWithProp[i].height > TargetHeightMaxLimit ||
 				allObjectWithProp[i].width > TargetWidthMaxLimit)
 			{
-				allObjects[i].top = -1;
 				allObjectWithProp[i].width = -1;
 				break;
 			}
@@ -531,7 +510,6 @@ inline void Detector::RemoveObjectWithLowContrast()
 
 		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(averageValue)) < 3)
 		{
-			allObjects[i].top = -1;
 			allObjectWithProp[i].width = -1;
 		}
 		// ConvertFourLimitsToRect(allValidObjects, allObjectRects, Width, Height, validObjectsCount);
@@ -552,7 +530,6 @@ inline void Detector::RemoveInValidObjects()
 		if (allObjectWithProp[i].height < 1 || allObjectWithProp[i].width < 1)
 			continue;
 
-		allObjects[validObjectsCount] = allObjects[i];
 		allObjectWithProp[validObjectsCount] = allObjectWithProp[i];
 		validObjectsCount++;
 	}
@@ -578,7 +555,6 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 			i++;
 			continue;
 		}
-		allObjects[newValidaObjectCount] = allObjects[i];
 		allObjectWithProp[newValidaObjectCount] = allObjectWithProp[i];
 		++i;
 		newValidaObjectCount++;
