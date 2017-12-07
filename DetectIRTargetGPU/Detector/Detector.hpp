@@ -563,17 +563,17 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 	auto newValidaObjectCount = 0;
 	for (auto i = 0; i < validObjectsCount;)
 	{
-		if (allObjects[i].top == -1)
+		if (allObjectWithProp[i].width == -1)
 		{
 			i++;
 			continue;
 		}
-		if(IsInForbiddenZone(allObjects[i]) == true)
+		if(IsInForbiddenZone(allObjectWithProp[i].fourLimits) == true)
 		{
 			i++;
 			continue;
 		}
-		if(IsAtBorderZone(allObjects[i]) == true)
+		if(IsAtBorderZone(allObjectWithProp[i].fourLimits) == true)
 		{
 			i++;
 			continue;
