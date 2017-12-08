@@ -512,7 +512,7 @@ inline void Detector::RemoveObjectWithLowContrast()
 
 		Util::CalCulateCenterValue(discretizationResultOnHost, centerValue, objectWidth, centerX, centerY);
 
-		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(averageValue)) < 3)
+		if (static_cast<int>(centerValue) - static_cast<int>(averageValue) < 3)
 		{
 			allObjects[i].top = -1;
 		}
