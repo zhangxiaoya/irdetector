@@ -6,6 +6,8 @@
 class Util
 {
 public:
+	static void GetMaxAndMinValue(unsigned short* frame, const FourLimits& object, unsigned short& maxValue, unsigned short& minValue, const int width);
+
 	static void CalculateAverage(unsigned short* frame, const FourLimits& object, unsigned short& averageValue, const int width);
 
 	static void CalCulateCenterValue(unsigned short* discretization_result_on_host, unsigned short& center_value, int width, const int center_x, const int center_y);
@@ -14,6 +16,20 @@ public:
 
 	static bool CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b);	
 };
+
+inline void Util::GetMaxAndMinValue(unsigned short* frame, const FourLimits& object, unsigned short& maxValue, unsigned short& minValue, const int width)
+{
+	minValue = 65535;
+	maxValue = 0;
+	for (int r = object.top; r <= object.bottom; ++r)
+	{
+		for (int c = object.left; c <= object.right; ++c)
+		{
+			maxValue = maxValue < frame[r * width + c] ? frame[r * width + c] : maxValue;
+			minValue = minValue > frame[r * width + c] ? frame[r * width + c] : minValue;
+		}
+	}
+}
 
 inline void Util::CalculateAverage(unsigned short* frame, const FourLimits& object, unsigned short& averageValue, const int width)
 {

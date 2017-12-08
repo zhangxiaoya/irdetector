@@ -476,7 +476,7 @@ inline void Detector::RemoveObjectWithLowContrast()
 		auto objectWidth = allObjects[i].right - allObjects[i].left + 1;
 		auto objectHeight = allObjects[i].bottom - allObjects[i].top + 1;
 
-		auto surroundBoxWidth = 3 * objectWidth;
+		auto surroundBoxWidth =	 3 * objectWidth;
 		auto surroundBoxHeight = 3 * objectHeight;
 
 		auto centerX = (allObjects[i].right + allObjects[i].left) / 2;
@@ -506,16 +506,27 @@ inline void Detector::RemoveObjectWithLowContrast()
 			rightBottomY = Height - 1;
 		}
 
+		unsigned short minValue = 65535;
+		unsigned short maxValue = 0;
+
 		FourLimits surroundingBox(leftTopY, rightBottomY, leftTopX, rightBottomX);
 
-		Util::CalculateAverage(discretizationResultOnHost, surroundingBox, averageValue, objectWidth);
+		// Util::GetMaxAndMinValue(originalFrameOnHost, surroundingBox, maxValue, minValue, surroundBoxWidth);
+
+		Util::CalculateAverage(discretizationResultOnHost, surroundingBox, averageValue, surroundBoxWidth);
 
 		Util::CalCulateCenterValue(discretizationResultOnHost, centerValue, objectWidth, centerX, centerY);
 
-		if (static_cast<int>(centerValue) - static_cast<int>(averageValue) < 3)
+		if (static_cast<int>(centerValue) - static_cast<int>(averageValue) < 2)
 		{
 			allObjects[i].top = -1;
 		}
+
+		//if (maxValue - minValue < 15)
+		//{
+		//	allObjects[i].top = -1;
+		//}
+
 		// ConvertFourLimitsToRect(allValidObjects, allObjectRects, Width, Height, validObjectsCount);
 		// ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
 	}
