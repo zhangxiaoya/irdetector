@@ -549,11 +549,11 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 			i++;
 			continue;
 		}
-		if(IsInForbiddenZone(allObjects[i]) == true)
-		{
-			i++;
-			continue;
-		}
+		// if(IsInForbiddenZone(allObjects[i]) == true)
+		// {
+		// 	i++;
+		// 	continue;
+		// }
 		if(IsAtBorderZone(allObjects[i]) == true)
 		{
 			i++;
