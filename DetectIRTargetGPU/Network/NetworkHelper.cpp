@@ -11,6 +11,7 @@
 #include "../Models/DetectResultRingBufferStruct.hpp"
 #include "../Checkers/CheckPerf.h"
 #include "../Monitor/Searcher.hpp"
+#include "../Monitor/MultiSearcher.hpp"
 #include "NetworkTransfer.h"
 #pragma comment(lib, "winmm.lib")
 
@@ -31,6 +32,7 @@ Detector* detector = new Detector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RA
 Monitor* monitor = new Monitor(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);     // 初始化Monitor
 
 Searcher* searcher = new Searcher(IMAGE_WIDTH, IMAGE_HEIGHT, PIXEL_SIZE, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE); // 初始化搜索算法
+MultiSearcher* multiSearcher = new MultiSearcher(IMAGE_WIDTH, IMAGE_HEIGHT, PIXEL_SIZE, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE); // 初始化搜索算法
 
 /****************************************************************************************/
 /* 参数定义：缓冲区全局变量声明与定义                                                      */
@@ -57,6 +59,7 @@ inline void RelaseSource()
 	delete detector;
 	delete monitor;
 	delete searcher;
+	delete multiSearcher;
 }
 
 /****************************************************************************************/
@@ -134,11 +137,13 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	readLock.unlock();
 
 	// 检测目标，并检测性能
-	 CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+	// CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
 	// 检测并跟踪目标，检测整个过程的时间系能
 	// CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
 	// 单圈搜索检测目标
     // CheckPerf(searcher->SearchOneRound(FrameDataInprocessing), "Total cost while single round search");
+	 // 单圈搜索与跟踪
+	 CheckPerf(multiSearcher->SearchOneRound(FrameDataInprocessing, &ResultItemSendToServer), "Total cost while single round search");
 
 	// 并发存储检测结果到缓冲区
 	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);

@@ -1,5 +1,5 @@
-#ifndef __SEARCHER_H__
-#define __SEARCHER_H__
+#ifndef __MULTI_SEARCHER_H__
+#define __MULTI_SEARCHER_H__
 
 #include "../Models/CandidateTargets.hpp"
 #include "../LogPrinter/LogPrinter.hpp"
@@ -25,7 +25,7 @@ public:
 	/********************************************************************************/
 	/* 搜索一圈函数声明（外部接口）                                                   */
 	/********************************************************************************/
-	void SearchOneRound(unsigned short* frameData);
+	void SearchOneRound(unsigned short* frameData, DetectResultSegment* result);
 
 private:
 	/********************************************************************************/
@@ -103,7 +103,7 @@ private:
 	int FrameIndex;
 
 	// 单帧检测临时存储结果
-	DetectResultSegment resultOfSingleFrame;
+	DetectResultSegment resultOfSingleFrame[SEARCH_TARGET_COUNT_ONE_ROUND];
 };
 
 inline MultiSearcher::MultiSearcher(const int width,
@@ -253,7 +253,7 @@ inline void MultiSearcher::GetLastResultAfterOneRound()
 /********************************************************************************/
 /* 外部接口函数定义                                                              */
 /********************************************************************************/
-inline void MultiSearcher::SearchOneRound(unsigned short* frameData)
+inline void MultiSearcher::SearchOneRound(unsigned short* frameData, DetectResultSegment* result)
 {
 	// printf("Searching Frame %04d\n", FrameIndex);
 	// 检查帧号是否包含背景信息（测试用）
@@ -268,9 +268,9 @@ inline void MultiSearcher::SearchOneRound(unsigned short* frameData)
 
 	// detector->DetectTargets(FramesInOneRound[FrameIndex], &resultOfSingleFrame, nullptr, nullptr);
 
-	monitors[FrameIndex]->Process(FramesInOneRound[FrameIndex], &resultOfSingleFrame);
+	monitors[FrameIndex]->Process(FramesInOneRound[FrameIndex], &resultOfSingleFrame[FrameIndex]);
 
-	CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[FrameIndex], resultOfSingleFrame, FrameIndex);
+	CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[FrameIndex], resultOfSingleFrame[FrameIndex], FrameIndex);
 
 	FrameIndex++;
 
@@ -280,6 +280,8 @@ inline void MultiSearcher::SearchOneRound(unsigned short* frameData)
 		// CandidateTargetCount = 0;
 		FrameIndex = 0;
 	}
+
+	memcpy(result, &resultOfSingleFrame[FrameIndex], sizeof(DetectResultSegment));
 }
 
 inline double MultiSearcher::CalculateSCR(unsigned short* frame, const TargetPosition& target)
