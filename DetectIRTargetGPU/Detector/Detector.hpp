@@ -90,7 +90,6 @@ private:
 	FourLimits* allObjects;
 	ObjectRect* allObjectRects;
 	FourLimitsWithScore* insideObjects;
-	// DetectedTarget* allObjectWithProp;
 
 	FourLimits ForbiddenZones[MAX_FORBIDDEN_ZONE_COUNT];
 	int ForbiddenZoneCount;
@@ -130,7 +129,6 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  allObjects(nullptr),
 	  allObjectRects(nullptr),
 	  insideObjects(nullptr),
-	  // allObjectWithProp(nullptr),
 	  ForbiddenZoneCount(0),
 	  validObjectsCount(0),
 	  lastResultCount(0),
@@ -239,10 +237,6 @@ inline bool Detector::ReleaseSpace()
 	{
 		delete[] insideObjects;
 	}
-	// if(this->allObjectWithProp != nullptr)
-	// {
-	// 	delete[] allObjectWithProp;
-	// }
 
 	if (status == true)
 	{
@@ -314,7 +308,6 @@ inline bool Detector::InitSpace()
 	allObjects = static_cast<FourLimits*>(malloc(sizeof(FourLimits) * Width * Height));
 	allObjectRects = static_cast<ObjectRect*>(malloc(sizeof(ObjectRect) * Width * Height));
 	insideObjects = static_cast<FourLimitsWithScore*>(malloc(sizeof(FourLimitsWithScore) * Width * Height));
-	// allObjectWithProp = static_cast<DetectedTarget*>(malloc(sizeof(DetectedTarget) *Width * Height));
 	return isInitSpaceReady;
 }
 
@@ -344,31 +337,22 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 			if (allObjects[label].top == -1)
 			{
 				allObjects[label].top = r;
-				// allObjectWithProp[label].fourLimits.top = r;
 			}
 			if (allObjects[label].bottom < r)
 			{
 				allObjects[label].bottom = r;
-				// allObjectWithProp[label].fourLimits.bottom = r;
-				// allObjectWithProp[label].height = allObjectWithProp[label].fourLimits.bottom - allObjectWithProp[label].fourLimits.top + 1;
-				// allObjectWithProp[label].centerY = (allObjectWithProp[label].fourLimits.bottom + allObjectWithProp[label].fourLimits.top) / 2;
 			}
 			if(allObjects[label].left == -1)
 			{
 				allObjects[label].left = c;
-				// allObjectWithProp[label].fourLimits.left = c;
 			}
 			else if (allObjects[label].left > c)
 			{
 				allObjects[label].left = c;
-				// allObjectWithProp[label].fourLimits.left = c;
 			}
 			if (allObjects[label].right < c)
 			{
 				allObjects[label].right = c;
-				// allObjectWithProp[label].fourLimits.right = c;
-				// allObjectWithProp[label].width = allObjectWithProp[label].fourLimits.right - allObjectWithProp[label].fourLimits.left + 1;
-				// allObjectWithProp[label].centerX = (allObjectWithProp[label].fourLimits.left + allObjectWithProp[label].fourLimits.right) / 2;
 			}
 		}
 	}
