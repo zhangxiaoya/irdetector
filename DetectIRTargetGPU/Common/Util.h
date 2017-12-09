@@ -15,6 +15,8 @@ public:
 	static void CalculateSurroundingValue(unsigned short* frame_of_original_image, const FourLimits& object, unsigned short& surrounding_average_value_of_origin_image, int width, int height);
 
 	static bool CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b);	
+
+	static bool CheckEqualDoubleValue(double a, double b);
 };
 
 inline void Util::GetMaxAndMinValue(unsigned short* frame, const FourLimits& object, unsigned short& maxValue, unsigned short& minValue, const int width)
@@ -80,5 +82,10 @@ inline void Util::CalculateSurroundingValue(unsigned short* frame_of_original_im
 inline bool Util::CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b)
 {
 	return a.score - b.score > 0.0000001;
+}
+
+inline bool Util::CheckEqualDoubleValue(double a, double b)
+{
+	return a - b < 0.0000001;
 }
 #endif

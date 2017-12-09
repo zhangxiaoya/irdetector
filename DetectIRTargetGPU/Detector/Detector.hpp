@@ -621,6 +621,55 @@ inline void Detector::FalseAlarmFilter()
 
 	if (lastResultCount >= MAX_DETECTED_TARGET_COUNT)
 		std::sort(this->insideObjects, this->insideObjects + lastResultCount, Util::CompareResult);
+
+	if (lastResultCount == 1)
+		return;
+	
+	// 最终检测结果中存在交叉，合并
+	// for (int i = 0; i < lastResultCount; ++i)
+	// {
+	// 	for (int j = 0; j < lastResultCount; ++j)
+	// 	{
+	// 		if (i == j)
+	// 			continue;
+	// 		if (Util::CheckEqualDoubleValue(this->insideObjects[i].score, 0) == true)
+	// 			continue;
+	// 		if(CheckCross(this->insideObjects[i].object, this->insideObjects[j].object) == true)
+	// 		{
+	// 			if (this->insideObjects[i].object.top > this->insideObjects[j].object.top)
+	// 				this->insideObjects[i].object.top = this->insideObjects[j].object.top;
+	// 
+	// 			if (this->insideObjects[i].object.left > this->insideObjects[j].object.left)
+	// 				this->insideObjects[i].object.left = this->insideObjects[j].object.left;
+	// 
+	// 			if (this->insideObjects[i].object.right < this->insideObjects[j].object.right)
+	// 				this->insideObjects[i].object.right = this->insideObjects[j].object.right;
+	// 
+	// 			if (this->insideObjects[i].object.bottom < this->insideObjects[j].object.bottom)
+	// 				this->insideObjects[i].object.bottom = this->insideObjects[j].object.bottom;
+	// 
+	// 			this->insideObjects[j].score = 0;
+	// 		}
+	// 	}
+	// }
+	// 
+	// int validResultIndex = 0;
+	// for (int i = 0; i < lastResultCount;)
+	// {
+	// 	if (Util::CheckEqualDoubleValue(this->insideObjects[i].score, 0.0) == true)
+	// 	{
+	// 		i++;
+	// 	}
+	// 	else
+	// 	{
+	// 		if (validResultIndex == i)
+	// 			continue;
+	// 		this->insideObjects[validResultIndex] = this->insideObjects[i];
+	// 		++i;
+	// 		validResultIndex++;
+	// 	}
+	// }
+	// lastResultCount = validResultIndex;
 }
 
 inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* result, FourLimits** allCandidatesTargets, int* allCandidateTargetsCount)
