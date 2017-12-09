@@ -409,7 +409,7 @@ inline bool Detector::CheckCross(const FourLimits& objectFirst, const FourLimits
 	auto centerXDiff = std::abs(firstCenterX - secondCenterX);
 	auto centerYDiff = std::abs(firstCenterY - secondCenterY);
 
-	if (centerXDiff <= (firstWidth + secondWidth) / 2 + 1 && centerYDiff <= (firstHeight + secondHeight) / 2 + 1)
+	if (centerXDiff <= (firstWidth + secondWidth) / 2  && centerYDiff <= (firstHeight + secondHeight) / 2 )
 		return true;
 
 	return false;
@@ -481,8 +481,8 @@ inline void Detector::RemoveObjectWithLowContrast()
 		auto objectWidth = allObjects[i].right - allObjects[i].left + 1;
 		auto objectHeight = allObjects[i].bottom - allObjects[i].top + 1;
 
-		auto surroundBoxWidth =	 3 * objectWidth;
-		auto surroundBoxHeight = 3 * objectHeight;
+		auto surroundBoxWidth =	 7 * objectWidth;
+		auto surroundBoxHeight = 7 * objectHeight;
 
 		auto centerX = (allObjects[i].right + allObjects[i].left) / 2;
 		auto centerY = (allObjects[i].bottom + allObjects[i].top) / 2;
@@ -516,23 +516,23 @@ inline void Detector::RemoveObjectWithLowContrast()
 
 		FourLimits surroundingBox(leftTopY, rightBottomY, leftTopX, rightBottomX);
 
-		// Util::GetMaxAndMinValue(originalFrameOnHost, surroundingBox, maxValue, minValue, surroundBoxWidth);
+		Util::GetMaxAndMinValue(originalFrameOnHost, surroundingBox, maxValue, minValue, surroundBoxWidth);
 
-		Util::CalculateAverage(discretizationResultOnHost, surroundingBox, averageValue, surroundBoxWidth);
+		// Util::CalculateAverage(discretizationResultOnHost, surroundingBox, averageValue, surroundBoxWidth);
+		// 
+		// Util::CalCulateCenterValue(discretizationResultOnHost, centerValue, objectWidth, centerX, centerY);
 
-		Util::CalCulateCenterValue(discretizationResultOnHost, centerValue, objectWidth, centerX, centerY);
+		// if (static_cast<int>(centerValue) - static_cast<int>(averageValue) < 2)
+		// {
+		// 	allObjects[i].top = -1;
+		// }
 
-		if (static_cast<int>(centerValue) - static_cast<int>(averageValue) < 2)
+		if (maxValue - minValue < 20)
 		{
 			allObjects[i].top = -1;
 		}
 
-		//if (maxValue - minValue < 15)
-		//{
-		//	allObjects[i].top = -1;
-		//}
-
-		// ConvertFourLimitsToRect(allValidObjects, allObjectRects, Width, Height, validObjectsCount);
+		// ConvertFourLimitsToRect(allObjects, allObjectRects, Width, Height, validObjectsCount);
 		// ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
 	}
 }

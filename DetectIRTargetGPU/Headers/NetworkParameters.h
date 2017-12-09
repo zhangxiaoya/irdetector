@@ -15,7 +15,7 @@
 
 // 是否进行大小端变换
 #ifndef NEED_CHANGE_LITTEL_ENDIAN_AND_BIG_ENDIAN
-#define NEED_CHANGE_LITTEL_ENDIAN_AND_BIG_ENDIAN true
+#define NEED_CHANGE_LITTEL_ENDIAN_AND_BIG_ENDIAN false
 #endif
 
 // 大小端转换宏
