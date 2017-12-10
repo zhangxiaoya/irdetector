@@ -27,12 +27,12 @@ public:
 	/********************************************************************************/
 	void SearchOneRound(unsigned short* frameData, DetectResultSegment* result);
 
-private:
 	/********************************************************************************/
 	/* 初始化资源函数声明                                                            */
 	/********************************************************************************/
 	void Init();
 
+private:
 	/********************************************************************************/
 	/* 释放资源函数声明                                                              */
 	/********************************************************************************/
@@ -120,7 +120,7 @@ inline MultiSearcher::MultiSearcher(const int width,
 	CandidateTargetCount(0),
 	FrameIndex(0)
 {
-	Init();
+	// Init();
 }
 
 inline MultiSearcher::~MultiSearcher()
@@ -142,6 +142,7 @@ inline void MultiSearcher::Init()
 	for (int i = 0; i < FRAME_COUNT_ONE_ROUND; ++i)
 	{
 		this->monitors[i] = new Monitor(Width, Height, DilationRadius, DiscretizationScale);
+		this->monitors[i]->InitDetector();
 	}
 
 	// 初始化存储一圈帧图像空间

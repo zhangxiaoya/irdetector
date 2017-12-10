@@ -23,6 +23,8 @@ public:
 	// Main process method
 	bool Process(unsigned short* frame, DetectResultSegment* result);
 
+	void InitDetector();
+
 private:
 	void UpdateConfidenceValueAndUpdateConfidenceQueue() const;
 
@@ -49,7 +51,6 @@ private:
 protected:
 	void InitMonitor();
 
-	void InitDetector();
 
 	void InitConfidenceValueMap();
 
@@ -97,7 +98,7 @@ inline Monitor::Monitor(const int width, const int height, const int dilationRad
 {
 	InitMonitor();
 
-	InitDetector();
+	// InitDetector();
 
 	InitConfidenceValueMap();
 
