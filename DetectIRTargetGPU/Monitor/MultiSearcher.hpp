@@ -264,14 +264,19 @@ inline void MultiSearcher::SearchOneRound(unsigned short* frameData, DetectResul
 	// 	return;
 	// }
 
-	// ¸´ÖÆ
-	memcpy(FramesInOneRound[FrameIndex], frameData, Width * Height * PixelSize);
+	// 
+	// unsigned short frameIndexInData = *(frameData + 1);
+	// std::cout << "FrameIndex => " << frameIndexInData << std::endl;
 
+	// ¸´ÖÆ
+	// memcpy(FramesInOneRound[FrameIndex], frameData, Width * Height * PixelSize);
+	// printf("FrameIndex => %d\n", FrameIndex);
 	// detector->DetectTargets(FramesInOneRound[FrameIndex], &resultOfSingleFrame, nullptr, nullptr);
 
-	monitors[FrameIndex]->Process(FramesInOneRound[FrameIndex], &resultOfSingleFrame[FrameIndex]);
+	monitors[FrameIndex]->Process(frameData, &resultOfSingleFrame[FrameIndex]);
 
-	CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[FrameIndex], resultOfSingleFrame[FrameIndex], FrameIndex);
+	//CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[FrameIndex], resultOfSingleFrame[FrameIndex], FrameIndex);
+	memcpy(result, &resultOfSingleFrame[FrameIndex], sizeof(DetectResultSegment));
 
 	FrameIndex++;
 
@@ -282,7 +287,6 @@ inline void MultiSearcher::SearchOneRound(unsigned short* frameData, DetectResul
 		FrameIndex = 0;
 	}
 
-	memcpy(result, &resultOfSingleFrame[FrameIndex], sizeof(DetectResultSegment));
 }
 
 inline double MultiSearcher::CalculateSCR(unsigned short* frame, const TargetPosition& target)
