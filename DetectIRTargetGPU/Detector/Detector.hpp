@@ -94,7 +94,7 @@ private:
 	FourLimits ForbiddenZones[MAX_FORBIDDEN_ZONE_COUNT];
 	int ForbiddenZoneCount;
 
-	int validObjectsCount;
+	int ValidObjectsCount;
 	int lastResultCount;
 
 	int TargetWidthMaxLimit;
@@ -130,7 +130,7 @@ inline Detector::Detector(const int width, const int height, const int dilationR
 	  allObjectRects(nullptr),
 	  insideObjects(nullptr),
 	  ForbiddenZoneCount(0),
-	  validObjectsCount(0),
+	  ValidObjectsCount(0),
 	  lastResultCount(0),
 	  TargetWidthMaxLimit(TARGET_WIDTH_MAX_LIMIT),
 	  TargetHeightMaxLimit(TARGET_HEIGHT_MAX_LIMIT),
@@ -252,12 +252,88 @@ inline bool Detector::ReleaseSpace()
 // Manul set Forbidden Zone, sine the bad-point of camera
 inline void Detector::InitForbiddenZones()
 {
-	ForbiddenZoneCount = 1;
+	ForbiddenZoneCount = 15;
 
-	ForbiddenZones[0].top = 101;
-	ForbiddenZones[0].bottom = 106;
-	ForbiddenZones[0].left = 289;
-	ForbiddenZones[0].right = 295;
+	// ForbiddenZones[0].top = 101;
+	// ForbiddenZones[0].bottom = 106;
+	// ForbiddenZones[0].left = 289;
+	// ForbiddenZones[0].right = 295;
+
+	ForbiddenZones[0].top = 132;
+	ForbiddenZones[0].bottom = 136;
+	ForbiddenZones[0].left = 25;
+	ForbiddenZones[0].right = 29;
+
+	ForbiddenZones[1].top = 481;
+	ForbiddenZones[1].bottom = 485;
+	ForbiddenZones[1].left = 541;
+	ForbiddenZones[1].right = 545;
+
+	ForbiddenZones[2].top = 109;
+	ForbiddenZones[2].bottom = 113;
+	ForbiddenZones[2].left = 579;
+	ForbiddenZones[2].right = 583;
+
+	ForbiddenZones[3].top = 382;
+	ForbiddenZones[3].bottom = 386;
+	ForbiddenZones[3].left = 345;
+	ForbiddenZones[3].right = 349;
+
+	ForbiddenZones[4].top = 287;
+	ForbiddenZones[4].bottom = 291;
+	ForbiddenZones[4].left = 594;
+	ForbiddenZones[4].right = 598;
+
+	ForbiddenZones[5].top = 408;
+	ForbiddenZones[5].bottom = 412;
+	ForbiddenZones[5].left = 614;
+	ForbiddenZones[5].right = 618;
+
+	ForbiddenZones[6].top = 188;
+	ForbiddenZones[6].bottom = 192;
+	ForbiddenZones[6].left = 271;
+	ForbiddenZones[6].right = 275;
+
+	ForbiddenZones[7].top = 194;
+	ForbiddenZones[7].bottom = 198;
+	ForbiddenZones[7].left = 593;
+	ForbiddenZones[7].right = 597;
+
+	ForbiddenZones[8].top = 458;
+	ForbiddenZones[8].bottom = 462;
+	ForbiddenZones[8].left = 614;
+	ForbiddenZones[8].right = 618;
+
+	ForbiddenZones[9].top = 231;
+	ForbiddenZones[9].bottom = 235;
+	ForbiddenZones[9].left = 554;
+	ForbiddenZones[9].right = 558;
+
+	ForbiddenZones[10].top = 453;
+	ForbiddenZones[10].bottom = 456;
+	ForbiddenZones[10].left = 334;
+	ForbiddenZones[10].right = 338;
+
+	ForbiddenZones[11].top = 95;
+	ForbiddenZones[11].bottom = 99;
+	ForbiddenZones[11].left = 584;
+	ForbiddenZones[11].right = 588;
+
+	ForbiddenZones[12].top = 368;
+	ForbiddenZones[12].bottom = 372;
+	ForbiddenZones[12].left = 324;
+	ForbiddenZones[12].right = 328;
+
+	ForbiddenZones[13].top = 412;
+	ForbiddenZones[13].bottom = 416;
+	ForbiddenZones[13].left = 308;
+	ForbiddenZones[13].right = 312;
+
+	ForbiddenZones[14].top = 472;
+	ForbiddenZones[14].bottom = 476;
+	ForbiddenZones[14].left = 430;
+	ForbiddenZones[14].right = 434;
+
 }
 
 inline bool Detector::IsInForbiddenZone(const FourLimits& candidateTargetRegion) const
@@ -413,12 +489,13 @@ inline bool Detector::CheckCross(const DetectedTarget& objectFirst, const Detect
 
 inline void Detector::MergeObjects()
 {
+	//std::cout << ValidObjectsCount << std::endl;
 #pragma omp parallel
-	for (auto i = 0; i < validObjectsCount; ++i)
+	for (auto i = 0; i < ValidObjectsCount; ++i)
 	{
 		if (allObjects[i].top == -1)
 			continue;
-		for (auto j = 0; j < validObjectsCount; ++j)
+		for (auto j = 0; j < ValidObjectsCount; ++j)
 		{
 			if (i == j || allObjects[j].top == -1)
 				continue;
@@ -447,14 +524,14 @@ inline void Detector::MergeObjects()
 				break;
 			}
 		}
-		// ConvertFourLimitsToRect(allObjects, allObjectRects, Width, Height, validObjectsCount);
+		// ConvertFourLimitsToRect(allObjects, allObjectRects, Width, Height, ValidObjectsCount);
 		// ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
 	}
 }
 
 inline void Detector::RemoveObjectWithLowContrast()
 {
-	for (auto i = 0; i < validObjectsCount; ++i)
+	for (auto i = 0; i < ValidObjectsCount; ++i)
 	{
 		if (allObjects[i].top == -1)
 			continue;
@@ -523,8 +600,8 @@ inline void Detector::RemoveObjectWithLowContrast()
 
 inline void Detector::RemoveInValidObjects()
 {
-	int oldValidObjectCount = validObjectsCount;
-	validObjectsCount = 0;
+	int oldValidObjectCount = ValidObjectsCount;
+	ValidObjectsCount = 0;
 	for (auto i = 0; i < oldValidObjectCount; ++i)
 	{
 		if(allObjects[i].top == -1)
@@ -534,26 +611,26 @@ inline void Detector::RemoveInValidObjects()
 		if(allObjects[i].bottom - allObjects[i].top + 1 < 1 || allObjects[i].right - allObjects[i].left + 1 < 1)
 			continue;
 
-		allObjects[validObjectsCount] = allObjects[i];
-		validObjectsCount++;
+		allObjects[ValidObjectsCount] = allObjects[i];
+		ValidObjectsCount++;
 	}
 }
 
 inline void Detector::RemoveInvalidObjectAfterMerge()
 {
 	auto newValidaObjectCount = 0;
-	for (auto i = 0; i < validObjectsCount;)
+	for (auto i = 0; i < ValidObjectsCount;)
 	{
 		if (allObjects[i].top == -1)
 		{
 			i++;
 			continue;
 		}
-		// if(IsInForbiddenZone(allObjects[i]) == true)
-		// {
-		// 	i++;
-		// 	continue;
-		// }
+		if(IsInForbiddenZone(allObjects[i]) == true)
+		{
+			i++;
+			continue;
+		}
 		if(IsAtBorderZone(allObjects[i]) == true)
 		{
 			i++;
@@ -563,14 +640,14 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 		++i;
 		newValidaObjectCount++;
 	}
-	validObjectsCount = newValidaObjectCount;
+	ValidObjectsCount = newValidaObjectCount;
 }
 
 inline void Detector::FalseAlarmFilter()
 {
 	lastResultCount = 0;
 
-	for (auto i = 0; i < validObjectsCount; ++i)
+	for (auto i = 0; i < ValidObjectsCount; ++i)
 	{
 		auto score = 0;
 		auto object = allObjects[i];
@@ -679,7 +756,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 	if (isFrameDataReady == true)
 	{
 		// assume all object(pixel) all valid
-		validObjectsCount = Width * Height;
+		ValidObjectsCount = Width * Height;
 
 		// dilation on gpu
 		NaiveDilation(this->originalFrameOnDevice, this->dilationResultOnDevice, Width, Height, DilationRadius);
@@ -718,7 +795,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		if (allCandidatesTargets != nullptr)
 			*allCandidatesTargets = this->allObjects;
 		if (allCandidateTargetsCount != nullptr)
-			*allCandidateTargetsCount = this->validObjectsCount;
+			*allCandidateTargetsCount = this->ValidObjectsCount;
 
 		// Filter all candiates
 		FalseAlarmFilter();
