@@ -28,7 +28,7 @@ unsigned short FrameDataInprocessing[IMAGE_SIZE] = { 0 };             // Ã¿Ò»Ö¡Í
 unsigned short FrameDataToShow[IMAGE_SIZE] = { 0 };                   // Ã¿Ò»Ö¡ÏÔÊ¾½á¹ûÍ¼ÏñÁÙÊ±»º³å
 DetectResultSegment ResultItemSendToServer;                              // Ã¿Ò»Ö¡Í¼Ïñ¼ì²â½á¹û
 static const int ResultItemSize = sizeof(DetectResultSegment);           // Ã¿Ò»Ö¡Í¼Ïñ¼ì²â½á¹û´óÐ¡
-cv::Mat CVFrame(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC1);
+cv::Mat CVFrame(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC3);
 
 /****************************************************************************************/
 /* ¼ì²âÆ÷¶¨Òå                                                                           */
