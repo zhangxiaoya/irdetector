@@ -631,7 +631,7 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 
 	// copy detect result and set default tracking status
 	detectResultWithStatus.detectResultPointers = &detectResult;
-	memset(detectResultWithStatus.hasTracker, false, sizeof(bool) * 5);
+	memset(detectResultWithStatus.hasTracker, false, sizeof(bool) * MAX_DETECTED_TARGET_COUNT);
 
 	// reset current frame block mask map
 	ResetCurrentDetectMask();

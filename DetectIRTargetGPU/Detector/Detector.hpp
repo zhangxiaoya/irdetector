@@ -252,87 +252,92 @@ inline bool Detector::ReleaseSpace()
 // Manul set Forbidden Zone, sine the bad-point of camera
 inline void Detector::InitForbiddenZones()
 {
-	ForbiddenZoneCount = 15;
+	ForbiddenZoneCount = 5;
 
 	// ForbiddenZones[0].top = 101;
 	// ForbiddenZones[0].bottom = 106;
 	// ForbiddenZones[0].left = 289;
 	// ForbiddenZones[0].right = 295;
 
-	ForbiddenZones[0].top = 132;
-	ForbiddenZones[0].bottom = 136;
-	ForbiddenZones[0].left = 25;
-	ForbiddenZones[0].right = 29;
+	ForbiddenZones[0].top = 438;
+	ForbiddenZones[0].bottom = 442;
+	ForbiddenZones[0].left = 249;
+	ForbiddenZones[0].right = 256;
 
-	ForbiddenZones[1].top = 481;
-	ForbiddenZones[1].bottom = 485;
-	ForbiddenZones[1].left = 541;
-	ForbiddenZones[1].right = 545;
+	ForbiddenZones[1].top = 420;
+	ForbiddenZones[1].bottom = 430;
+	ForbiddenZones[1].left = 288;
+	ForbiddenZones[1].right = 298;
 
-	ForbiddenZones[2].top = 109;
-	ForbiddenZones[2].bottom = 113;
-	ForbiddenZones[2].left = 579;
-	ForbiddenZones[2].right = 583;
+	ForbiddenZones[2].top = 354;
+	ForbiddenZones[2].bottom = 364;
+	ForbiddenZones[2].left = 318;
+	ForbiddenZones[2].right = 328;
 
-	ForbiddenZones[3].top = 382;
-	ForbiddenZones[3].bottom = 386;
-	ForbiddenZones[3].left = 345;
-	ForbiddenZones[3].right = 349;
+	ForbiddenZones[3].top = 244;
+	ForbiddenZones[3].bottom = 248;
+	ForbiddenZones[3].left = 399;
+	ForbiddenZones[3].right = 403;
 
-	ForbiddenZones[4].top = 287;
-	ForbiddenZones[4].bottom = 291;
-	ForbiddenZones[4].left = 594;
-	ForbiddenZones[4].right = 598;
+	ForbiddenZones[4].top = 376;
+	ForbiddenZones[4].bottom = 390;
+	ForbiddenZones[4].left = 342;
+	ForbiddenZones[4].right = 354;
 
-	ForbiddenZones[5].top = 408;
-	ForbiddenZones[5].bottom = 412;
-	ForbiddenZones[5].left = 614;
-	ForbiddenZones[5].right = 618;
+	// ForbiddenZones[4].top = 287;
+	// ForbiddenZones[4].bottom = 291;
+	// ForbiddenZones[4].left = 594;
+	// ForbiddenZones[4].right = 598;
 
-	ForbiddenZones[6].top = 188;
-	ForbiddenZones[6].bottom = 192;
-	ForbiddenZones[6].left = 271;
-	ForbiddenZones[6].right = 275;
-
-	ForbiddenZones[7].top = 194;
-	ForbiddenZones[7].bottom = 198;
-	ForbiddenZones[7].left = 593;
-	ForbiddenZones[7].right = 597;
-
-	ForbiddenZones[8].top = 458;
-	ForbiddenZones[8].bottom = 462;
-	ForbiddenZones[8].left = 614;
-	ForbiddenZones[8].right = 618;
-
-	ForbiddenZones[9].top = 231;
-	ForbiddenZones[9].bottom = 235;
-	ForbiddenZones[9].left = 554;
-	ForbiddenZones[9].right = 558;
-
-	ForbiddenZones[10].top = 453;
-	ForbiddenZones[10].bottom = 456;
-	ForbiddenZones[10].left = 334;
-	ForbiddenZones[10].right = 338;
-
-	ForbiddenZones[11].top = 95;
-	ForbiddenZones[11].bottom = 99;
-	ForbiddenZones[11].left = 584;
-	ForbiddenZones[11].right = 588;
-
-	ForbiddenZones[12].top = 368;
-	ForbiddenZones[12].bottom = 372;
-	ForbiddenZones[12].left = 324;
-	ForbiddenZones[12].right = 328;
-
-	ForbiddenZones[13].top = 412;
-	ForbiddenZones[13].bottom = 416;
-	ForbiddenZones[13].left = 308;
-	ForbiddenZones[13].right = 312;
-
-	ForbiddenZones[14].top = 472;
-	ForbiddenZones[14].bottom = 476;
-	ForbiddenZones[14].left = 430;
-	ForbiddenZones[14].right = 434;
+	// ForbiddenZones[5].top = 408;
+	// ForbiddenZones[5].bottom = 412;
+	// ForbiddenZones[5].left = 614;
+	// ForbiddenZones[5].right = 618;
+	// 
+	// ForbiddenZones[6].top = 188;
+	// ForbiddenZones[6].bottom = 192;
+	// ForbiddenZones[6].left = 271;
+	// ForbiddenZones[6].right = 275;
+	// 
+	// ForbiddenZones[7].top = 194;
+	// ForbiddenZones[7].bottom = 198;
+	// ForbiddenZones[7].left = 593;
+	// ForbiddenZones[7].right = 597;
+	// 
+	// ForbiddenZones[8].top = 458;
+	// ForbiddenZones[8].bottom = 462;
+	// ForbiddenZones[8].left = 614;
+	// ForbiddenZones[8].right = 618;
+	// 
+	// ForbiddenZones[9].top = 231;
+	// ForbiddenZones[9].bottom = 235;
+	// ForbiddenZones[9].left = 554;
+	// ForbiddenZones[9].right = 558;
+	// 
+	// ForbiddenZones[10].top = 453;
+	// ForbiddenZones[10].bottom = 456;
+	// ForbiddenZones[10].left = 334;
+	// ForbiddenZones[10].right = 338;
+	// 
+	// ForbiddenZones[11].top = 95;
+	// ForbiddenZones[11].bottom = 99;
+	// ForbiddenZones[11].left = 584;
+	// ForbiddenZones[11].right = 588;
+	// 
+	// ForbiddenZones[12].top = 368;
+	// ForbiddenZones[12].bottom = 372;
+	// ForbiddenZones[12].left = 324;
+	// ForbiddenZones[12].right = 328;
+	// 
+	// ForbiddenZones[13].top = 412;
+	// ForbiddenZones[13].bottom = 416;
+	// ForbiddenZones[13].left = 308;
+	// ForbiddenZones[13].right = 312;
+	// 
+	// ForbiddenZones[14].top = 472;
+	// ForbiddenZones[14].bottom = 476;
+	// ForbiddenZones[14].left = 430;
+	// ForbiddenZones[14].right = 434;
 
 }
 
@@ -350,15 +355,15 @@ inline bool Detector::IsInForbiddenZone(const FourLimits& candidateTargetRegion)
 
 inline bool Detector::IsAtBorderZone(const FourLimits& candidateTargetRegion) const
 {
-	// if (candidateTargetRegion.left < 5
-	// 	|| candidateTargetRegion.bottom > (Height - 6)
-	// 	|| candidateTargetRegion.top < 5
-	// 	|| candidateTargetRegion.right > (Width - 6))
-	// 	return true;
-
 	if (candidateTargetRegion.left < 5
-		|| candidateTargetRegion.right >(Width - 6))
+		|| candidateTargetRegion.bottom > (Height - 6)
+		|| candidateTargetRegion.top < 5
+		|| candidateTargetRegion.right > (Width - 6))
 		return true;
+
+	// if (candidateTargetRegion.left < 5
+	// 	|| candidateTargetRegion.right >(Width - 6))
+	// 	return true;
 
 	return false;
 }
@@ -588,7 +593,7 @@ inline void Detector::RemoveObjectWithLowContrast()
 		// 	allObjects[i].top = -1;
 		// }
 
-		if (maxValue - minValue < 20)
+		if (maxValue - minValue < 15)
 		{
 			allObjects[i].top = -1;
 		}
