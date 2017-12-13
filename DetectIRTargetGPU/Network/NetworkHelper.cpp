@@ -5,6 +5,7 @@
 #include "../Headers/FrameParameters.h"
 #include "../Models/DetectResultSegment.hpp"
 #include "../Detector/Detector.hpp"
+#include "../Detector/LazyDetector.hpp"
 #include "../Headers/PreProcessParameters.h"
 #include "../Monitor/Monitor.hpp"
 #include "../Models/FrameDataRingBufferStruct.hpp"
@@ -33,8 +34,9 @@ cv::Mat CVFrame(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC3);
 /****************************************************************************************/
 /* 检测器定义                                                                           */
 /****************************************************************************************/
-Detector* detector = new Detector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);  // 初始化检测器
-Monitor* monitor = new Monitor(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);     // 初始化Monitor
+Detector* detector = new Detector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);              // 初始化检测器
+LazyDetector* lazyDetector = new LazyDetector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);  // 初始化延迟检测器
+Monitor* monitor = new Monitor(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);                 // 初始化Monitor
 
 Searcher* searcher = new Searcher(IMAGE_WIDTH, IMAGE_HEIGHT, PIXEL_SIZE, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE); // 初始化搜索算法
 MultiSearcher* multiSearcher = new MultiSearcher(IMAGE_WIDTH, IMAGE_HEIGHT, PIXEL_SIZE, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE); // 初始化搜索算法
@@ -62,6 +64,7 @@ void ShowLastResult(int shouLastResultDelay)
 inline void RelaseSource()
 {
 	delete detector;
+	delete lazyDetector;
 	delete monitor;
 	delete searcher;
 	delete multiSearcher;
@@ -143,8 +146,10 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 
 	// 检测目标，并检测性能
 	// CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+	// 延迟检测目标，并检测性能
+	CheckPerf(lazyDetector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
 	// 检测并跟踪目标，检测整个过程的时间系能
-	 CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
+	//CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
 	// 单圈搜索检测目标
     // CheckPerf(searcher->SearchOneRound(FrameDataInprocessing), "Total cost while single round search");
 	// 单圈搜索与跟踪
@@ -285,6 +290,7 @@ void RunOnNetwork()
 	searcher->Init();
 	monitor->InitDetector();
 	multiSearcher->Init();
+	lazyDetector->InitDetector();
 
 	// 初始化数据缓冲和结果缓冲
 	InitDataSourceBuffer(&Buffer);

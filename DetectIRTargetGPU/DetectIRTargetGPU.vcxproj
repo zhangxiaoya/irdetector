@@ -173,6 +173,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Checkers\CheckPerf.h" />
     <ClInclude Include="Common\Util.h" />
     <ClInclude Include="DataReaderFromeFiles\BinaryFileReader.hpp" />
+    <ClInclude Include="Detector\LazyDetector.hpp" />
     <ClInclude Include="Dilations\DilatetionKernel.cuh" />
     <ClInclude Include="Dilations\DilatetionOnCPU.hpp" />
     <ClInclude Include="Headers\DetectorParameters.h" />

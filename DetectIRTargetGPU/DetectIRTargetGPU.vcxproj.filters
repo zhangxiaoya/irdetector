@@ -189,6 +189,9 @@
     <ClInclude Include="Monitor\MultiSearcher.hpp">
       <Filter>Monitor</Filter>
     </ClInclude>
+    <ClInclude Include="Detector\LazyDetector.hpp">
+      <Filter>Detector</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
