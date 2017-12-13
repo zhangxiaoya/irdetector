@@ -17,6 +17,9 @@
 #include "../Models/FourLimitsWithScore.hpp"
 #include "../Models/DetectedTarget.hpp"
 
+/********************************************************************************************************/
+/* ºÏ≤‚∆˜¿‡∂®“Â                                                                                         */
+/********************************************************************************************************/
 class Detector
 {
 public:
@@ -26,7 +29,10 @@ public:
 
 	bool InitSpace();
 
-	void DetectTargets(unsigned short* frame, DetectResultSegment* result, FourLimits** allCandidatesTargets = nullptr, int* allCandidateTargetsCount = nullptr);
+	void DetectTargets(unsigned short* frame,
+					   DetectResultSegment* result,
+		               FourLimits** allCandidatesTargets = nullptr,
+		               int* allCandidateTargetsCount = nullptr);
 
 	void SetRemoveFalseAlarmParameters(bool checkStandardDeviationFlag,
 	                                   bool checkSurroundingBoundaryFlag,
@@ -40,7 +46,11 @@ private:
 
 	void GetAllObjects(int* labelsOnHost, FourLimits* allObjects, int width, int height);
 
-	void ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height, int validObjectCount = 0);
+	void ConvertFourLimitsToRect(FourLimits* allObjects,
+								 ObjectRect* allObjectRects,
+		                         int width,
+								 int height,
+		                         int validObjectCount = 0);
 
 	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
@@ -631,11 +641,11 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 			i++;
 			continue;
 		}
-		if(IsInForbiddenZone(allObjects[i]) == true)
-		{
-			i++;
-			continue;
-		}
+		// if(IsInForbiddenZone(allObjects[i]) == true)
+		// {
+		// 	i++;
+		// 	continue;
+		// }
 		if(IsAtBorderZone(allObjects[i]) == true)
 		{
 			i++;
