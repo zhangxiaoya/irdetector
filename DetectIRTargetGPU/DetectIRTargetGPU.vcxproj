@@ -189,6 +189,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Models\CandidateTargets.hpp" />
     <ClInclude Include="Models\Confidences.hpp" />
     <ClInclude Include="Models\DetectedTarget.hpp" />
+    <ClInclude Include="Models\DetectedTargetLazyChecker.hpp" />
     <ClInclude Include="Models\FourLimits.h" />
     <ClInclude Include="Models\FourLimitsWithScore.hpp" />
     <ClInclude Include="Models\LogLevel.hpp" />
