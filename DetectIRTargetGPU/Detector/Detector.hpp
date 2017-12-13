@@ -504,7 +504,6 @@ inline bool Detector::CheckCross(const DetectedTarget& objectFirst, const Detect
 
 inline void Detector::MergeObjects()
 {
-	//std::cout << ValidObjectsCount << std::endl;
 #pragma omp parallel
 	for (auto i = 0; i < ValidObjectsCount; ++i)
 	{
@@ -551,9 +550,6 @@ inline void Detector::RemoveObjectWithLowContrast()
 		if (allObjects[i].top == -1)
 			continue;
 
-		unsigned short averageValue = 0;
-		unsigned short centerValue = 0;
-
 		auto objectWidth = allObjects[i].right - allObjects[i].left + 1;
 		auto objectHeight = allObjects[i].bottom - allObjects[i].top + 1;
 
@@ -591,17 +587,7 @@ inline void Detector::RemoveObjectWithLowContrast()
 		unsigned short maxValue = 0;
 
 		FourLimits surroundingBox(leftTopY, rightBottomY, leftTopX, rightBottomX);
-
 		Util::GetMaxAndMinValue(originalFrameOnHost, surroundingBox, maxValue, minValue, surroundBoxWidth);
-
-		// Util::CalculateAverage(discretizationResultOnHost, surroundingBox, averageValue, surroundBoxWidth);
-		// 
-		// Util::CalCulateCenterValue(discretizationResultOnHost, centerValue, objectWidth, centerX, centerY);
-
-		// if (static_cast<int>(centerValue) - static_cast<int>(averageValue) < 2)
-		// {
-		// 	allObjects[i].top = -1;
-		// }
 
 		if (maxValue - minValue < 15)
 		{
@@ -666,10 +652,12 @@ inline void Detector::FalseAlarmFilter()
 	{
 		auto score = 0;
 		auto object = allObjects[i];
+
 		filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, object, Width, Height);
 
-		auto currentResult = (CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, Width, Height))
-			|| (CHECK_DECRETIZATED_FLAG && filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, Width, Height));
+		auto currentResult =
+			(CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, Width, Height)) ||
+			(CHECK_DECRETIZATED_FLAG && filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, Width, Height));
 		if (currentResult == false) continue;
 		score++;
 
