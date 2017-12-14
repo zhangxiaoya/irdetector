@@ -208,6 +208,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Network\NetworkHelper.h" />
     <ClInclude Include="Network\NetworkTransfer.h" />
     <ClInclude Include="Segmentation\segementationHelper.h" />
+    <ClInclude Include="Validation\LazyDetectorValidation.hpp" />
     <ClInclude Include="Validation\PerformanceValidation.hpp" />
     <ClInclude Include="Validation\CorrectnessValidation.hpp" />
     <ClInclude Include="Validation\SearchValidation.hpp" />

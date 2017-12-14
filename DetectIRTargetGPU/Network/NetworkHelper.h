@@ -3,9 +3,12 @@
 #include "../Models/DetectResultSegment.hpp"
 #include <core/core.hpp>
 #include "../Detector/Detector.hpp"
+#include "../Detector/LazyDetector.hpp"
 #include "../Monitor/Monitor.hpp"
 #include "../Models/FrameDataRingBufferStruct.hpp"
 #include "../Models/DetectResultRingBufferStruct.hpp"
+#include "../Monitor/Searcher.hpp"
+#include "../Monitor/MultiSearcher.hpp"
 
 /****************************************************************************************/
 /* 其他参数定义                                                                          */
@@ -22,6 +25,9 @@ extern cv::Mat CVFrame;
 /****************************************************************************************/
 extern Detector* detector;  // 初始化检测器
 extern Monitor* monitor;     // 初始化Monitor
+extern LazyDetector* lazyDetector;
+extern Searcher* searcher;
+extern MultiSearcher* multiSearcher;
 
 /****************************************************************************************/
 /* 参数定义：缓冲区全局变量声明与定义                                                      */

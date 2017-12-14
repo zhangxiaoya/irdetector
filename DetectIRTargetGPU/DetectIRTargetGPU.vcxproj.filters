@@ -195,6 +195,9 @@
     <ClInclude Include="Models\DetectedTargetLazyChecker.hpp">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Validation\LazyDetectorValidation.hpp">
+      <Filter>Validation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

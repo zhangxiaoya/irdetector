@@ -1,5 +1,4 @@
-#ifndef __LAZY_DETECTOR_H__
-#define __LAZY_DETECTOR_H__
+#pragma once
 
 #ifndef DecisionTime
 #define DecisionTime (3)
@@ -43,7 +42,7 @@ private:
 	DetectedTargetLazyChecker lazyChecker[LazyCountorCount];
 };
 
-LazyDetector::LazyDetector(const int width, const int height, const int dilationRadius, const int discretizationScale)
+inline LazyDetector::LazyDetector(const int width, const int height, const int dilationRadius, const int discretizationScale)
 	:detector(nullptr),
 	 Width(width),
 	 Height(height),
@@ -52,7 +51,7 @@ LazyDetector::LazyDetector(const int width, const int height, const int dilation
 {
 }
 
-LazyDetector::~LazyDetector()
+inline LazyDetector::~LazyDetector()
 {
 	delete detector;
 }
@@ -70,8 +69,8 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 
 	for (int detectTargetIdx = 0; detectTargetIdx < result->targetCount; ++detectTargetIdx)
 	{
-		if (result->targets[detectTargetIdx].bottomRightX - result->targets[detectTargetIdx].topLeftX < 3 &&
-			result->targets[detectTargetIdx].bottomRightY - result->targets[detectTargetIdx].topLeftY < 3)
+		if (result->targets[detectTargetIdx].bottomRightX - result->targets[detectTargetIdx].topLeftX > 3 &&
+			result->targets[detectTargetIdx].bottomRightY - result->targets[detectTargetIdx].topLeftY > 3)
 			continue;
 
 		bool existFlag = false;
@@ -104,7 +103,7 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 	//ÉúÃüÔö³¤
 	for (int i = 0; i < LazyCountorCount; ++i)
 	{
-		if (lazyChecker[i].count >= 2)
+		if (lazyChecker[i].count >= 3)
 		{
 			// add forbidden zone
 			detector->AddForbiddenZone(lazyChecker[i].position);
@@ -122,4 +121,3 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 	}
 
 }
-#endif // !__LAZY_DETECTOR_H__
