@@ -369,15 +369,15 @@ inline bool Detector::IsInForbiddenZone(const FourLimits& candidateTargetRegion)
 
 inline bool Detector::IsAtBorderZone(const FourLimits& candidateTargetRegion) const
 {
-	if (candidateTargetRegion.left < 5
-		|| candidateTargetRegion.bottom > (Height - 6)
-		|| candidateTargetRegion.top < 5
-		|| candidateTargetRegion.right > (Width - 6))
-		return true;
-
 	// if (candidateTargetRegion.left < 5
-	// 	|| candidateTargetRegion.right >(Width - 6))
+	// 	|| candidateTargetRegion.bottom > (Height - 6)
+	// 	|| candidateTargetRegion.top < 5
+	// 	|| candidateTargetRegion.right > (Width - 6))
 	// 	return true;
+
+	if (candidateTargetRegion.left < 5
+		|| candidateTargetRegion.right >(Width - 6))
+		return true;
 
 	return false;
 }
@@ -411,7 +411,7 @@ inline void Detector::CopyFrameData(unsigned short* frame)
 	this->isFrameDataReady = true;
 
 	memcpy(this->originalFrameOnHost, frame, sizeof(unsigned short) * Width * Height);
-	memset(this->originalFrameOnHost, MAX_PIXEL_VALUE, FRAME_HEADER_LENGTH);
+	memset(this->originalFrameOnHost, MIN_PIXEL_VALUE, FRAME_HEADER_LENGTH);
 	memset(this->allObjects, -1, sizeof(FourLimits) * Width * Height);
 	memset(this->allObjectRects, 0, sizeof(ObjectRect) * Width * Height);
 

@@ -3,6 +3,11 @@
 #define MAX_PIXEL_VALUE (65535)
 #endif // !MAX_PIXEL_VALUE
 
+#ifndef MIN_PIXEL_VALUE
+#define MIN_PIXEL_VALUE (0)
+#endif // MIN_PIXEL_VALUE
+
+
 // Í¼ÏñÖ¡Í·³¤¶È
 #ifndef FRAME_HEADER_LENGTH
 #define FRAME_HEADER_LENGTH (16)
