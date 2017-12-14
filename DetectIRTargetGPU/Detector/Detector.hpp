@@ -808,16 +808,21 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		FalseAlarmFilter();
 
 		// put all valid result to resultSegment
-		result->targetCount = lastResultCount >= MAX_DETECTED_TARGET_COUNT ? MAX_DETECTED_TARGET_COUNT : lastResultCount;
+		result->targetCount = static_cast<unsigned short>(lastResultCount >= MAX_DETECTED_TARGET_COUNT ? MAX_DETECTED_TARGET_COUNT : lastResultCount);
 
 		for (auto i = 0; i < result->targetCount; ++i)
 		{
 			TargetPosition pos;
-			pos.topLeftX = insideObjects[i].object.left;
-			pos.topLeftY = insideObjects[i].object.top;
-			pos.bottomRightX = insideObjects[i].object.right;
-			pos.bottomRightY = insideObjects[i].object.bottom;
+			TargetInfo info;
+			pos.topLeftX = static_cast<unsigned short>(insideObjects[i].object.left);
+			pos.topLeftY = static_cast<unsigned short>(insideObjects[i].object.top);
+			pos.bottomRightX = static_cast<unsigned short>(insideObjects[i].object.right);
+			pos.bottomRightY = static_cast<unsigned short>(insideObjects[i].object.bottom);
 			result->targets[i] = pos;
+			unsigned short avgValue = 0;
+			Util::CalculateAverage(frame, FourLimits(pos), avgValue, Width);
+			info.avgValue = avgValue;
+			result->targetInfo[i] = info;
 		}
 	}
 }

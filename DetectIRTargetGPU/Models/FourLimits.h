@@ -1,5 +1,5 @@
 #pragma once
-#include "TargetPosition.hpp"
+#include "DetectResultSegment.hpp"
 
 struct FourLimits
 {
@@ -13,10 +13,10 @@ struct FourLimits
 
 	FourLimits(TargetPosition& pos)
 	{
-		this->top = pos.topLeftY;
-		this->left = pos.topLeftX;
-		this->right = pos.bottomRightX;
-		this->bottom = pos.bottomRightY;
+		this->top =	   (int)pos.topLeftY;
+		this->left =   (int)pos.topLeftX;
+		this->right =  (int)pos.bottomRightX;
+		this->bottom = (int)pos.bottomRightY;
 	}
 
 	int top;

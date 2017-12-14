@@ -69,9 +69,9 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 
 	for (int detectTargetIdx = 0; detectTargetIdx < result->targetCount; ++detectTargetIdx)
 	{
-		if (result->targets[detectTargetIdx].bottomRightX - result->targets[detectTargetIdx].topLeftX > 3 &&
-			result->targets[detectTargetIdx].bottomRightY - result->targets[detectTargetIdx].topLeftY > 3)
-			continue;
+		// if (result->targets[detectTargetIdx].bottomRightX - result->targets[detectTargetIdx].topLeftX > 3 &&
+		// 	result->targets[detectTargetIdx].bottomRightY - result->targets[detectTargetIdx].topLeftY > 3)
+		// 	continue;
 
 		bool existFlag = false;
 		for (int countorIdx = 0; countorIdx < LazyCountorCount; ++countorIdx)
