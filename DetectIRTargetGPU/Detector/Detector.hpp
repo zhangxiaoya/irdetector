@@ -41,6 +41,8 @@ public:
 	                                   bool checkOriginalImageThreshold,
 	                                   bool checkDiscretizatedThreshold);
 
+	bool AddForbiddenZone(FourLimits& zone);
+
 private:
 	void CopyFrameData(unsigned short* frame);
 
@@ -262,13 +264,14 @@ inline bool Detector::ReleaseSpace()
 // Manul set Forbidden Zone, sine the bad-point of camera
 inline void Detector::InitForbiddenZones()
 {
-	ForbiddenZoneCount = 5;
+	ForbiddenZoneCount = 0;
 
 	// ForbiddenZones[0].top = 101;
 	// ForbiddenZones[0].bottom = 106;
 	// ForbiddenZones[0].left = 289;
 	// ForbiddenZones[0].right = 295;
 
+	/*
 	ForbiddenZones[0].top = 438;
 	ForbiddenZones[0].bottom = 442;
 	ForbiddenZones[0].left = 249;
@@ -293,6 +296,7 @@ inline void Detector::InitForbiddenZones()
 	ForbiddenZones[4].bottom = 390;
 	ForbiddenZones[4].left = 342;
 	ForbiddenZones[4].right = 354;
+	*/
 
 	// ForbiddenZones[4].top = 287;
 	// ForbiddenZones[4].bottom = 291;
@@ -587,14 +591,14 @@ inline void Detector::RemoveObjectWithLowContrast()
 		unsigned short maxValue = 0;
 
 		FourLimits surroundingBox(leftTopY, rightBottomY, leftTopX, rightBottomX);
-		Util::GetMaxAndMinValue(originalFrameOnHost, surroundingBox, maxValue, minValue, surroundBoxWidth);
+		Util::GetMaxAndMinValue(originalFrameOnHost, surroundingBox, maxValue, minValue, Width);
 
 		if (maxValue - minValue < 15)
 		{
 			allObjects[i].top = -1;
 		}
 
-		// ConvertFourLimitsToRect(allObjects, allObjectRects, Width, Height, validObjectsCount);
+		// ConvertFourLimitsToRect(allObjects, allObjectRects, Width, Height, ValidObjectsCount);
 		// ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
 	}
 }
@@ -627,11 +631,11 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 			i++;
 			continue;
 		}
-		// if(IsInForbiddenZone(allObjects[i]) == true)
-		// {
-		// 	i++;
-		// 	continue;
-		// }
+		if(IsInForbiddenZone(allObjects[i]) == true)
+		{
+			i++;
+			continue;
+		}
 		if(IsAtBorderZone(allObjects[i]) == true)
 		{
 			i++;
@@ -837,5 +841,22 @@ inline void Detector::SetRemoveFalseAlarmParameters(const bool checkStandardDevi
 	CHECK_DECRETIZATED_FLAG = checkDiscretizatedThreshold;
 	filters.SetConvexPartitionOfDiscretizedImage(20 * 256);
 	filters.SetConcavePartitionOfDiscretizedImage(1);
+}
+
+inline bool Detector::AddForbiddenZone(FourLimits& zone)
+{
+	if (ForbiddenZoneCount < MAX_FORBIDDEN_ZONE_COUNT)
+	{
+		ForbiddenZones[ForbiddenZoneCount].bottom = zone.bottom;
+		ForbiddenZones[ForbiddenZoneCount].top = zone.top;
+		ForbiddenZones[ForbiddenZoneCount].left = zone.left;
+		ForbiddenZones[ForbiddenZoneCount].right = zone.right;
+		ForbiddenZoneCount++;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 #endif

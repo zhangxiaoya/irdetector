@@ -70,6 +70,10 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 
 	for (int detectTargetIdx = 0; detectTargetIdx < result->targetCount; ++detectTargetIdx)
 	{
+		if (result->targets[detectTargetIdx].bottomRightX - result->targets[detectTargetIdx].topLeftX < 3 &&
+			result->targets[detectTargetIdx].bottomRightY - result->targets[detectTargetIdx].topLeftY < 3)
+			continue;
+
 		bool existFlag = false;
 		for (int countorIdx = 0; countorIdx < LazyCountorCount; ++countorIdx)
 		{
@@ -100,9 +104,12 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 	//ÉúÃüÔö³¤
 	for (int i = 0; i < LazyCountorCount; ++i)
 	{
-		if (lazyChecker[i].count >= 3)
+		if (lazyChecker[i].count >= 2)
 		{
 			// add forbidden zone
+			detector->AddForbiddenZone(lazyChecker[i].position);
+			lazyChecker[i].count = lazyChecker[i].lifeTime = 0;
+			lazyChecker[i].position = FourLimits();
 			continue;
 		}
 		if (lazyChecker[i].count > 0)
