@@ -43,6 +43,8 @@ public:
 
 	bool AddForbiddenZone(FourLimits& zone);
 
+	void ResetForbiddenZones();
+
 private:
 	void CopyFrameData(unsigned short* frame);
 
@@ -261,6 +263,11 @@ inline bool Detector::ReleaseSpace()
 	return status;
 }
 
+//
+inline void Detector::ResetForbiddenZones()
+{
+	InitForbiddenZones();
+}
 // Manul set Forbidden Zone, sine the bad-point of camera
 inline void Detector::InitForbiddenZones()
 {
