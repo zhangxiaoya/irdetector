@@ -106,7 +106,8 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 		if (lazyChecker[i].count >= 3)
 		{
 			// add forbidden zone
-			detector->AddForbiddenZone(lazyChecker[i].position);
+			if(detector->AddForbiddenZone(lazyChecker[i].position) == false)
+				printf("Add Forbidden Failed, May be the bad point is too many!");
 			lazyChecker[i].count = lazyChecker[i].lifeTime = 0;
 			lazyChecker[i].position = FourLimits();
 			continue;
