@@ -45,6 +45,8 @@ public:
 
 	void ResetForbiddenZones();
 
+	FourLimits* GetCurrentForbiddenZones(int& forbiddenZoneCount);
+
 private:
 	void CopyFrameData(unsigned short* frame);
 
@@ -268,6 +270,13 @@ inline void Detector::ResetForbiddenZones()
 {
 	InitForbiddenZones();
 }
+
+inline FourLimits* Detector::GetCurrentForbiddenZones(int& forbiddenZoneCount)
+{
+	forbiddenZoneCount = ForbiddenZoneCount;
+	return ForbiddenZones;
+}
+
 // Manul set Forbidden Zone, sine the bad-point of camera
 inline void Detector::InitForbiddenZones()
 {
