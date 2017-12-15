@@ -28,6 +28,10 @@ public:
 
 	void DetectTargets(unsigned short* frame, DetectResultSegment* result);
 
+	void ResetForbiddenZone();
+
+	FourLimits* GetCurrentForbiddenZones(int& forbiddenZoneCount);
+
 private:
 	/*¼ì²âÆ÷ÉùÃ÷*/
 	Detector* detector;
@@ -54,6 +58,16 @@ inline LazyDetector::LazyDetector(const int width, const int height, const int d
 inline LazyDetector::~LazyDetector()
 {
 	delete detector;
+}
+
+inline void LazyDetector::ResetForbiddenZone()
+{
+	this->detector->ResetForbiddenZones();
+}
+
+inline FourLimits* LazyDetector::GetCurrentForbiddenZones(int& forbiddenZoneCount)
+{
+	return this->detector->GetCurrentForbiddenZones(forbiddenZoneCount);
 }
 
 inline void LazyDetector::InitDetector()
