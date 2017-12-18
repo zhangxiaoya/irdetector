@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 	const auto cudaInitStatus = CUDAInit::cudaDeviceInit();
 	if (cudaInitStatus)
 	{
-		RunOnNetwork();
+//		RunOnNetwork();
 
 //		CheckConrrectness(IMAGE_WITDH, IMAGE_HEIGHT);
 
@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 
 //		CheckSearching(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);
 
-//		CheckLazyDetector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);
+		CheckLazyDetector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);
 	}
 
 	//  Õ∑≈CUDA…Ë±∏
