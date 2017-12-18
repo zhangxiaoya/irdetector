@@ -81,14 +81,14 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 {
 	this->detector->DetectTargets(frame, result);
 
-	for (int detectTargetIdx = 0; detectTargetIdx < result->targetCount; ++detectTargetIdx)
+	for (auto detectTargetIdx = 0; detectTargetIdx < result->targetCount; ++detectTargetIdx)
 	{
 		if (result->targets[detectTargetIdx].bottomRightX - result->targets[detectTargetIdx].topLeftX > 3 &&
 		result->targets[detectTargetIdx].bottomRightY - result->targets[detectTargetIdx].topLeftY > 3)
 			continue;
 
-		bool existFlag = false;
-		for (int countorIdx = 0; countorIdx < LazyCountorCount; ++countorIdx)
+		auto existFlag = false;
+		for (auto countorIdx = 0; countorIdx < LazyCountorCount; ++countorIdx)
 		{
 			if (lazyChecker[countorIdx].lifeTime == 0)
 				continue;
@@ -102,7 +102,7 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 		}
 		if (existFlag == false)
 		{
-			for (int countorIdx = 0; countorIdx < LazyCountorCount; ++countorIdx)
+			for (auto countorIdx = 0; countorIdx < LazyCountorCount; ++countorIdx)
 			{
 				if (lazyChecker[countorIdx].lifeTime != 0)
 					continue;
@@ -116,7 +116,7 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 	}
 
 	//ÉúÃüÔö³¤
-	for (int i = 0; i < LazyCountorCount; ++i)
+	for (auto i = 0; i < LazyCountorCount; ++i)
 	{
 		if (lazyChecker[i].count >= 3)
 		{
