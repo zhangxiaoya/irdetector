@@ -17,6 +17,9 @@
 #include "../Models/FourLimitsWithScore.hpp"
 #include "../Models/DetectedTarget.hpp"
 
+/********************************************************************************************************/
+/* ºÏ≤‚∆˜¿‡∂®“Â                                                                                         */
+/********************************************************************************************************/
 class Detector
 {
 public:
@@ -26,7 +29,10 @@ public:
 
 	bool InitSpace();
 
-	void DetectTargets(unsigned short* frame, DetectResultSegment* result, FourLimits** allCandidatesTargets = nullptr, int* allCandidateTargetsCount = nullptr);
+	void DetectTargets(unsigned short* frame,
+					   DetectResultSegment* result,
+		               FourLimits** allCandidatesTargets = nullptr,
+		               int* allCandidateTargetsCount = nullptr);
 
 	void SetRemoveFalseAlarmParameters(bool checkStandardDeviationFlag,
 	                                   bool checkSurroundingBoundaryFlag,
@@ -35,12 +41,22 @@ public:
 	                                   bool checkOriginalImageThreshold,
 	                                   bool checkDiscretizatedThreshold);
 
+	bool AddForbiddenZone(FourLimits& zone);
+
+	void ResetForbiddenZones();
+
+	FourLimits* GetCurrentForbiddenZones(int& forbiddenZoneCount);
+
 private:
 	void CopyFrameData(unsigned short* frame);
 
 	void GetAllObjects(int* labelsOnHost, FourLimits* allObjects, int width, int height);
 
-	void ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height, int validObjectCount = 0);
+	void ConvertFourLimitsToRect(FourLimits* allObjects,
+								 ObjectRect* allObjectRects,
+		                         int width,
+								 int height,
+		                         int validObjectCount = 0);
 
 	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
@@ -249,16 +265,29 @@ inline bool Detector::ReleaseSpace()
 	return status;
 }
 
+//
+inline void Detector::ResetForbiddenZones()
+{
+	InitForbiddenZones();
+}
+
+inline FourLimits* Detector::GetCurrentForbiddenZones(int& forbiddenZoneCount)
+{
+	forbiddenZoneCount = ForbiddenZoneCount;
+	return ForbiddenZones;
+}
+
 // Manul set Forbidden Zone, sine the bad-point of camera
 inline void Detector::InitForbiddenZones()
 {
-	ForbiddenZoneCount = 5;
+	ForbiddenZoneCount = 0;
 
 	// ForbiddenZones[0].top = 101;
 	// ForbiddenZones[0].bottom = 106;
 	// ForbiddenZones[0].left = 289;
 	// ForbiddenZones[0].right = 295;
 
+	/*
 	ForbiddenZones[0].top = 438;
 	ForbiddenZones[0].bottom = 442;
 	ForbiddenZones[0].left = 249;
@@ -283,6 +312,7 @@ inline void Detector::InitForbiddenZones()
 	ForbiddenZones[4].bottom = 390;
 	ForbiddenZones[4].left = 342;
 	ForbiddenZones[4].right = 354;
+	*/
 
 	// ForbiddenZones[4].top = 287;
 	// ForbiddenZones[4].bottom = 291;
@@ -355,15 +385,15 @@ inline bool Detector::IsInForbiddenZone(const FourLimits& candidateTargetRegion)
 
 inline bool Detector::IsAtBorderZone(const FourLimits& candidateTargetRegion) const
 {
-	if (candidateTargetRegion.left < 5
-		|| candidateTargetRegion.bottom > (Height - 6)
-		|| candidateTargetRegion.top < 5
-		|| candidateTargetRegion.right > (Width - 6))
-		return true;
-
 	// if (candidateTargetRegion.left < 5
-	// 	|| candidateTargetRegion.right >(Width - 6))
+	// 	|| candidateTargetRegion.bottom > (Height - 6)
+	// 	|| candidateTargetRegion.top < 5
+	// 	|| candidateTargetRegion.right > (Width - 6))
 	// 	return true;
+
+	if (candidateTargetRegion.left < 5
+		|| candidateTargetRegion.right >(Width - 6))
+		return true;
 
 	return false;
 }
@@ -397,7 +427,7 @@ inline void Detector::CopyFrameData(unsigned short* frame)
 	this->isFrameDataReady = true;
 
 	memcpy(this->originalFrameOnHost, frame, sizeof(unsigned short) * Width * Height);
-	memset(this->originalFrameOnHost, MAX_PIXEL_VALUE, FRAME_HEADER_LENGTH);
+	memset(this->originalFrameOnHost, MIN_PIXEL_VALUE, FRAME_HEADER_LENGTH);
 	memset(this->allObjects, -1, sizeof(FourLimits) * Width * Height);
 	memset(this->allObjectRects, 0, sizeof(ObjectRect) * Width * Height);
 
@@ -494,7 +524,6 @@ inline bool Detector::CheckCross(const DetectedTarget& objectFirst, const Detect
 
 inline void Detector::MergeObjects()
 {
-	//std::cout << ValidObjectsCount << std::endl;
 #pragma omp parallel
 	for (auto i = 0; i < ValidObjectsCount; ++i)
 	{
@@ -541,9 +570,6 @@ inline void Detector::RemoveObjectWithLowContrast()
 		if (allObjects[i].top == -1)
 			continue;
 
-		unsigned short averageValue = 0;
-		unsigned short centerValue = 0;
-
 		auto objectWidth = allObjects[i].right - allObjects[i].left + 1;
 		auto objectHeight = allObjects[i].bottom - allObjects[i].top + 1;
 
@@ -581,24 +607,14 @@ inline void Detector::RemoveObjectWithLowContrast()
 		unsigned short maxValue = 0;
 
 		FourLimits surroundingBox(leftTopY, rightBottomY, leftTopX, rightBottomX);
-
-		Util::GetMaxAndMinValue(originalFrameOnHost, surroundingBox, maxValue, minValue, surroundBoxWidth);
-
-		// Util::CalculateAverage(discretizationResultOnHost, surroundingBox, averageValue, surroundBoxWidth);
-		// 
-		// Util::CalCulateCenterValue(discretizationResultOnHost, centerValue, objectWidth, centerX, centerY);
-
-		// if (static_cast<int>(centerValue) - static_cast<int>(averageValue) < 2)
-		// {
-		// 	allObjects[i].top = -1;
-		// }
+		Util::GetMaxAndMinValue(originalFrameOnHost, surroundingBox, maxValue, minValue, Width);
 
 		if (maxValue - minValue < 15)
 		{
 			allObjects[i].top = -1;
 		}
 
-		// ConvertFourLimitsToRect(allObjects, allObjectRects, Width, Height, validObjectsCount);
+		// ConvertFourLimitsToRect(allObjects, allObjectRects, Width, Height, ValidObjectsCount);
 		// ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
 	}
 }
@@ -656,10 +672,12 @@ inline void Detector::FalseAlarmFilter()
 	{
 		auto score = 0;
 		auto object = allObjects[i];
+
 		filters.InitObjectParameters(originalFrameOnHost, discretizationResultOnHost, object, Width, Height);
 
-		auto currentResult = (CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, Width, Height))
-			|| (CHECK_DECRETIZATED_FLAG && filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, Width, Height));
+		auto currentResult =
+			(CHECK_ORIGIN_FLAG && filters.CheckOriginalImageSuroundedBox(originalFrameOnHost, Width, Height)) ||
+			(CHECK_DECRETIZATED_FLAG && filters.CheckDiscretizedImageSuroundedBox(discretizationResultOnHost, Width, Height));
 		if (currentResult == false) continue;
 		score++;
 
@@ -806,16 +824,21 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		FalseAlarmFilter();
 
 		// put all valid result to resultSegment
-		result->targetCount = lastResultCount >= MAX_DETECTED_TARGET_COUNT ? MAX_DETECTED_TARGET_COUNT : lastResultCount;
+		result->targetCount = static_cast<unsigned short>(lastResultCount >= MAX_DETECTED_TARGET_COUNT ? MAX_DETECTED_TARGET_COUNT : lastResultCount);
 
 		for (auto i = 0; i < result->targetCount; ++i)
 		{
 			TargetPosition pos;
-			pos.topLeftX = insideObjects[i].object.left;
-			pos.topLeftY = insideObjects[i].object.top;
-			pos.bottomRightX = insideObjects[i].object.right;
-			pos.bottomRightY = insideObjects[i].object.bottom;
+			TargetInfo info;
+			pos.topLeftX = static_cast<unsigned short>(insideObjects[i].object.left);
+			pos.topLeftY = static_cast<unsigned short>(insideObjects[i].object.top);
+			pos.bottomRightX = static_cast<unsigned short>(insideObjects[i].object.right);
+			pos.bottomRightY = static_cast<unsigned short>(insideObjects[i].object.bottom);
 			result->targets[i] = pos;
+			unsigned short avgValue = 0;
+			Util::CalculateAverage(frame, FourLimits(pos), avgValue, Width);
+			info.avgValue = avgValue;
+			result->targetInfo[i] = info;
 		}
 	}
 }
@@ -839,5 +862,22 @@ inline void Detector::SetRemoveFalseAlarmParameters(const bool checkStandardDevi
 	CHECK_DECRETIZATED_FLAG = checkDiscretizatedThreshold;
 	filters.SetConvexPartitionOfDiscretizedImage(20 * 256);
 	filters.SetConcavePartitionOfDiscretizedImage(1);
+}
+
+inline bool Detector::AddForbiddenZone(FourLimits& zone)
+{
+	if (ForbiddenZoneCount < MAX_FORBIDDEN_ZONE_COUNT)
+	{
+		ForbiddenZones[ForbiddenZoneCount].bottom = zone.bottom;
+		ForbiddenZones[ForbiddenZoneCount].top = zone.top;
+		ForbiddenZones[ForbiddenZoneCount].left = zone.left;
+		ForbiddenZones[ForbiddenZoneCount].right = zone.right;
+		ForbiddenZoneCount++;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 #endif

@@ -62,10 +62,12 @@ void ShowFrame::ToMat(T* frame, const int width, const int height, cv::Mat& img)
 {
 	for (auto r = 0; r < height; ++r)
 	{
-		auto ptr = img.ptr<uchar>(r);
+		auto ptr = img.ptr<cv::Vec3b>(r);
 		for (auto c = 0; c < width; ++c)
 		{
-			ptr[c] = static_cast<uchar>(frame[r * width + c]);
+			ptr[c][0] = static_cast<uchar>(frame[r * width + c]);
+			ptr[c][1] = static_cast<uchar>(frame[r * width + c]);
+			ptr[c][2] = static_cast<uchar>(frame[r * width + c]);
 		}
 	}
 }
@@ -139,7 +141,10 @@ inline void ShowFrame::DrawRectangles(cv::Mat& frame, DetectResultSegment* allRe
 {
 	for (auto i = 0; i < allRects->targetCount; ++i)
 	{
-		rectangle(frame, cv::Point(allRects->targets[i].topLeftX, allRects->targets[i].topLeftY), cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1), cv::Scalar(255, 255, 0));
+		rectangle(frame,
+				  cv::Point(allRects->targets[i].topLeftX-1, allRects->targets[i].topLeftY-1),
+				  cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1),
+				  cv::Scalar(0, 255, 255));
 	}
 }
 

@@ -17,6 +17,8 @@ public:
 	static bool CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b);	
 
 	static bool CheckEqualDoubleValue(double a, double b);
+
+	static bool IsSameTarget(FourLimits& a, FourLimits& b);
 };
 
 inline void Util::GetMaxAndMinValue(unsigned short* frame, const FourLimits& object, unsigned short& maxValue, unsigned short& minValue, const int width)
@@ -87,5 +89,10 @@ inline bool Util::CompareResult(FourLimitsWithScore& a, FourLimitsWithScore& b)
 inline bool Util::CheckEqualDoubleValue(double a, double b)
 {
 	return a - b < 0.0000001;
+}
+
+inline bool Util::IsSameTarget(FourLimits& a, FourLimits& b)
+{
+	return !(a.bottom ^ b.bottom) && !(a.left ^ b.left) && !(a.right ^ b.right) && !(a.top ^ b.top);
 }
 #endif

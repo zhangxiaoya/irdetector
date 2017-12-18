@@ -5,6 +5,7 @@
 #include "../Headers/FrameParameters.h"
 #include "../Models/DetectResultSegment.hpp"
 #include "../Detector/Detector.hpp"
+#include "../Detector/LazyDetector.hpp"
 #include "../Headers/PreProcessParameters.h"
 #include "../Monitor/Monitor.hpp"
 #include "../Models/FrameDataRingBufferStruct.hpp"
@@ -15,33 +16,39 @@
 #include "NetworkTransfer.h"
 #pragma comment(lib, "winmm.lib")
 
+/***************************************************************************************/
+/*  测试参数定义                                                                       */
+/***************************************************************************************/
+bool IsShowDetectedResult = false;
+
 /****************************************************************************************/
-/* 其他参数定义                                                                          */
+/* 其他参数定义                                                                         */
 /****************************************************************************************/
 unsigned char FrameData[FRAME_DATA_SIZE];                             // 每一帧图像临时缓冲
 unsigned short FrameDataInprocessing[IMAGE_SIZE] = { 0 };             // 每一帧图像临时缓冲
 unsigned short FrameDataToShow[IMAGE_SIZE] = { 0 };                   // 每一帧显示结果图像临时缓冲
 DetectResultSegment ResultItemSendToServer;                              // 每一帧图像检测结果
 static const int ResultItemSize = sizeof(DetectResultSegment);           // 每一帧图像检测结果大小
-cv::Mat CVFrame(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC1);
+cv::Mat CVFrame(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC3);
 
 /****************************************************************************************/
-/* 检测器定义                                                                          */
+/* 检测器定义                                                                           */
 /****************************************************************************************/
-Detector* detector = new Detector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);  // 初始化检测器
-Monitor* monitor = new Monitor(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);     // 初始化Monitor
+Detector* detector = new Detector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);              // 初始化检测器
+LazyDetector* lazyDetector = new LazyDetector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);  // 初始化延迟检测器
+Monitor* monitor = new Monitor(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);                 // 初始化Monitor
 
 Searcher* searcher = new Searcher(IMAGE_WIDTH, IMAGE_HEIGHT, PIXEL_SIZE, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE); // 初始化搜索算法
 MultiSearcher* multiSearcher = new MultiSearcher(IMAGE_WIDTH, IMAGE_HEIGHT, PIXEL_SIZE, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE); // 初始化搜索算法
 
 /****************************************************************************************/
-/* 参数定义：缓冲区全局变量声明与定义                                                      */
+/* 参数定义：缓冲区全局变量声明与定义                                                   */
 /****************************************************************************************/
 FrameDataRingBufferStruct Buffer(FRAME_DATA_SIZE, RING_BUFFER_SIZE);                    // 数据接收线程环形缓冲区初始化
 DetectResultRingBufferStruct ResultBuffer(IMAGE_WIDTH, IMAGE_HEIGHT, RING_BUFFER_SIZE); // 结果发送线程环形缓冲区初始化
 
 /****************************************************************************************/
-/* 函数定义：显示结果（测试用）                                                           */
+/* 函数定义：显示结果（测试用）                                                         */
 /****************************************************************************************/
 void ShowLastResult(int shouLastResultDelay)
 {
@@ -52,18 +59,19 @@ void ShowLastResult(int shouLastResultDelay)
 }
 
 /****************************************************************************************/
-/* 函数定义：释放指针                                                                    */
+/* 函数定义：释放指针                                                                   */
 /****************************************************************************************/
 inline void RelaseSource()
 {
 	delete detector;
+	delete lazyDetector;
 	delete monitor;
 	delete searcher;
 	delete multiSearcher;
 }
 
 /****************************************************************************************/
-/* 函数定义：从网络读取数据操作（读取一帧）                                                 */
+/* 函数定义：从网络读取数据操作（读取一帧）                                             */
 /****************************************************************************************/
 bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 {
@@ -103,7 +111,7 @@ bool InputDataToBuffer(FrameDataRingBufferStruct* buffer)
 }
 
 /****************************************************************************************/
-/* 函数定义：检测一帧数据，并且把结果放在缓冲区                                             */
+/* 函数定义：检测一帧数据，并且把结果放在缓冲区                                         */
 /****************************************************************************************/
 bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruct* resultBuffer)
 {
@@ -137,7 +145,9 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	readLock.unlock();
 
 	// 检测目标，并检测性能
-	 CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+    //  CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+	// 延迟检测目标，并检测性能
+	 CheckPerf(lazyDetector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
 	// 检测并跟踪目标，检测整个过程的时间系能
 	// CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
 	// 单圈搜索检测目标
@@ -167,15 +177,18 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	writerLock.unlock();
 
 	// 临时显示结果
-	auto shouLastResultDelay = 1;
-	//ShowLastResult(shouLastResultDelay);
+	if (IsShowDetectedResult)
+	{
+		auto shouLastResultDelay = 1;
+		ShowLastResult(shouLastResultDelay);
+	}
 
 	// 返回一次线程执行状态
 	return true;
 }
 
 /****************************************************************************************/
-/* 函数定义：发送一帧检测结果                                                             */
+/* 函数定义：发送一帧检测结果                                                           */
 /****************************************************************************************/
 bool OutputData(DetectResultRingBufferStruct* buffer)
 {
@@ -205,7 +218,7 @@ bool OutputData(DetectResultRingBufferStruct* buffer)
 }
 
 /****************************************************************************************/
-/* 函数定义：读取图像帧线程任务                                                           */
+/* 函数定义：读取图像帧线程任务                                                         */
 /****************************************************************************************/
 void InputDataTask()
 {
@@ -221,7 +234,7 @@ void InputDataTask()
 }
 
 /****************************************************************************************/
-/* 函数定义：检测目标线程任务                                                             */
+/* 函数定义：检测目标线程任务                                                           */
 /****************************************************************************************/
 void DetectTask()
 {
@@ -233,7 +246,7 @@ void DetectTask()
 }
 
 /****************************************************************************************/
-/* 函数定义：发送结果线程任务                                                             */
+/* 函数定义：发送结果线程任务                                                           */
 /****************************************************************************************/
 void OutputDataTask()
 {
@@ -245,7 +258,7 @@ void OutputDataTask()
 }
 
 /****************************************************************************************/
-/* 函数定义：初始化接受数据缓冲                                                            */
+/* 函数定义：初始化接受数据缓冲                                                         */
 /****************************************************************************************/
 void InitDataSourceBuffer(FrameDataRingBufferStruct* buffer)
 {
@@ -254,7 +267,7 @@ void InitDataSourceBuffer(FrameDataRingBufferStruct* buffer)
 }
 
 /****************************************************************************************/
-/* 函数定义：初始化检测结果缓冲                                                           */
+/* 函数定义：初始化检测结果缓冲                                                         */
 /****************************************************************************************/
 void InitResultBuffer(DetectResultRingBufferStruct* buffer)
 {
@@ -263,7 +276,7 @@ void InitResultBuffer(DetectResultRingBufferStruct* buffer)
 }
 
 /****************************************************************************************/
-/* 函数定义：在网络环境运行                                                               */
+/* 函数定义：在网络环境运行                                                             */
 /****************************************************************************************/
 void RunOnNetwork()
 {
@@ -277,6 +290,7 @@ void RunOnNetwork()
 	searcher->Init();
 	monitor->InitDetector();
 	multiSearcher->Init();
+	lazyDetector->InitDetector();
 
 	// 初始化数据缓冲和结果缓冲
 	InitDataSourceBuffer(&Buffer);
