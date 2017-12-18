@@ -1,30 +1,31 @@
-#ifndef __SEARCHER_H__
-#define __SEARCHER_H__
+#ifndef __MULTI_SEARCHER_H__
+#define __MULTI_SEARCHER_H__
 
 #include "../Models/CandidateTargets.hpp"
 #include "../LogPrinter/LogPrinter.hpp"
 #include "../Detector/Detector.hpp"
 #include "../Checkers/CheckPerf.h"
 #include "../Headers/SearcherParameters.h"
+#include "Monitor.hpp"
 
 /********************************************************************************/
 /* 旋转搜索类定义                                                                */
 /********************************************************************************/
-class Searcher
+class MultiSearcher
 {
 public:
-	Searcher(const int width,
+	MultiSearcher(const int width,
 		const int height,
 		const int pixelSize,
 		const int dilationRadius,
 		const int discretizationScale);
 
-	~Searcher();
+	~MultiSearcher();
 
 	/********************************************************************************/
 	/* 搜索一圈函数声明（外部接口）                                                   */
 	/********************************************************************************/
-	void SearchOneRound(unsigned short* frameData);
+	void SearchOneRound(unsigned short* frameData, DetectResultSegment* result);
 
 	/********************************************************************************/
 	/* 初始化资源函数声明                                                            */
@@ -79,6 +80,10 @@ protected:
 private:
 	// 目标检测器指针声明
 	Detector* detector;
+
+	// 目标跟踪器
+	Monitor* monitors[FRAME_COUNT_ONE_ROUND];
+
 	// 一圈内所有图像
 	unsigned short* FramesInOneRound[FRAME_COUNT_ONE_ROUND];
 
@@ -98,14 +103,14 @@ private:
 	int FrameIndex;
 
 	// 单帧检测临时存储结果
-	DetectResultSegment resultOfSingleFrame;
+	DetectResultSegment resultOfSingleFrame[SEARCH_TARGET_COUNT_ONE_ROUND];
 };
 
-inline Searcher::Searcher(const int width,
-                          const int height,
-                          const int pixelSize,
-                          const int dilationRadius,
-                          const int discretizationScale):
+inline MultiSearcher::MultiSearcher(const int width,
+	const int height,
+	const int pixelSize,
+	const int dilationRadius,
+	const int discretizationScale) :
 	detector(nullptr),
 	Width(width),
 	Height(height),
@@ -115,10 +120,10 @@ inline Searcher::Searcher(const int width,
 	CandidateTargetCount(0),
 	FrameIndex(0)
 {
-	//Init();
+	// Init();
 }
 
-inline Searcher::~Searcher()
+inline MultiSearcher::~MultiSearcher()
 {
 	Release();
 }
@@ -126,12 +131,19 @@ inline Searcher::~Searcher()
 /********************************************************************************/
 /* 初始化资源函数定义                                                             */
 /********************************************************************************/
-inline void Searcher::Init()
+inline void MultiSearcher::Init()
 {
 	// 初始化检测器
 	this->detector = new Detector(Width, Height, DilationRadius, DiscretizationScale);
 	detector->InitSpace();
 	detector->SetRemoveFalseAlarmParameters(true, false, false, false, true, true);
+
+	// 初始化每个角度对应的跟踪器
+	for (int i = 0; i < FRAME_COUNT_ONE_ROUND; ++i)
+	{
+		this->monitors[i] = new Monitor(Width, Height, DilationRadius, DiscretizationScale);
+		this->monitors[i]->InitDetector();
+	}
 
 	// 初始化存储一圈帧图像空间
 	for (auto i = 0; i < FRAME_COUNT_ONE_ROUND; ++i)
@@ -143,7 +155,7 @@ inline void Searcher::Init()
 /********************************************************************************/
 /* 释放资源函数定义                                                              */
 /********************************************************************************/
-inline void Searcher::Release()
+inline void MultiSearcher::Release()
 {
 	// 释放存储一圈图像空间
 	for (auto i = 0; i < FRAME_COUNT_ONE_ROUND; ++i)
@@ -152,12 +164,17 @@ inline void Searcher::Release()
 	}
 	// 删除检测器
 	delete detector;
+	// 删除每个角度的跟踪器
+	for (int i = 0; i < FRAME_COUNT_ONE_ROUND; ++i)
+	{
+		delete this->monitors[i];
+	}
 }
 
 /********************************************************************************/
 /* 检测是否是地物背景函数定义                                                     */
 /********************************************************************************/
-inline bool Searcher::CheckIfHaveGroundObject(int frame_index) const
+inline bool MultiSearcher::CheckIfHaveGroundObject(int frame_index) const
 {
 	// 测试文件使用
 	if (frame_index >= 64 && frame_index < 145)
@@ -168,7 +185,7 @@ inline bool Searcher::CheckIfHaveGroundObject(int frame_index) const
 /********************************************************************************/
 /* 获取最终一圈后结果函数定义                                                     */
 /********************************************************************************/
-inline void Searcher::GetLastResultAfterOneRound()
+inline void MultiSearcher::GetLastResultAfterOneRound()
 {
 	// 候选队列中的所有检测到的目标，按照分值排序
 	std::sort(this->AllCandidateTargets, AllCandidateTargets + CandidateTargetCount, CompareCandidates);
@@ -237,34 +254,42 @@ inline void Searcher::GetLastResultAfterOneRound()
 /********************************************************************************/
 /* 外部接口函数定义                                                              */
 /********************************************************************************/
-inline void Searcher::SearchOneRound(unsigned short* frameData)
+inline void MultiSearcher::SearchOneRound(unsigned short* frameData, DetectResultSegment* result)
 {
 	// printf("Searching Frame %04d\n", FrameIndex);
 	// 检查帧号是否包含背景信息（测试用）
-	if (CheckIfHaveGroundObject(FrameIndex) == true)
-	{
-		FrameIndex++;
-		return;
-	}
+	// if (CheckIfHaveGroundObject(FrameIndex) == true)
+	// {
+	// 	FrameIndex++;
+	// 	return;
+	// }
+
+	// 
+	// unsigned short frameIndexInData = *(frameData + 1);
+	// std::cout << "FrameIndex => " << frameIndexInData << std::endl;
 
 	// 复制
-	memcpy(FramesInOneRound[FrameIndex], frameData, Width * Height * PixelSize);
+	// memcpy(FramesInOneRound[FrameIndex], frameData, Width * Height * PixelSize);
+	// printf("FrameIndex => %d\n", FrameIndex);
+	// detector->DetectTargets(FramesInOneRound[FrameIndex], &resultOfSingleFrame, nullptr, nullptr);
 
-	detector->DetectTargets(FramesInOneRound[FrameIndex], &resultOfSingleFrame, nullptr, nullptr);
+	monitors[FrameIndex]->Process(frameData, &resultOfSingleFrame[FrameIndex]);
 
-	CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[FrameIndex], resultOfSingleFrame, FrameIndex);
+	//CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[FrameIndex], resultOfSingleFrame[FrameIndex], FrameIndex);
+	memcpy(result, &resultOfSingleFrame[FrameIndex], sizeof(DetectResultSegment));
 
 	FrameIndex++;
 
 	if (FrameIndex == FRAME_COUNT_ONE_ROUND)
 	{
-		GetLastResultAfterOneRound();
-		CandidateTargetCount = 0;
+		// GetLastResultAfterOneRound();
+		// CandidateTargetCount = 0;
 		FrameIndex = 0;
 	}
+
 }
 
-inline double Searcher::CalculateSCR(unsigned short* frame, const TargetPosition& target)
+inline double MultiSearcher::CalculateSCR(unsigned short* frame, const TargetPosition& target)
 {
 	int width = target.bottomRightX - target.topLeftX;
 	int height = target.bottomRightY - target.topLeftY;
@@ -370,7 +395,7 @@ inline double Searcher::CalculateSCR(unsigned short* frame, const TargetPosition
 	return abs(avgTarget - avgSurrouding) / stdDivation;
 }
 
-inline double Searcher::CalculateLocalDiff(unsigned short* frame, const TargetPosition& target)
+inline double MultiSearcher::CalculateLocalDiff(unsigned short* frame, const TargetPosition& target)
 {
 	int objectWidth = target.bottomRightX - target.topLeftX;
 	int objectHeight = target.bottomRightY - target.topLeftY;
@@ -428,7 +453,7 @@ inline double Searcher::CalculateLocalDiff(unsigned short* frame, const TargetPo
 	return maxTarget - avgSurrouding;
 }
 
-inline double Searcher::CalculateMaxValue(unsigned short* frame, const TargetPosition& target) const
+inline double MultiSearcher::CalculateMaxValue(unsigned short* frame, const TargetPosition& target) const
 {
 	double max = 0.0;
 	for (auto r = target.topLeftY; r < target.bottomRightY; ++r)
@@ -442,7 +467,7 @@ inline double Searcher::CalculateMaxValue(unsigned short* frame, const TargetPos
 	return max;
 }
 
-inline void Searcher::CalculateScoreForDetectedTargetsAndPushToCandidateQueue(unsigned short* frame, const DetectResultSegment& result, int frameIndex)
+inline void MultiSearcher::CalculateScoreForDetectedTargetsAndPushToCandidateQueue(unsigned short* frame, const DetectResultSegment& result, int frameIndex)
 {
 	for (auto i = 0; i< result.targetCount; i++)
 	{

@@ -2,6 +2,7 @@
 #define __MONITOR_H__
 #include "../Models/Confidences.hpp"
 #include "../Detector/Detector.hpp"
+#include "../Detector/LazyDetector.hpp"
 #include "Tracker.hpp"
 #include "../Models/DetectResultSegment.hpp"
 
@@ -22,6 +23,8 @@ public:
 
 	// Main process method
 	bool Process(unsigned short* frame, DetectResultSegment* result);
+
+	void InitDetector();
 
 private:
 	void UpdateConfidenceValueAndUpdateConfidenceQueue() const;
@@ -49,7 +52,6 @@ private:
 protected:
 	void InitMonitor();
 
-	void InitDetector();
 
 	void InitConfidenceValueMap();
 
@@ -75,6 +77,7 @@ private:
 
 	Confidences* confidences;
 	Detector* detector;
+	LazyDetector* lazyDetector;
 	DetectResultSegment detectResult;
 	DetectResultWithTrackerStatus detectResultWithStatus;
 
@@ -92,12 +95,13 @@ inline Monitor::Monitor(const int width, const int height, const int dilationRad
 	  DiscretizationScale(discretizationScale),
 	  confidences(nullptr),
 	  detector(nullptr),
+	  lazyDetector(nullptr),
 	  allCandidateTargets(nullptr),
 	  allCandidateTargetsCount(0)
 {
 	InitMonitor();
 
-	InitDetector();
+	// InitDetector();
 
 	InitConfidenceValueMap();
 
@@ -107,6 +111,7 @@ inline Monitor::Monitor(const int width, const int height, const int dilationRad
 inline Monitor::~Monitor()
 {
 	delete detector;
+	delete lazyDetector;
 	delete confidences;
 
 	ReleaseConfidenceValueMap();
@@ -626,11 +631,12 @@ inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top,
 inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 {
 	// detect target in single frame
-	detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
+	//detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
+	lazyDetector->DetectTargets(frame, &detectResult);
 
 	// copy detect result and set default tracking status
 	detectResultWithStatus.detectResultPointers = &detectResult;
-	memset(detectResultWithStatus.hasTracker, false, sizeof(bool) * 5);
+	memset(detectResultWithStatus.hasTracker, false, sizeof(bool) * MAX_DETECTED_TARGET_COUNT);
 
 	// reset current frame block mask map
 	ResetCurrentDetectMask();
@@ -663,7 +669,6 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 		}
 		result->targetCount = trackingTargetCount;
 	}
-	//std::cout << "All target candidates count is " << allCandidateTargetsCount << std::endl;
 	return true;
 }
 
@@ -681,6 +686,9 @@ inline void Monitor::InitDetector()
 	this->detector = new Detector(Width, Height, DilationRadius, DiscretizationScale);
 	this->detector->InitSpace();
 	this->detector->SetRemoveFalseAlarmParameters(false, false, false, false, true, true);
+
+	this->lazyDetector = new LazyDetector(Width, Height, DilationRadius, DiscretizationScale);
+	this->lazyDetector->InitDetector();
 }
 
 inline void Monitor::InitConfidenceValueMap()

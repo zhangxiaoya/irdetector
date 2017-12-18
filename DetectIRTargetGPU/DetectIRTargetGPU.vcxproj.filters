@@ -144,9 +144,6 @@
     <ClInclude Include="Monitor\Tracker.hpp">
       <Filter>Monitor</Filter>
     </ClInclude>
-    <ClInclude Include="Models\TargetPosition.hpp">
-      <Filter>Models</Filter>
-    </ClInclude>
     <ClInclude Include="Validation\trackingValidation.hpp">
       <Filter>Validation</Filter>
     </ClInclude>
@@ -182,6 +179,21 @@
     </ClInclude>
     <ClInclude Include="Models\Trace.hpp">
       <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\DetectedTarget.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Monitor\MultiSearcher.hpp">
+      <Filter>Monitor</Filter>
+    </ClInclude>
+    <ClInclude Include="Detector\LazyDetector.hpp">
+      <Filter>Detector</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\DetectedTargetLazyChecker.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Validation\LazyDetectorValidation.hpp">
+      <Filter>Validation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

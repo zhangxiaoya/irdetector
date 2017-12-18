@@ -5,25 +5,31 @@
 #include "../Common/Util.h"
 #include <cmath>
 #include "../Headers/GlobalMainHeaders.h"
+#include "../Models/DetectedTarget.hpp"
 
 class Filter
 {
 public:
 	Filter();
 
-	bool CheckOriginalImageSuroundedBox(unsigned short* originalFrameOnHost, int width, int height, const FourLimits& object) const;
+	bool CheckOriginalImageSuroundedBox(unsigned short* originalFrameOnHost, int width, int height) const;
 
-	bool CheckDiscretizedImageSuroundedBox(unsigned short* preprocessedFrameOnHost, int width, int height, const FourLimits& object) const;
+	bool CheckDiscretizedImageSuroundedBox(unsigned short* preprocessedFrameOnHost, int width, int height) const;
 
 	bool CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned short* preprocessedFrameOnHost, int width, int height, const FourLimits& object) const;
+	bool CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned short* preprocessedFrameOnHost, int width, int height, const DetectedTarget& object) const;
 
 	bool CheckCoverageOfPreprocessedFrame(unsigned short* preprocessedFrameOnHost, int width, const FourLimits& object) const;
+	bool CheckCoverageOfPreprocessedFrame(unsigned short* preprocessedFrameOnHost, int width, const DetectedTarget& object) const;
 
 	bool CheckInsideBoundaryDescendGradient(unsigned short* originalFrameOnHost, int width, const FourLimits& object) const;
+	bool CheckInsideBoundaryDescendGradient(unsigned short* originalFrameOnHost, int width, const DetectedTarget& object) const;
 
 	bool CheckStandardDeviation(unsigned short* originalFrameOnHost, int width, const FourLimits& object) const;
+	bool CheckStandardDeviation(unsigned short* originalFrameOnHost, int width, const DetectedTarget& object) const;
 
 	void InitObjectParameters(unsigned short* frameOfOriginalImage, unsigned short* frameOfPreprocessedImage, const FourLimits& object, int width, int height);
+	void InitObjectParameters(unsigned short* frameOfOriginalImage, unsigned short* frameOfPreprocessedImage, const DetectedTarget& object, int width, int height);
 
 public:
 	void SetConvexPartitionOfOriginalImage(int value);
@@ -48,7 +54,6 @@ private:
 	bool CheckPeakValueAndAverageValue(unsigned short* frameOnHost,
 	                                   int width,
 	                                   int height,
-	                                   const FourLimits& object,
 	                                   unsigned short centerValueOfCurrentRect,
 	                                   int convexPartition,
 	                                   int concavePartition) const;
@@ -72,7 +77,7 @@ private:
 	int const MinDiffOfConvextAndConcaveThreshold;
 };
 
-inline bool Filter::CheckPeakValueAndAverageValue(unsigned short* frameOnHost, int width, int height, const FourLimits& object, unsigned short centerValueOfCurrentRect, int convexPartition, int concavePartition) const
+inline bool Filter::CheckPeakValueAndAverageValue(unsigned short* frameOnHost, int width, int height, unsigned short centerValueOfCurrentRect, int convexPartition, int concavePartition) const
 {
 	auto surroundingBoxWidth = 3 * objectWidth;
 	auto surroundingBoxHeight = 3 * objectHeight;
@@ -119,14 +124,14 @@ inline Filter::Filter(): centerX(0), centerY(0),
 {
 }
 
-inline bool Filter::CheckOriginalImageSuroundedBox(unsigned short* originalFrameOnHost, int width, int height, const FourLimits& object) const
+inline bool Filter::CheckOriginalImageSuroundedBox(unsigned short* originalFrameOnHost, int width, int height) const
 {
-	return CheckPeakValueAndAverageValue(originalFrameOnHost, width, height, object, centerValueOfOriginalImage, ConvexPartitionOfOriginalImage, ConcavePartitionOfOriginalImage);
+	return CheckPeakValueAndAverageValue(originalFrameOnHost, width, height, centerValueOfOriginalImage, ConvexPartitionOfOriginalImage, ConcavePartitionOfOriginalImage);
 }
 
-inline bool Filter::CheckDiscretizedImageSuroundedBox(unsigned short* preprocessedFrameOnHost, int width, int height, const FourLimits& object) const
+inline bool Filter::CheckDiscretizedImageSuroundedBox(unsigned short* preprocessedFrameOnHost, int width, int height) const
 {
-	return CheckPeakValueAndAverageValue(preprocessedFrameOnHost, width, height, object, centerValueOfPreprocessedImage, ConvexPartitionOfDiscretizedImage, ConcavePartitionOfDiscretizedImage);
+	return CheckPeakValueAndAverageValue(preprocessedFrameOnHost, width, height, centerValueOfPreprocessedImage, ConvexPartitionOfDiscretizedImage, ConcavePartitionOfDiscretizedImage);
 }
 
 inline bool Filter::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned short* preprocessedFrameOnHost, int width, int height, const FourLimits& object) const
@@ -228,6 +233,105 @@ inline bool Filter::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPre
 	return false;
 }
 
+inline bool Filter::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(unsigned short* preprocessedFrameOnHost, int width, int height, const DetectedTarget& object) const
+{
+	auto pixelValueOverCenterValueCount = 0;
+	auto pixelCountOfSurroundingBoundary = 0;
+
+	auto sum = 0;
+	auto topRow = object.fourLimits.top - 1;
+	if (topRow >= 0)
+	{
+		for (auto c = object.fourLimits.left; c <= object.fourLimits.right; ++c)
+		{
+			auto val = preprocessedFrameOnHost[topRow * width + c];
+			if (val > centerValueOfPreprocessedImage)
+				pixelValueOverCenterValueCount++;
+			sum += static_cast<int>(val);
+		}
+		pixelCountOfSurroundingBoundary += (object.fourLimits.right - object.fourLimits.left + 1);
+	}
+
+	auto bottomRow = object.fourLimits.bottom + 1;
+	if (bottomRow < height)
+	{
+		for (auto c = object.fourLimits.left; c <= object.fourLimits.right; ++c)
+		{
+			auto val = preprocessedFrameOnHost[bottomRow * width + c];
+			if (val > centerValueOfPreprocessedImage)
+				pixelValueOverCenterValueCount++;
+			sum += static_cast<int>(val);
+		}
+		pixelCountOfSurroundingBoundary += (object.fourLimits.right - object.fourLimits.left + 1);
+	}
+
+	auto leftCol = object.fourLimits.left - 1;
+	if (leftCol >= 0)
+	{
+		for (auto r = object.fourLimits.top; r <= object.fourLimits.bottom; ++r)
+		{
+			auto val = preprocessedFrameOnHost[r * width + leftCol];
+			if (val > centerValueOfPreprocessedImage)
+				pixelValueOverCenterValueCount++;
+			sum += static_cast<int>(val);
+		}
+		pixelCountOfSurroundingBoundary += (object.fourLimits.bottom - object.fourLimits.top + 1);
+	}
+
+	auto rightCol = object.fourLimits.right + 1;
+	if (rightCol < width)
+	{
+		for (auto r = object.fourLimits.top; r <= object.fourLimits.bottom; ++r)
+		{
+			auto val = preprocessedFrameOnHost[r * width + rightCol];
+			if (val > centerValueOfPreprocessedImage)
+				pixelValueOverCenterValueCount++;
+			sum += static_cast<int>(val);
+		}
+		pixelCountOfSurroundingBoundary += (object.fourLimits.bottom - object.fourLimits.top + 1);
+	}
+
+	if (leftCol >= 0 && topRow >= 0)
+	{
+		auto val = preprocessedFrameOnHost[topRow * width + leftCol];
+		if (val > centerValueOfPreprocessedImage)
+			pixelValueOverCenterValueCount++;
+		sum += static_cast<int>(val);
+		pixelCountOfSurroundingBoundary++;
+	}
+	if (leftCol >= 0 && bottomRow < height)
+	{
+		auto val = preprocessedFrameOnHost[bottomRow * width + leftCol];
+		if (val > centerValueOfPreprocessedImage)
+			pixelValueOverCenterValueCount++;
+		sum += static_cast<int>(val);
+		pixelCountOfSurroundingBoundary++;
+	}
+	if (rightCol < width && topRow >= 0)
+	{
+		auto val = preprocessedFrameOnHost[topRow * width + rightCol];
+		if (val > centerValueOfPreprocessedImage)
+			pixelValueOverCenterValueCount++;
+		sum += static_cast<int>(val);
+		pixelCountOfSurroundingBoundary++;
+	}
+	if (rightCol < width && bottomRow < height)
+	{
+		auto val = preprocessedFrameOnHost[bottomRow * width + rightCol];
+		if (val > centerValueOfPreprocessedImage)
+			pixelValueOverCenterValueCount++;
+		sum += static_cast<int>(val);
+		pixelCountOfSurroundingBoundary++;
+	}
+
+	auto avgSurroundingPixels = static_cast<unsigned short>(sum / pixelCountOfSurroundingBoundary);
+
+	if (pixelValueOverCenterValueCount < 2 && avgSurroundingPixels < (averageValueOfPreprocessedImage * 11 / 12))
+		return true;
+
+	return false;
+}
+
 inline bool Filter::CheckCoverageOfPreprocessedFrame(unsigned short* preprocessedFrameOnHost, int width, const FourLimits& object) const
 {
 	auto sum = 0;
@@ -242,6 +346,32 @@ inline bool Filter::CheckCoverageOfPreprocessedFrame(unsigned short* preprocesse
 	for (auto r = object.top; r <= object.bottom; ++r)
 	{
 		for (auto c = object.left; c <= object.right; ++c)
+		{
+			if (preprocessedFrameOnHost[r * width + c] >= maxValue)
+				count++;
+		}
+	}
+
+	if (static_cast<double>(count) / (objectHeight * objectWidth) > 0.15)
+		return true;
+
+	return false;
+}
+
+inline bool Filter::CheckCoverageOfPreprocessedFrame(unsigned short* preprocessedFrameOnHost, int width, const DetectedTarget& object) const
+{
+	auto sum = 0;
+	sum += preprocessedFrameOnHost[object.fourLimits.top * width + object.fourLimits.left];
+	sum += preprocessedFrameOnHost[object.fourLimits.bottom * width + object.fourLimits.left];
+	sum += preprocessedFrameOnHost[object.fourLimits.top * width + object.fourLimits.right];
+	sum += preprocessedFrameOnHost[object.fourLimits.bottom * width + object.fourLimits.right];
+
+	auto maxValue = static_cast<unsigned short>(sum / 4);
+
+	auto count = 0;
+	for (auto r = object.fourLimits.top; r <= object.fourLimits.bottom; ++r)
+	{
+		for (auto c = object.fourLimits.left; c <= object.fourLimits.right; ++c)
 		{
 			if (preprocessedFrameOnHost[r * width + c] >= maxValue)
 				count++;
@@ -287,6 +417,39 @@ inline bool Filter::CheckInsideBoundaryDescendGradient(unsigned short* originalF
 	return false;
 }
 
+inline bool Filter::CheckInsideBoundaryDescendGradient(unsigned short* originalFrameOnHost, int width, const DetectedTarget& object) const
+{
+	auto topRowSum = 0;
+	auto bottomRowSum = 0;
+	for (auto c = object.fourLimits.left; c <= object.fourLimits.right; ++c)
+	{
+		topRowSum += static_cast<int>(originalFrameOnHost[object.fourLimits.top * width + c]);
+		bottomRowSum += static_cast<int>(originalFrameOnHost[object.fourLimits.bottom * width + c]);
+	}
+	auto avgTop = static_cast<unsigned short>(topRowSum / (object.fourLimits.right - object.fourLimits.left + 1));
+	auto avgBottom = static_cast<unsigned short>(bottomRowSum / (object.fourLimits.right - object.fourLimits.left + 1));
+
+	auto leftSum = 0;
+	auto rightSum = 0;
+	for (auto r = object.fourLimits.top; r <= object.fourLimits.bottom; ++r)
+	{
+		leftSum += static_cast<int>(originalFrameOnHost[r * width + object.fourLimits.left]);
+		rightSum += static_cast<int>(originalFrameOnHost[r * width + object.fourLimits.right]);
+	}
+	auto avgLeft = static_cast<int>(leftSum / (object.fourLimits.bottom - object.fourLimits.top + 1));
+	auto avgRight = static_cast<int>(rightSum / (object.fourLimits.bottom - object.fourLimits.top + 1));
+
+	auto count = 0;
+	if (avgLeft < averageValueOfOriginalImage) count++;
+	if (avgBottom < averageValueOfOriginalImage) count++;
+	if (avgRight < averageValueOfOriginalImage) count++;
+	if (avgTop < averageValueOfOriginalImage) count++;
+
+	if (count > 3)
+		return true;
+	return false;
+}
+
 inline bool Filter::CheckStandardDeviation(unsigned short* originalFrameOnHost, int width, const FourLimits& object) const
 {
 	uint64_t sum = 0;
@@ -299,6 +462,29 @@ inline bool Filter::CheckStandardDeviation(unsigned short* originalFrameOnHost, 
 	}
 	auto objectWidth = object.right - object.left + 1;
 	auto objectHeight = object.bottom - object.top + 1;
+	auto standardDeviation = sqrt(sum / (objectWidth * objectHeight));
+
+	auto k = 2;
+	auto adaptiveThreshold = standardDeviation * k + averageValueOfOriginalImage;
+
+	if (adaptiveThreshold >= 150)
+		return true;
+
+	return false;
+}
+
+inline bool Filter::CheckStandardDeviation(unsigned short* originalFrameOnHost, int width, const DetectedTarget& object) const
+{
+	uint64_t sum = 0;
+	for (auto r = object.fourLimits.top; r <= object.fourLimits.bottom; ++r)
+	{
+		for (auto c = object.fourLimits.left; c <= object.fourLimits.right; ++c)
+		{
+			sum += (originalFrameOnHost[r * width + c] - averageValueOfOriginalImage) * (originalFrameOnHost[r * width + c] - averageValueOfOriginalImage);
+		}
+	}
+	auto objectWidth = object.fourLimits.right - object.fourLimits.left + 1;
+	auto objectHeight = object.fourLimits.bottom - object.fourLimits.top + 1;
 	auto standardDeviation = sqrt(sum / (objectWidth * objectHeight));
 
 	auto k = 2;
@@ -323,6 +509,21 @@ inline void Filter::InitObjectParameters(unsigned short* frameOfOriginalImage, u
 	Util::CalCulateCenterValue(frameOfOriginalImage, centerValueOfOriginalImage, width, centerX, centerY);
 	Util::CalCulateCenterValue(frameOfPreprocessedImage, centerValueOfPreprocessedImage, width, centerX, centerY);
 	Util::CalculateSurroundingValue(frameOfOriginalImage, object, surroundingAverageValueOfOriginImage, width, height);
+}
+
+inline void Filter::InitObjectParameters(unsigned short* frameOfOriginalImage, unsigned short* frameOfPreprocessedImage, const DetectedTarget& object, int width, int height)
+{
+	centerX = object.centerX;
+	centerY = object.centerY;
+
+	objectWidth = object.width;
+	objectHeight = object.height;
+
+	Util::CalculateAverage(frameOfOriginalImage, object.fourLimits, averageValueOfOriginalImage, width);
+	Util::CalculateAverage(frameOfPreprocessedImage, object.fourLimits, averageValueOfPreprocessedImage, width);
+	Util::CalCulateCenterValue(frameOfOriginalImage, centerValueOfOriginalImage, width, centerX, centerY);
+	Util::CalCulateCenterValue(frameOfPreprocessedImage, centerValueOfPreprocessedImage, width, centerX, centerY);
+	Util::CalculateSurroundingValue(frameOfOriginalImage, object.fourLimits, surroundingAverageValueOfOriginImage, width, height);
 }
 
 inline void Filter::SetConvexPartitionOfOriginalImage(int value)

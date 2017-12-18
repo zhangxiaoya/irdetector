@@ -180,8 +180,8 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 					else
 					{
 						// 如果已经接收到了，输出错误信息
-						printf("Invalid data order, duplicated segment!");
-						printf("Segment %d had received more than once!", static_cast<int>(partBuffer[1]));
+						printf("Invalid data order, duplicated segment!\n");
+						printf("Segment %d had received more than once!\n", static_cast<int>(partBuffer[1]));
 						// 多接收一个数据段
 						i--;
 					}
@@ -198,7 +198,8 @@ bool GetOneFrameFromNetwork(unsigned char* frameData)
 				}
 			}
 			// 将除去帧号和段号的数据部分复制到图像帧数据对应的位置
-			memcpy(frameData + i * (quarterBufferSize - 2), partBuffer + 2, sizeof(unsigned char) * (quarterBufferSize - 2));
+			int packageIndex = (int)(*(partBuffer + 1));
+			memcpy(frameData + packageIndex * (quarterBufferSize - 2), partBuffer + 2, sizeof(unsigned char) * (quarterBufferSize - 2));
 		}
 		else if (receivedStatus == 10)
 		{

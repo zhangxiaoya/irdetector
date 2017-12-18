@@ -7,3 +7,5 @@ void CheckPerformance(const int width, const int height, const int dilationRadiu
 void CheckTracking(const int width, const int height, const int dilationRadius, const int discretizationScale);
 
 void CheckSearching(const int width, const int height, const int dilationRadius, const int discretizationScale);
+
+void CheckLazyDetector(const int width, const int height, const int dilationRadius, const int discretizationScale);

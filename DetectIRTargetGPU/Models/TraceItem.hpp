@@ -1,5 +1,5 @@
 #pragma
-#include "TargetPosition.hpp"
+#include "DetectResultSegment.hpp"
 
 struct TraceItem
 {

@@ -2,7 +2,7 @@
 
 // 旋转一圈图像帧数
 #ifndef FRAME_COUNT_ONE_ROUND
-#define FRAME_COUNT_ONE_ROUND (171)
+#define FRAME_COUNT_ONE_ROUND (18)
 #endif
 
 // 旋转一圈，最多检测到的目标数量

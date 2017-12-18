@@ -3,6 +3,11 @@
 #define MAX_PIXEL_VALUE (65535)
 #endif // !MAX_PIXEL_VALUE
 
+#ifndef MIN_PIXEL_VALUE
+#define MIN_PIXEL_VALUE (0)
+#endif // MIN_PIXEL_VALUE
+
+
 // 图像帧头长度
 #ifndef FRAME_HEADER_LENGTH
 #define FRAME_HEADER_LENGTH (16)
@@ -30,5 +35,5 @@
 
 // 图像检索禁区最大数量
 #ifndef MAX_FORBIDDEN_ZONE_COUNT
-#define MAX_FORBIDDEN_ZONE_COUNT (10)
+#define MAX_FORBIDDEN_ZONE_COUNT (20)
 #endif // !MAX_FORBIDDEN_ZONE_COUNT

@@ -138,6 +138,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -172,6 +173,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Checkers\CheckPerf.h" />
     <ClInclude Include="Common\Util.h" />
     <ClInclude Include="DataReaderFromeFiles\BinaryFileReader.hpp" />
+    <ClInclude Include="Detector\LazyDetector.hpp" />
     <ClInclude Include="Dilations\DilatetionKernel.cuh" />
     <ClInclude Include="Dilations\DilatetionOnCPU.hpp" />
     <ClInclude Include="Headers\DetectorParameters.h" />
@@ -186,6 +188,8 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="LogPrinter\LogPrinter.hpp" />
     <ClInclude Include="Models\CandidateTargets.hpp" />
     <ClInclude Include="Models\Confidences.hpp" />
+    <ClInclude Include="Models\DetectedTarget.hpp" />
+    <ClInclude Include="Models\DetectedTargetLazyChecker.hpp" />
     <ClInclude Include="Models\FourLimits.h" />
     <ClInclude Include="Models\FourLimitsWithScore.hpp" />
     <ClInclude Include="Models\LogLevel.hpp" />
@@ -193,16 +197,17 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Models\Point.h" />
     <ClInclude Include="Models\DetectResultRingBufferStruct.hpp" />
     <ClInclude Include="Models\FrameDataRingBufferStruct.hpp" />
-    <ClInclude Include="Models\TargetPosition.hpp" />
     <ClInclude Include="Models\Trace.hpp" />
     <ClInclude Include="Models\TraceItem.hpp" />
     <ClInclude Include="Monitor\Filter.hpp" />
     <ClInclude Include="Monitor\Monitor.hpp" />
+    <ClInclude Include="Monitor\MultiSearcher.hpp" />
     <ClInclude Include="Monitor\Searcher.hpp" />
     <ClInclude Include="Monitor\Tracker.hpp" />
     <ClInclude Include="Network\NetworkHelper.h" />
     <ClInclude Include="Network\NetworkTransfer.h" />
     <ClInclude Include="Segmentation\segementationHelper.h" />
+    <ClInclude Include="Validation\LazyDetectorValidation.hpp" />
     <ClInclude Include="Validation\PerformanceValidation.hpp" />
     <ClInclude Include="Validation\CorrectnessValidation.hpp" />
     <ClInclude Include="Validation\SearchValidation.hpp" />
