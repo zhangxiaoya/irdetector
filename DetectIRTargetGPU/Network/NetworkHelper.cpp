@@ -19,7 +19,7 @@
 /***************************************************************************************/
 /*  测试参数定义                                                                       */
 /***************************************************************************************/
-bool IsShowDetectedResult = false;
+bool IsShowDetectedResult = true;
 
 /****************************************************************************************/
 /* 其他参数定义                                                                         */
@@ -38,7 +38,7 @@ Detector* detector = new Detector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RA
 LazyDetector* lazyDetector = new LazyDetector(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);  // 初始化延迟检测器
 Monitor* monitor = new Monitor(IMAGE_WIDTH, IMAGE_HEIGHT, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);                 // 初始化Monitor
 
-Searcher* searcher = new Searcher(IMAGE_WIDTH, IMAGE_HEIGHT, PIXEL_SIZE, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE); // 初始化搜索算法
+Searcher* searcher = new Searcher(IMAGE_WIDTH, IMAGE_HEIGHT, PIXEL_SIZE, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE);                // 初始化搜索算法
 MultiSearcher* multiSearcher = new MultiSearcher(IMAGE_WIDTH, IMAGE_HEIGHT, PIXEL_SIZE, DIALATION_KERNEL_RADIUS, DISCRETIZATION_SCALE); // 初始化搜索算法
 
 /****************************************************************************************/
