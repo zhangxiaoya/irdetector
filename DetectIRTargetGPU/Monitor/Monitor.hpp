@@ -504,8 +504,8 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 						TargetPosition pos;
 						pos.topLeftX = maxC;
 						pos.topLeftY = maxR;
-						pos.bottomRightX = maxC + targetWidth;
-						pos.bottomRightY = maxR + targetHeight;
+						pos.bottomRightX = maxC + targetWidth - 1;
+						pos.bottomRightY = maxR + targetHeight - 1;
 						UpdateTracker(TrackerList[i], pos, false);
 					}
 				}
