@@ -6,12 +6,12 @@
 #include "Tracker.hpp"
 #include "../Models/DetectResultSegment.hpp"
 
-const int ConfValue = 6; // Confidence value for queue
+const int ConfValue = 6;           // Confidence value for queue
 const int IncrementConfValue = 12; // Confidence value for map
 
-const int MaxTrackerCount = 10; // Max tracker count
+const int MaxTrackerCount = 10;       // Max tracker count
 const int TrackConfirmThreshold = 12; // Confirm tracking target threshold
-const int MaxConfidenceValue = 100; // Max confidence value for per block
+const int MaxConfidenceValue = 100;   // Max confidence value for per block
 
 // Monitor class
 class Monitor
@@ -51,7 +51,6 @@ private:
 
 protected:
 	void InitMonitor();
-
 
 	void InitConfidenceValueMap();
 
@@ -99,12 +98,13 @@ inline Monitor::Monitor(const int width, const int height, const int dilationRad
 	  allCandidateTargets(nullptr),
 	  allCandidateTargetsCount(0)
 {
+	// 初始化Monitor
 	InitMonitor();
 
-	// InitDetector();
-
+	// 初始化置信值
 	InitConfidenceValueMap();
 
+	// 初始化跟踪器列表
 	InitTrackerList();
 }
 
@@ -631,8 +631,8 @@ inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top,
 inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 {
 	// detect target in single frame
-	//detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
-	lazyDetector->DetectTargets(frame, &detectResult);
+	detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
+	//lazyDetector->DetectTargets(frame, &detectResult);
 
 	// copy detect result and set default tracking status
 	detectResultWithStatus.detectResultPointers = &detectResult;
@@ -674,8 +674,10 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 
 inline void Monitor::InitMonitor()
 {
+	// 计算块的行数和列数
 	BlockCols = (Width + (BlockSize - 1)) / BlockSize;
 	BlockRows = (Height + (BlockSize - 1)) / BlockSize;
+
 
 	this->confidences = new Confidences(Width, Height, BlockCols, BlockRows);
 	this->confidences->InitConfidenceMap();
