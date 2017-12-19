@@ -8,7 +8,8 @@ struct FourLimits
 		  bottom(_bottom),
 		  left(_left),
 		  right(_right),
-		  label(-1)
+		  label(-1),
+		  area(0)
 	{
 	}
 
@@ -25,4 +26,5 @@ struct FourLimits
 	int left;
 	int right;
 	int label;
+	int area;
 };

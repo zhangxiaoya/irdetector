@@ -52,6 +52,8 @@ private:
 
 	void GetAllObjects(int* labelsOnHost, FourLimits* allObjects, int width, int height);
 
+	void CalculateArea();
+
 	void ConvertFourLimitsToRect(FourLimits* allObjects,
 								 ObjectRect* allObjectRects,
 		                         int width,
@@ -469,6 +471,30 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 	}
 }
 
+inline void Detector::CalculateArea()
+{
+	for (int i = 0; i < Width * Height; ++i)
+	{
+		if (allObjects[i].top == -1)
+			continue;
+		if (allObjects[i].bottom - allObjects[i].top + 1 > TargetHeightMaxLimit || allObjects[i].right - allObjects[i].left + 1 > TargetWidthMaxLimit)
+			continue;
+		if (allObjects[i].bottom - allObjects[i].top + 1 < 1 || allObjects[i].right - allObjects[i].left + 1 < 1)
+			continue;
+
+		allObjects[i].label = i;
+		allObjects[i].area++;
+		for (int r = allObjects[i].top; r <= allObjects[i].bottom; ++r)
+		{
+			for (int c = allObjects[i].left; c <= allObjects[i].right; ++c)
+			{
+				if (labelsOnHost[r * Width + c] == allObjects[i].label)
+					allObjects[i].area++;
+			}
+		}
+	}
+}
+
 inline void Detector::ConvertFourLimitsToRect(FourLimits* allObjects, ObjectRect* allObjectRects, int width, int height, int validObjectCount)
 {
 	if (validObjectCount == 0)
@@ -548,6 +574,8 @@ inline void Detector::MergeObjects()
 					allObjects[i].bottom = allObjects[j].bottom;
 
 				allObjects[j].top = -1;
+
+				allObjects[i].area += allObjects[j].area;
 
 			}
 
@@ -797,6 +825,9 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		// get all object
 		GetAllObjects(labelsOnHost, allObjects, Width, Height);
 
+		// calculate area
+		CalculateArea();
+
 		// remove invalid objects
 		RemoveInValidObjects();
 
@@ -844,6 +875,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 			unsigned short minValue = 65535;
 			Util::GetMaxAndMinValue(frame, FourLimits(pos), maxValue, minValue, Width);
 			info.placeHolder_1 = maxValue - minValue;
+			info.placeHolder_2 = insideObjects[i].object.area;
 			result->targetInfo[i] = info;
 		}
 	}
