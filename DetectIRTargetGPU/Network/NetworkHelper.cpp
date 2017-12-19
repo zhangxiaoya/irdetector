@@ -19,7 +19,7 @@
 /***************************************************************************************/
 /*  测试参数定义                                                                        */
 /***************************************************************************************/
-bool IsShowDetectedResult = false;
+bool IsShowDetectedResult = true;
 
 /****************************************************************************************/
 /* 其他参数定义                                                                          */
@@ -147,13 +147,13 @@ bool DetectTarget(FrameDataRingBufferStruct* buffer, DetectResultRingBufferStruc
 	// 检测目标，并检测性能
     //  CheckPerf(detector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
 	// 延迟检测目标，并检测性能
-	CheckPerf(lazyDetector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
+	// CheckPerf(lazyDetector->DetectTargets(FrameDataInprocessing, &ResultItemSendToServer), "Total process");
 	// 检测并跟踪目标，检测整个过程的时间系能
-	// CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
+	CheckPerf(monitor->Process(FrameDataInprocessing, &ResultItemSendToServer), "Total Tracking Process");
 	// 单圈搜索检测目标
     // CheckPerf(searcher->SearchOneRound(FrameDataInprocessing), "Total cost while single round search");
 	// 单圈搜索与跟踪
-	 //CheckPerf(multiSearcher->SearchOneRound(FrameDataInprocessing, &ResultItemSendToServer), "Total cost while single round search");
+	// CheckPerf(multiSearcher->SearchOneRound(FrameDataInprocessing, &ResultItemSendToServer), "Total cost while single round search");
 
 	// 并发存储检测结果到缓冲区
 	std::unique_lock<std::mutex> writerLock(resultBuffer->bufferMutex);
