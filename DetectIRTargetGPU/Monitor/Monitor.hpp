@@ -66,7 +66,6 @@ private:
 	int Height;
 	int DilationRadius;
 	int DiscretizationScale;
-	bool IsTracking = true; // For debug tracking
 
 	int BlockCols;
 	int BlockRows;
@@ -631,8 +630,8 @@ inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top,
 inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 {
 	// detect target in single frame
-	detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
-	//lazyDetector->DetectTargets(frame, &detectResult);
+	//detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
+	lazyDetector->DetectTargets(frame, &detectResult);
 
 	// copy detect result and set default tracking status
 	detectResultWithStatus.detectResultPointers = &detectResult;
@@ -650,25 +649,20 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 	// copy tracking result back
 	memcpy(result->header, detectResult.header, FRAME_HEADER_LENGTH);
 	result->targetCount = detectResult.targetCount;
-	if (IsTracking == false)
+	
+	// memcpy(result->targets, detectResult.targets, sizeof(TargetPosition) * 5);
+	int trackingTargetCount = 0;
+	for (auto i = 0; i < MaxTrackerCount; ++i)
 	{
-		memcpy(result->targets, detectResult.targets, sizeof(TargetPosition) * 5);
-	}
-	else
-	{
-		int trackingTargetCount = 0;
-		for (auto i = 0; i < MaxTrackerCount; ++i)
+		if (TrackerList[i].ValidFlag == true && TrackerList[i].LifeTime > 2)
 		{
-			if (TrackerList[i].ValidFlag == true && TrackerList[i].LifeTime > 2)
-			{
-				result->targets[trackingTargetCount] = TrackerList[i].Postion;
-				trackingTargetCount++;
-				if (trackingTargetCount >= 5)
-					break;
-			}
+			result->targets[trackingTargetCount] = TrackerList[i].Postion;
+			trackingTargetCount++;
+			if (trackingTargetCount >= 5)
+				break;
 		}
-		result->targetCount = trackingTargetCount;
 	}
+	result->targetCount = trackingTargetCount;
 	return true;
 }
 

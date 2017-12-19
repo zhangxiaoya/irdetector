@@ -504,7 +504,7 @@ inline bool Detector::CheckCross(const FourLimits& objectFirst, const FourLimits
 	auto centerXDiff = std::abs(firstCenterX - secondCenterX);
 	auto centerYDiff = std::abs(firstCenterY - secondCenterY);
 
-	if (centerXDiff <= (firstWidth + secondWidth) / 2  && centerYDiff <= (firstHeight + secondHeight) / 2 )
+	if (centerXDiff <= (firstWidth + secondWidth) / 2 + 1  && centerYDiff <= (firstHeight + secondHeight) / 2  + 1)
 		return true;
 
 	return false;
@@ -808,6 +808,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 
 		// Merge all objects
 		MergeObjects();
+
 		// Remove objects after merge
 		RemoveInvalidObjectAfterMerge();
 
@@ -829,15 +830,20 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		for (auto i = 0; i < result->targetCount; ++i)
 		{
 			TargetPosition pos;
-			TargetInfo info;
 			pos.topLeftX = static_cast<unsigned short>(insideObjects[i].object.left);
 			pos.topLeftY = static_cast<unsigned short>(insideObjects[i].object.top);
 			pos.bottomRightX = static_cast<unsigned short>(insideObjects[i].object.right);
 			pos.bottomRightY = static_cast<unsigned short>(insideObjects[i].object.bottom);
 			result->targets[i] = pos;
+
+			TargetInfo info;
 			unsigned short avgValue = 0;
 			Util::CalculateAverage(frame, FourLimits(pos), avgValue, Width);
 			info.avgValue = avgValue;
+			unsigned short maxValue = 0;
+			unsigned short minValue = 65535;
+			Util::GetMaxAndMinValue(frame, FourLimits(pos), maxValue, minValue, Width);
+			info.placeHolder_1 = maxValue - minValue;
 			result->targetInfo[i] = info;
 		}
 	}
