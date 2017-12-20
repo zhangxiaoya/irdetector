@@ -13,6 +13,11 @@ const int MaxTrackerCount = 10;       // Max tracker count
 const int TrackConfirmThreshold = 12; // Confirm tracking target threshold
 const int MaxConfidenceValue = 100;   // Max confidence value for per block
 
+inline bool CompareTracker(Tracker& a, Tracker& b)
+{
+	return a.ValidFlag && b.ValidFlag && a.LifeTime > b.LifeTime;
+}
+
 // Monitor class
 class Monitor
 {
@@ -487,7 +492,7 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 					detectResultWithStatus.hasTracker[mostLikelyTargetIndex] = true;
 				}
 				// if tracker cannot find one target in it's search region, then shrink it's lifetime
-				// this is simple way, if there no target detect in this region, need tracker research target
+				// update: if there no target detect in this region, need tracker research target
 				if (updateTrackerInfoSuccess == false)
 				{
 					auto targetWidth = TrackerList[i].Postion.bottomRightX - TrackerList[i].Postion.topLeftX + 1;
@@ -681,7 +686,6 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 {
 	// detect target in single frame
 	detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
-
 	// lazyDetector->DetectTargets(frame, &detectResult);
 
 	// copy detect result and set default tracking status
@@ -702,17 +706,32 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 	result->targetCount = detectResult.targetCount;
 	
 	// memcpy(result->targets, detectResult.targets, sizeof(TargetPosition) * 5);
+	std::sort(TrackerList, TrackerList + MaxTrackerCount, CompareTracker);
 	int trackingTargetCount = 0;
-	for (auto i = 0; i < MaxTrackerCount; ++i)
+	for (int i = 0; i < MAX_DETECTED_TARGET_COUNT; ++i)
 	{
 		if (TrackerList[i].ValidFlag == true && TrackerList[i].LifeTime > 2)
 		{
 			result->targets[trackingTargetCount] = TrackerList[i].Postion;
 			trackingTargetCount++;
-			if (trackingTargetCount >= 5)
-				break;
+		}
+		else
+		{
+			break;
 		}
 	}
+
+	// int trackingTargetCount = 0;
+	// for (auto i = 0; i < MaxTrackerCount; ++i)
+	// {
+	// 	if (TrackerList[i].ValidFlag == true && TrackerList[i].LifeTime > 2)
+	// 	{
+	// 		result->targets[trackingTargetCount] = TrackerList[i].Postion;
+	// 		trackingTargetCount++;
+	// 		if (trackingTargetCount >= MAX_DETECTED_TARGET_COUNT)
+	// 			break;
+	// 	}
+	// }
 	result->targetCount = trackingTargetCount;
 	return true;
 }
