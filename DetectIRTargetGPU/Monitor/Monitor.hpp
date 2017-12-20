@@ -6,12 +6,12 @@
 #include "Tracker.hpp"
 #include "../Models/DetectResultSegment.hpp"
 
-const int ConfValue = 6;           // Confidence value for queue
-const int IncrementConfValue = 12; // Confidence value for map
+const int ConfValue = 1;           // Confidence value for queue
+const int IncrementConfValue = 1;  // Confidence value for map
 
-const int MaxTrackerCount = 10;       // Max tracker count
-const int TrackConfirmThreshold = 12; // Confirm tracking target threshold
-const int MaxConfidenceValue = 100;   // Max confidence value for per block
+const int MaxTrackerCount = 10;      // Max tracker count
+const int TrackConfirmThreshold = 6; // Confirm tracking target threshold
+const int MaxConfidenceValue = 5;   // Max confidence value for per block
 
 inline bool CompareTracker(Tracker& a, Tracker& b)
 {
