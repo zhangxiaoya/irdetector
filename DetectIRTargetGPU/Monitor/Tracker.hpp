@@ -9,9 +9,9 @@ class Tracker
 public:
 	Tracker();
 
-	void InitLifeTime();
+	void InitLifeTime(Point& centerPos);
 
-	void ExtendLifeTime();
+	void ExtendLifeTime(Point& centerPos);
 
 	void ShrinkLifeTime();
 
@@ -31,23 +31,40 @@ inline Tracker::Tracker(): ValidFlag(false), LifeTime(0), BlockX(0), BlockY(0), 
 {
 }
 
-inline void Tracker::InitLifeTime()
+inline void Tracker::InitLifeTime(Point& centerPos)
 {
 	LifeTime = 1;
+	CenterList[posEnd] = centerPos;
+	posEnd++;
 }
 
-inline void Tracker::ExtendLifeTime()
+inline void Tracker::ExtendLifeTime(Point& centerPos)
 {
 	++LifeTime;
 	if (LifeTime > MaxLifeTime)
 		LifeTime = MaxLifeTime;
+
+	CenterList[posEnd] = centerPos;
+	posEnd++;
+	if (posEnd == (MaxLifeTime + 1))
+		posEnd = 0;
+	if ((posEnd + 1) % (MaxLifeTime + 1) == posBeg)
+	{
+		posBeg++;
+		if (posBeg == (MaxLifeTime + 1))
+			posBeg = 0;
+	}
 }
 
 inline void Tracker::ShrinkLifeTime()
 {
 	--LifeTime;
 	if (LifeTime <= 0)
+	{
 		this->ValidFlag = false;
+		posBeg = 0;
+		posEnd = 0;
+	}
 }
 
 #endif

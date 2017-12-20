@@ -303,8 +303,10 @@ inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targe
 	GetBlockPos(targetPos, br, bc);
 	tracker.BlockX = bc;
 	tracker.BlockY = br;
+
+	Point centerPos((targetPos.topLeftX + targetPos.bottomRightX) / 2, (targetPos.topLeftY + targetPos.bottomRightY) / 2);
 	if(isExtendLifetime == true)
-		tracker.ExtendLifeTime();
+		tracker.ExtendLifeTime(centerPos);
 }
 
 inline void Monitor::AddTracker(const TargetPosition& targetPos)
@@ -324,7 +326,9 @@ inline void Monitor::AddTracker(const TargetPosition& targetPos)
 			TrackerList[i].BlockX = BC;
 			TrackerList[i].BlockY = BR;
 
-			TrackerList[i].InitLifeTime();
+			Point centerPos((targetPos.topLeftX + targetPos.bottomRightX) / 2, (targetPos.topLeftY + targetPos.bottomRightY) / 2);
+
+			TrackerList[i].InitLifeTime(centerPos);
 			TrackerList[i].ValidFlag = true;
 			break;
 		}
