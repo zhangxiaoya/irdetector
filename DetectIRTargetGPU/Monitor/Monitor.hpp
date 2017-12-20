@@ -710,7 +710,6 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 	result->targetCount = detectResult.targetCount;
 	
 	// memcpy(result->targets, detectResult.targets, sizeof(TargetPosition) * 5);
-	std::sort(TrackerList, TrackerList + MaxTrackerCount, CompareTracker);
 	// int trackingTargetCount = 0;
 	// for (int i = 0; i < MAX_DETECTED_TARGET_COUNT; ++i)
 	// {
@@ -724,6 +723,8 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 	// 		break;
 	// 	}
 	// }
+
+	std::sort(TrackerList, TrackerList + MaxTrackerCount, CompareTracker);
 
 	int trackingTargetCount = 0;
 	for (auto i = 0; i < MaxTrackerCount; ++i)
@@ -740,10 +741,10 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 				}
 			}
 		}
-		else
-		{
-			break;
-		}
+		// else
+		// {
+		// 	break;
+		// }
 	}
 	result->targetCount = trackingTargetCount;
 	return true;
