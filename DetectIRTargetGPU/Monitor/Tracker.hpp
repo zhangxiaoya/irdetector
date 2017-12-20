@@ -4,6 +4,11 @@
 
 const int MaxLifeTime = 5;
 
+#ifndef CENTER_POSITION_DIFF
+#define CENTER_POSITION_DIFF (0)
+#endif // !CENTER_POSITION_DIFF
+
+
 class Tracker
 {
 public:
@@ -15,6 +20,10 @@ public:
 
 	void ShrinkLifeTime();
 
+	bool IsComming();
+
+	bool IsOutting();
+
 	bool ValidFlag;
 	int LifeTime;
 	TargetPosition Postion;
@@ -25,6 +34,9 @@ public:
 	Point CenterList[MaxLifeTime + 1];
 	int posBeg;
 	int posEnd;
+
+private:
+	bool MovingCheck();
 };
 
 inline Tracker::Tracker(): ValidFlag(false), LifeTime(0), BlockX(0), BlockY(0), Area(0), posBeg(0), posEnd(0)
@@ -65,6 +77,44 @@ inline void Tracker::ShrinkLifeTime()
 		posBeg = 0;
 		posEnd = 0;
 	}
+}
+
+inline bool Tracker::IsComming()
+{
+	return MovingCheck();
+}
+
+inline bool Tracker::IsOutting()
+{
+	return !MovingCheck();
+}
+
+inline bool Tracker::MovingCheck()
+{
+	int positiveCount = 0;
+	int i = posEnd - 1;
+	if (i == -1)
+		i = MaxLifeTime;
+	int previousPos = 0;
+	while (i != posBeg)
+	{
+		if (CenterList[i].x - previousPos > CENTER_POSITION_DIFF)
+		{
+			positiveCount++;
+		}
+		else
+		{
+			positiveCount--;
+		}
+		previousPos = CenterList[i].x;
+		i--;
+		if (i == -1)
+			i = MaxLifeTime;
+	}
+	if (positiveCount > 1)
+		return true;
+	else
+		return false;
 }
 
 #endif

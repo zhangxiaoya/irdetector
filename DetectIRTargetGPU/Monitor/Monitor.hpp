@@ -711,31 +711,40 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 	
 	// memcpy(result->targets, detectResult.targets, sizeof(TargetPosition) * 5);
 	std::sort(TrackerList, TrackerList + MaxTrackerCount, CompareTracker);
+	// int trackingTargetCount = 0;
+	// for (int i = 0; i < MAX_DETECTED_TARGET_COUNT; ++i)
+	// {
+	// 	if (TrackerList[i].ValidFlag == true && TrackerList[i].LifeTime > 2)
+	// 	{
+	// 		result->targets[trackingTargetCount] = TrackerList[i].Postion;
+	// 		trackingTargetCount++;
+	// 	}
+	// 	else
+	// 	{
+	// 		break;
+	// 	}
+	// }
+
 	int trackingTargetCount = 0;
-	for (int i = 0; i < MAX_DETECTED_TARGET_COUNT; ++i)
+	for (auto i = 0; i < MaxTrackerCount; ++i)
 	{
 		if (TrackerList[i].ValidFlag == true && TrackerList[i].LifeTime > 2)
 		{
-			result->targets[trackingTargetCount] = TrackerList[i].Postion;
-			trackingTargetCount++;
+			if (TrackerList[i].IsComming() == false )
+			{
+				result->targets[trackingTargetCount] = TrackerList[i].Postion;
+				trackingTargetCount++;
+				if (trackingTargetCount >= MAX_DETECTED_TARGET_COUNT)
+				{
+					break;
+				}
+			}
 		}
 		else
 		{
 			break;
 		}
 	}
-
-	// int trackingTargetCount = 0;
-	// for (auto i = 0; i < MaxTrackerCount; ++i)
-	// {
-	// 	if (TrackerList[i].ValidFlag == true && TrackerList[i].LifeTime > 2)
-	// 	{
-	// 		result->targets[trackingTargetCount] = TrackerList[i].Postion;
-	// 		trackingTargetCount++;
-	// 		if (trackingTargetCount >= MAX_DETECTED_TARGET_COUNT)
-	// 			break;
-	// 	}
-	// }
 	result->targetCount = trackingTargetCount;
 	return true;
 }
