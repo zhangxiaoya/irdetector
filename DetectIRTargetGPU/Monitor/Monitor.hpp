@@ -442,6 +442,7 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 	{
 		for (int i = 0; i < MaxTrackerCount; ++i)
 		{
+			// 只更新有效的跟踪器
 			if (TrackerList[i].ValidFlag == true)
 			{
 				// Step first: find search region base this tracker
@@ -458,6 +459,8 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 				searchRegionBottom = searchRegionBottom < Height ? searchRegionBottom : Height;
 
 				bool updateTrackerInfoSuccess = false;
+				int maxAreaDiff = 65535;
+				int mostLikelyTargetIndex = 0;
 				for (int j = 0; j < detectResultWithStatus.detectResultPointers->targetCount; ++j)
 				{
 					if (detectResultWithStatus.hasTracker[j] == true)
@@ -465,13 +468,23 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 					auto targetCenterX = (detectResultWithStatus.detectResultPointers->targets[j].bottomRightX + detectResultWithStatus.detectResultPointers->targets[j].topLeftX) / 2;
 					auto targetCenterY = (detectResultWithStatus.detectResultPointers->targets[j].bottomRightY + detectResultWithStatus.detectResultPointers->targets[j].topLeftY) / 2;
 					// if find one target in this search region, then update this tracker info, actually need find all target int this region, then the nearest target should be last result
-					// this is simple way, need to-do
+					// update: we use area nearly equal method
 					if (targetCenterX > searchRegionLeft && targetCenterX < searchRegionRight && targetCenterY > searchRegionTop && targetCenterY < searchRegionBottom)
 					{
+						if (maxAreaDiff > std::abs(detectResultWithStatus.detectResultPointers->targetInfo[j].placeHolder_2 - TrackerList[i].Area))
+						{
+							maxAreaDiff = std::abs(detectResultWithStatus.detectResultPointers->targetInfo[j].placeHolder_2 - TrackerList[i].Area);
+							mostLikelyTargetIndex = j;
+						}
 						updateTrackerInfoSuccess = true;
-						UpdateTracker(TrackerList[i], detectResultWithStatus.detectResultPointers->targets[j], detectResultWithStatus.detectResultPointers->targetInfo[j]);
-						detectResultWithStatus.hasTracker[j] = true;
 					}
+				}
+				if (updateTrackerInfoSuccess == true)
+				{
+					UpdateTracker(TrackerList[i],
+						detectResultWithStatus.detectResultPointers->targets[mostLikelyTargetIndex],
+						detectResultWithStatus.detectResultPointers->targetInfo[mostLikelyTargetIndex]);
+					detectResultWithStatus.hasTracker[mostLikelyTargetIndex] = true;
 				}
 				// if tracker cannot find one target in it's search region, then shrink it's lifetime
 				// this is simple way, if there no target detect in this region, need tracker research target
@@ -668,6 +681,7 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 {
 	// detect target in single frame
 	detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
+
 	// lazyDetector->DetectTargets(frame, &detectResult);
 
 	// copy detect result and set default tracking status
