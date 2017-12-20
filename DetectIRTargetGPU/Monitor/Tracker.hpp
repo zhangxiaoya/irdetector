@@ -18,11 +18,12 @@ public:
 	bool ValidFlag;
 	int LifeTime;
 	TargetPosition Postion;
+	unsigned short Area;
 	int BlockX;
 	int BlockY;
 };
 
-inline Tracker::Tracker(): ValidFlag(false), LifeTime(0), BlockX(0), BlockY(0)
+inline Tracker::Tracker(): ValidFlag(false), LifeTime(0), BlockX(0), BlockY(0), Area(0)
 {
 }
 

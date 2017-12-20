@@ -39,7 +39,7 @@ private:
 
 	int CheckDistance(const TargetPosition& targetPos, const TargetPosition& trackerPos) const;
 
-	void UpdateTracker(Tracker& tracker, const TargetPosition& targetPos, bool isExtendLifetime = true);
+	void UpdateTracker(Tracker& tracker, const TargetPosition& targetPos, const TargetInfo& targetInfo, bool isExtendLifetime = true);
 
 	void AddTracker(const TargetPosition& targetPos);
 
@@ -48,6 +48,8 @@ private:
 	void UpdateTrackerForAllBlocks(unsigned short* frame);
 
 	double GetContrastRate(unsigned short* frame, int left, int top, int width, int height);
+
+	int GetArea(unsigned short* frame, int left, int top, int width, int height);
 
 protected:
 	void InitMonitor();
@@ -282,12 +284,14 @@ inline int Monitor::CheckDistance(const TargetPosition& targetPos, const TargetP
 	return ManhattanDistance;
 }
 
-inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targetPos, bool isExtendLifetime)
+inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targetPos, const TargetInfo& targetInfo, bool isExtendLifetime)
 {
 	tracker.Postion.bottomRightY = targetPos.bottomRightY;
 	tracker.Postion.bottomRightX = targetPos.bottomRightX;
 	tracker.Postion.topLeftX = targetPos.topLeftX;
 	tracker.Postion.topLeftY = targetPos.topLeftY;
+
+	tracker.Area = targetInfo.placeHolder_2;
 
 	int bc = 0;
 	int br = 0;
@@ -378,7 +382,8 @@ inline void Monitor::UpdateTrackerOrAddTrackerForBlockUnit(const int blockX, con
 				{
 					// Use Manhattan Distance to check if this is the same target with tracker
 					if (CheckDistance(detectResultWithStatus.detectResultPointers->targets[targetIdx], TrackerList[trackerIdx].Postion) < 10)
-						UpdateTracker(TrackerList[trackerIdx], detectResultWithStatus.detectResultPointers->targets[targetIdx]);
+						//UpdateTracker(TrackerList[trackerIdx], detectResultWithStatus.detectResultPointers->targets[targetIdx]);
+						;
 
 					else
 						AddTracker(detectResultWithStatus.detectResultPointers->targets[targetIdx]);
@@ -464,13 +469,12 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 					if (targetCenterX > searchRegionLeft && targetCenterX < searchRegionRight && targetCenterY > searchRegionTop && targetCenterY < searchRegionBottom)
 					{
 						updateTrackerInfoSuccess = true;
-						UpdateTracker(TrackerList[i], detectResultWithStatus.detectResultPointers->targets[j]);
+						UpdateTracker(TrackerList[i], detectResultWithStatus.detectResultPointers->targets[j], detectResultWithStatus.detectResultPointers->targetInfo[j]);
 						detectResultWithStatus.hasTracker[j] = true;
 					}
 				}
 				// if tracker cannot find one target in it's search region, then shrink it's lifetime
 				// this is simple way, if there no target detect in this region, need tracker research target
-				// need to-do
 				if (updateTrackerInfoSuccess == false)
 				{
 					auto targetWidth = TrackerList[i].Postion.bottomRightX - TrackerList[i].Postion.topLeftX + 1;
@@ -479,16 +483,19 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 					double maxContrast = 0.0;
 					double maxR = searchRegionTop;
 					double maxC = searchRegionLeft;
+					TargetInfo info;
 					for (int r = searchRegionTop; r <= searchRegionBottom - targetHeight; ++r)
 					{
 						for (int c = searchRegionLeft; c <= searchRegionRight - targetWidth; ++c)
 						{
 							double currentContrast = GetContrastRate(frame, c, r, targetWidth, targetHeight);
+							int Area = GetArea(frame, c, r, targetWidth, targetHeight);
 							if (currentContrast > maxContrast)
 							{
 								maxContrast = currentContrast;
 								maxR = r;
 								maxC = c;
+								info.placeHolder_2 = Area;
 							}
 						}
 					}
@@ -505,7 +512,7 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 						pos.topLeftY = maxR;
 						pos.bottomRightX = maxC + targetWidth - 1;
 						pos.bottomRightY = maxR + targetHeight - 1;
-						UpdateTracker(TrackerList[i], pos, false);
+						UpdateTracker(TrackerList[i], pos, info, false);
 					}
 				}
 			}
@@ -622,6 +629,36 @@ inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top,
 	return result;
 }
 
+inline int Monitor::GetArea(unsigned short* frame, int left, int top, int width, int height)
+{
+	double avgTarget = 0.0;
+	int area = 0;
+
+	// target average gray value
+	double sum = 0.0;
+	for (int r = top; r < top + height; ++r)
+	{
+		double sumRow = 0.0;
+		for (int c = left; c < left + width; ++c)
+		{
+			sumRow += static_cast<double>(frame[r * Width + c]);
+		}
+		sum += (sumRow / width);
+	}
+	avgTarget = sum / height;
+
+	for (int r = top; r < top + height; ++r)
+	{
+		for (int c = left; c < left + width; ++c)
+		{
+			if ((double)frame[r * Width + c] > avgTarget)
+				area++;
+		}
+	}
+
+	return area;
+}
+
 /******************************************************************************
 /*
 /*  Main Process Method
@@ -630,8 +667,8 @@ inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top,
 inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 {
 	// detect target in single frame
-	//detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
-	lazyDetector->DetectTargets(frame, &detectResult);
+	detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
+	// lazyDetector->DetectTargets(frame, &detectResult);
 
 	// copy detect result and set default tracking status
 	detectResultWithStatus.detectResultPointers = &detectResult;
