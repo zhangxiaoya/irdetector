@@ -21,9 +21,13 @@ public:
 	unsigned short Area;
 	int BlockX;
 	int BlockY;
+
+	Point CenterList[MaxLifeTime + 1];
+	int posBeg;
+	int posEnd;
 };
 
-inline Tracker::Tracker(): ValidFlag(false), LifeTime(0), BlockX(0), BlockY(0), Area(0)
+inline Tracker::Tracker(): ValidFlag(false), LifeTime(0), BlockX(0), BlockY(0), Area(0), posBeg(0), posEnd(0)
 {
 }
 
