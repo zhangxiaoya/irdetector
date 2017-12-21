@@ -19,12 +19,12 @@
 
 // 目标尺寸最大宽度
 #ifndef TARGET_WIDTH_MAX_LIMIT
-#define TARGET_WIDTH_MAX_LIMIT (10)
+#define TARGET_WIDTH_MAX_LIMIT (20)
 #endif // !TARGET_WIDTH_MAX_LIMIT
 
 // 目标尺寸最大高度
 #ifndef TARGET_HEIGHT_MAX_LIMIT
-#define TARGET_HEIGHT_MAX_LIMIT (10)
+#define TARGET_HEIGHT_MAX_LIMIT (20)
 #endif // !TARGET_HEIGHT_MAX_LIMIT
 
 // 去除虚警时，最低对比度

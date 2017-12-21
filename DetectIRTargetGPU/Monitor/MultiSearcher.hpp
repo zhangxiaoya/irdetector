@@ -256,24 +256,9 @@ inline void MultiSearcher::GetLastResultAfterOneRound()
 /********************************************************************************/
 inline void MultiSearcher::SearchOneRound(unsigned short* frameData, DetectResultSegment* result)
 {
-	// printf("Searching Frame %04d\n", FrameIndex);
-	// 检查帧号是否包含背景信息（测试用）
-	// if (CheckIfHaveGroundObject(FrameIndex) == true)
-	// {
-	// 	FrameIndex++;
-	// 	return;
-	// }
+	memcpy(FramesInOneRound[FrameIndex], frameData, Width * Height * PixelSize);
 
-	// 
-	// unsigned short frameIndexInData = *(frameData + 1);
-	// std::cout << "FrameIndex => " << frameIndexInData << std::endl;
-
-	// 复制
-	// memcpy(FramesInOneRound[FrameIndex], frameData, Width * Height * PixelSize);
-	// printf("FrameIndex => %d\n", FrameIndex);
-	// detector->DetectTargets(FramesInOneRound[FrameIndex], &resultOfSingleFrame, nullptr, nullptr);
-
-	monitors[FrameIndex]->Process(frameData, &resultOfSingleFrame[FrameIndex]);
+	monitors[FrameIndex]->Process(FramesInOneRound[FrameIndex], &resultOfSingleFrame[FrameIndex]);
 
 	//CalculateScoreForDetectedTargetsAndPushToCandidateQueue(FramesInOneRound[FrameIndex], resultOfSingleFrame[FrameIndex], FrameIndex);
 	memcpy(result, &resultOfSingleFrame[FrameIndex], sizeof(DetectResultSegment));

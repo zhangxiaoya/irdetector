@@ -610,6 +610,8 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 	{
 		if (TrackerList[i].ValidFlag == true && TrackerList[i].LifeTime > 2)
 		{
+			if (TrackerList[i].IsNotMove())
+				continue;
 			if (TrackerList[i].IsComming() == false)
 			{
 				result->targets[trackingTargetCount] = TrackerList[i].Postion;

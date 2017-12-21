@@ -5,7 +5,7 @@
 const int MaxLifeTime = 5;
 
 #ifndef CENTER_POSITION_DIFF
-#define CENTER_POSITION_DIFF (0)
+#define CENTER_POSITION_DIFF (1)
 #endif // !CENTER_POSITION_DIFF
 
 
@@ -24,6 +24,8 @@ public:
 
 	bool IsOutting();
 
+	bool IsNotMove();
+
 	bool ValidFlag;
 	int LifeTime;
 	TargetPosition Postion;
@@ -37,6 +39,10 @@ public:
 
 private:
 	bool MovingCheck();
+
+	bool HoritalMovingCheck();
+
+	bool VartitalMovingCheck();
 };
 
 inline Tracker::Tracker(): ValidFlag(false), LifeTime(0), BlockX(0), BlockY(0), posBeg(0), posEnd(0)
@@ -89,6 +95,11 @@ inline bool Tracker::IsOutting()
 	return !MovingCheck();
 }
 
+inline bool Tracker::IsNotMove()
+{
+	return !VartitalMovingCheck() && !HoritalMovingCheck();
+}
+
 inline bool Tracker::MovingCheck()
 {
 	int positiveCount = 0;
@@ -112,6 +123,60 @@ inline bool Tracker::MovingCheck()
 			i = MaxLifeTime;
 	}
 	if (positiveCount > 1)
+		return true;
+	return false;
+}
+
+inline bool Tracker::HoritalMovingCheck()
+{
+	int positiveCount = 0;
+	int i = posEnd - 1;
+	if (i == -1)
+		i = MaxLifeTime;
+	int previousPos = 0;
+	while (i != posBeg)
+	{
+		if (std::abs(CenterList[i].y - previousPos) > CENTER_POSITION_DIFF)
+		{
+			positiveCount++;
+		}
+		else
+		{
+			positiveCount--;
+		}
+		previousPos = CenterList[i].y;
+		i--;
+		if (i == -1)
+			i = MaxLifeTime;
+	}
+	if (positiveCount > 2)
+		return true;
+	return false;
+}
+
+inline bool Tracker::VartitalMovingCheck()
+{
+	int positiveCount = 0;
+	int i = posEnd - 1;
+	if (i == -1)
+		i = MaxLifeTime;
+	int previousPos = 0;
+	while (i != posBeg)
+	{
+		if (std::abs(CenterList[i].x - previousPos) > CENTER_POSITION_DIFF)
+		{
+			positiveCount++;
+		}
+		else
+		{
+			positiveCount--;
+		}
+		previousPos = CenterList[i].x;
+		i--;
+		if (i == -1)
+			i = MaxLifeTime;
+	}
+	if (positiveCount > 2)
 		return true;
 	return false;
 }
