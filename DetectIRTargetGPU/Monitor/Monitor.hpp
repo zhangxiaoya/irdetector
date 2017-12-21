@@ -294,7 +294,7 @@ inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targe
 	tracker.Postion.topLeftX = targetPos.topLeftX;
 	tracker.Postion.topLeftY = targetPos.topLeftY;
 
-	tracker.Area = targetInfo.placeHolder_2;
+	tracker.Info = targetInfo;
 
 	int bc = 0;
 	int br = 0;
@@ -326,7 +326,7 @@ inline void Monitor::AddTracker(const TargetPosition& targetPos, const TargetInf
 
 			Point centerPos((targetPos.topLeftX + targetPos.bottomRightX) / 2, (targetPos.topLeftY + targetPos.bottomRightY) / 2);
 
-			TrackerList[i].Area = targetInfo.placeHolder_2;
+			TrackerList[i].Info = targetInfo;
 
 			TrackerList[i].InitLifeTime(centerPos);
 			TrackerList[i].ValidFlag = true;
@@ -388,9 +388,9 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 					// update: we use area nearly equal method
 					if (targetCenterX > searchRegionLeft && targetCenterX < searchRegionRight && targetCenterY > searchRegionTop && targetCenterY < searchRegionBottom)
 					{
-						if (maxAreaDiff > std::abs(detectResultWithStatus.detectResultPointers->targetInfo[j].placeHolder_2 - TrackerList[i].Area))
+						if (maxAreaDiff > std::abs(detectResultWithStatus.detectResultPointers->targetInfo[j].placeHolder_2 - TrackerList[i].Info.placeHolder_2))
 						{
-							maxAreaDiff = std::abs(detectResultWithStatus.detectResultPointers->targetInfo[j].placeHolder_2 - TrackerList[i].Area);
+							maxAreaDiff = std::abs(detectResultWithStatus.detectResultPointers->targetInfo[j].placeHolder_2 - TrackerList[i].Info.placeHolder_2);
 							mostLikelyTargetIndex = j;
 						}
 						updateTrackerInfoSuccess = true;

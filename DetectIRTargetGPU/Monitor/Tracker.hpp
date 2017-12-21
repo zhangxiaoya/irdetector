@@ -27,7 +27,7 @@ public:
 	bool ValidFlag;
 	int LifeTime;
 	TargetPosition Postion;
-	unsigned short Area;
+	TargetInfo Info;
 	int BlockX;
 	int BlockY;
 
@@ -39,7 +39,7 @@ private:
 	bool MovingCheck();
 };
 
-inline Tracker::Tracker(): ValidFlag(false), LifeTime(0), BlockX(0), BlockY(0), Area(0), posBeg(0), posEnd(0)
+inline Tracker::Tracker(): ValidFlag(false), LifeTime(0), BlockX(0), BlockY(0), posBeg(0), posEnd(0)
 {
 }
 
@@ -113,8 +113,7 @@ inline bool Tracker::MovingCheck()
 	}
 	if (positiveCount > 1)
 		return true;
-	else
-		return false;
+	return false;
 }
 
 #endif
