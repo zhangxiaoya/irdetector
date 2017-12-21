@@ -29,15 +29,15 @@ struct TargetInfo
 {
 	TargetInfo() :
 		avgValue(0),
-		placeHolder_1(0),
-		placeHolder_2(0),
+		contrast(0),
+		area(0),
 		placeHolder_3(0)
 	{
 	}
 
 	unsigned short avgValue;
-	unsigned short placeHolder_1;
-	unsigned short placeHolder_2;
+	unsigned short contrast;
+	unsigned short area;
 	unsigned short placeHolder_3;
 };
 

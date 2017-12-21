@@ -388,9 +388,9 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 					// update: we use area nearly equal method
 					if (targetCenterX > searchRegionLeft && targetCenterX < searchRegionRight && targetCenterY > searchRegionTop && targetCenterY < searchRegionBottom)
 					{
-						if (maxAreaDiff > std::abs(detectResultWithStatus.detectResultPointers->targetInfo[j].placeHolder_2 - TrackerList[i].Info.placeHolder_2))
+						if (maxAreaDiff > std::abs(detectResultWithStatus.detectResultPointers->targetInfo[j].area - TrackerList[i].Info.area))
 						{
-							maxAreaDiff = std::abs(detectResultWithStatus.detectResultPointers->targetInfo[j].placeHolder_2 - TrackerList[i].Info.placeHolder_2);
+							maxAreaDiff = std::abs(detectResultWithStatus.detectResultPointers->targetInfo[j].area - TrackerList[i].Info.area);
 							mostLikelyTargetIndex = j;
 						}
 						updateTrackerInfoSuccess = true;
@@ -425,7 +425,7 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 								maxContrast = currentContrast;
 								maxR = r;
 								maxC = c;
-								info.placeHolder_2 = Area;
+								info.area = Area;
 							}
 						}
 					}

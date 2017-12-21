@@ -874,8 +874,8 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 			unsigned short maxValue = 0;
 			unsigned short minValue = 65535;
 			Util::GetMaxAndMinValue(frame, FourLimits(pos), maxValue, minValue, Width);
-			info.placeHolder_1 = maxValue - minValue;
-			info.placeHolder_2 = insideObjects[i].object.area;
+			info.contrast = maxValue - minValue;
+			info.area = insideObjects[i].object.area;
 			result->targetInfo[i] = info;
 		}
 	}
