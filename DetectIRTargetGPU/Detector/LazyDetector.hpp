@@ -115,7 +115,7 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 		}
 	}
 
-	//生命增长
+	// 累积
 	for (auto i = 0; i < LazyCountorCount; ++i)
 	{
 		if (lazyChecker[i].count >= 3)
@@ -135,5 +135,4 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 			lazyChecker[i].position = FourLimits();
 		}
 	}
-
 }
