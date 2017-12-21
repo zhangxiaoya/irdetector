@@ -46,7 +46,7 @@ private:
 
 	void UpdateTracker(Tracker& tracker, const TargetPosition& targetPos, const TargetInfo& targetInfo, bool isExtendLifetime = true);
 
-	void AddTracker(const TargetPosition& targetPos);
+	void AddTracker(const TargetPosition& targetPos, const TargetInfo& targetInfo);
 
 	void UpdateTrackerForAllBlocks(unsigned short* frame);
 
@@ -307,7 +307,7 @@ inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targe
 		tracker.ExtendLifeTime(centerPos);
 }
 
-inline void Monitor::AddTracker(const TargetPosition& targetPos)
+inline void Monitor::AddTracker(const TargetPosition& targetPos, const TargetInfo& targetInfo)
 {
 	for (auto i = 0; i < MaxTrackerCount; ++i)
 	{
@@ -326,6 +326,8 @@ inline void Monitor::AddTracker(const TargetPosition& targetPos)
 
 			Point centerPos((targetPos.topLeftX + targetPos.bottomRightX) / 2, (targetPos.topLeftY + targetPos.bottomRightY) / 2);
 
+			TrackerList[i].Area = targetInfo.placeHolder_2;
+
 			TrackerList[i].InitLifeTime(centerPos);
 			TrackerList[i].ValidFlag = true;
 			break;
@@ -342,8 +344,8 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 	// Step 3. if there no tracker, or there are no target has been tracked, then add tracker for them
 
 	// This is step 1;
-	bool hasTracker = false;
-	for (int i = 0; i < MaxTrackerCount; ++i)
+	auto hasTracker = false;
+	for (auto i = 0; i < MaxTrackerCount; ++i)
 	{
 		if (TrackerList[i].ValidFlag == true)
 		{
@@ -355,7 +357,7 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 	// This is step 2
 	if (hasTracker == true)
 	{
-		for (int i = 0; i < MaxTrackerCount; ++i)
+		for (auto i = 0; i < MaxTrackerCount; ++i)
 		{
 			// 只更新有效的跟踪器
 			if (TrackerList[i].ValidFlag == true)
@@ -373,10 +375,10 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 				auto searchRegionBottom = centerY + BlockSize;
 				searchRegionBottom = searchRegionBottom < Height ? searchRegionBottom : Height;
 
-				bool updateTrackerInfoSuccess = false;
-				int maxAreaDiff = 65535;
-				int mostLikelyTargetIndex = 0;
-				for (int j = 0; j < detectResultWithStatus.detectResultPointers->targetCount; ++j)
+				auto updateTrackerInfoSuccess = false;
+				auto maxAreaDiff = 65535;
+				auto mostLikelyTargetIndex = 0;
+				for (auto j = 0; j < detectResultWithStatus.detectResultPointers->targetCount; ++j)
 				{
 					if (detectResultWithStatus.hasTracker[j] == true)
 						continue;
@@ -461,7 +463,7 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 		auto TotalConfValue = this->ConfidenceValueMap[br * BlockCols + bc] + CalculateQueueSum(bc, br);
 		if (TotalConfValue >= TrackConfirmThreshold)
 		{
-			AddTracker(detectResultWithStatus.detectResultPointers->targets[i]);
+			AddTracker(detectResultWithStatus.detectResultPointers->targets[i], detectResultWithStatus.detectResultPointers->targetInfo[i]);
 			detectResultWithStatus.hasTracker[i] = true;
 		}
 	}
