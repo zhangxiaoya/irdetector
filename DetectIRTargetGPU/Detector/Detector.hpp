@@ -393,8 +393,8 @@ inline bool Detector::IsAtBorderZone(const FourLimits& candidateTargetRegion) co
 	// 	|| candidateTargetRegion.right > (Width - 6))
 	// 	return true;
 
-	if (candidateTargetRegion.left < 5
-		|| candidateTargetRegion.right >(Width - 6))
+	if (candidateTargetRegion.left < 7
+		|| candidateTargetRegion.right >(Width - 8))
 		return true;
 
 	return false;
@@ -430,6 +430,7 @@ inline void Detector::CopyFrameData(unsigned short* frame)
 
 	memcpy(this->originalFrameOnHost, frame, sizeof(unsigned short) * Width * Height);
 	memset(this->originalFrameOnHost, MIN_PIXEL_VALUE, FRAME_HEADER_LENGTH);
+	memset(this->originalFrameOnHost + Width, MIN_PIXEL_VALUE, FRAME_HEADER_LENGTH);
 	memset(this->allObjects, -1, sizeof(FourLimits) * Width * Height);
 	memset(this->allObjectRects, 0, sizeof(ObjectRect) * Width * Height);
 
@@ -675,7 +676,7 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 			i++;
 			continue;
 		}
-		if(IsInForbiddenZone(allObjects[i]) == true)
+		if(ForbiddenZoneCount > 0 && IsInForbiddenZone(allObjects[i]) == true)
 		{
 			i++;
 			continue;
