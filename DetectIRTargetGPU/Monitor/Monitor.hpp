@@ -6,12 +6,17 @@
 #include "Tracker.hpp"
 #include "../Models/DetectResultSegment.hpp"
 
-const int ConfValue = 6; // Confidence value for queue
-const int IncrementConfValue = 12; // Confidence value for map
+const int ConfValue = 1;           // Confidence value for queue
+const int IncrementConfValue = 1;  // Confidence value for map
 
-const int MaxTrackerCount = 10; // Max tracker count
-const int TrackConfirmThreshold = 12; // Confirm tracking target threshold
-const int MaxConfidenceValue = 100; // Max confidence value for per block
+const int MaxTrackerCount = 10;      // Max tracker count
+const int TrackConfirmThreshold = 6; // Confirm tracking target threshold
+const int MaxConfidenceValue = 5;    // Max confidence value for per block
+
+inline bool CompareTracker(Tracker& a, Tracker& b)
+{
+	return a.ValidFlag && b.ValidFlag && a.LifeTime > b.LifeTime;
+}
 
 // Monitor class
 class Monitor
@@ -39,19 +44,18 @@ private:
 
 	int CheckDistance(const TargetPosition& targetPos, const TargetPosition& trackerPos) const;
 
-	void UpdateTracker(Tracker& tracker, const TargetPosition& targetPos, bool isExtendLifetime = true);
+	void UpdateTracker(Tracker& tracker, const TargetPosition& targetPos, const TargetInfo& targetInfo, bool isExtendLifetime = true);
 
-	void AddTracker(const TargetPosition& targetPos);
-
-	void UpdateTrackerOrAddTrackerForBlockUnit(int blockX, int blockY);
+	void AddTracker(const TargetPosition& targetPos, const TargetInfo& targetInfo);
 
 	void UpdateTrackerForAllBlocks(unsigned short* frame);
 
 	double GetContrastRate(unsigned short* frame, int left, int top, int width, int height);
 
+	int GetArea(unsigned short* frame, int left, int top, int width, int height);
+
 protected:
 	void InitMonitor();
-
 
 	void InitConfidenceValueMap();
 
@@ -67,7 +71,6 @@ private:
 	int Height;
 	int DilationRadius;
 	int DiscretizationScale;
-	bool IsTracking = true; // For debug tracking
 
 	int BlockCols;
 	int BlockRows;
@@ -81,7 +84,7 @@ private:
 	DetectResultSegment detectResult;
 	DetectResultWithTrackerStatus detectResultWithStatus;
 
-	FourLimits* allCandidateTargets;  // this is an reference of all detected targets, the space of these target candidates is init and release in detetor, DON'T init or release this pointer !!!
+	FourLimits* allCandidateTargets; // this is an reference of all detected targets, the space of these target candidates is init and release in detetor, DON'T init or release this pointer !!!
 	int allCandidateTargetsCount;
 
 	Tracker* TrackerList;
@@ -99,12 +102,13 @@ inline Monitor::Monitor(const int width, const int height, const int dilationRad
 	  allCandidateTargets(nullptr),
 	  allCandidateTargetsCount(0)
 {
+	// 初始化Monitor
 	InitMonitor();
 
-	// InitDetector();
-
+	// 初始化置信值
 	InitConfidenceValueMap();
 
+	// 初始化跟踪器列表
 	InitTrackerList();
 }
 
@@ -283,23 +287,27 @@ inline int Monitor::CheckDistance(const TargetPosition& targetPos, const TargetP
 	return ManhattanDistance;
 }
 
-inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targetPos, bool isExtendLifetime)
+inline void Monitor::UpdateTracker(Tracker& tracker, const TargetPosition& targetPos, const TargetInfo& targetInfo, bool isExtendLifetime)
 {
 	tracker.Postion.bottomRightY = targetPos.bottomRightY;
 	tracker.Postion.bottomRightX = targetPos.bottomRightX;
 	tracker.Postion.topLeftX = targetPos.topLeftX;
 	tracker.Postion.topLeftY = targetPos.topLeftY;
 
+	tracker.Info = targetInfo;
+
 	int bc = 0;
 	int br = 0;
 	GetBlockPos(targetPos, br, bc);
 	tracker.BlockX = bc;
 	tracker.BlockY = br;
+
+	Point centerPos((targetPos.topLeftX + targetPos.bottomRightX) / 2, (targetPos.topLeftY + targetPos.bottomRightY) / 2);
 	if(isExtendLifetime == true)
-		tracker.ExtendLifeTime();
+		tracker.ExtendLifeTime(centerPos);
 }
 
-inline void Monitor::AddTracker(const TargetPosition& targetPos)
+inline void Monitor::AddTracker(const TargetPosition& targetPos, const TargetInfo& targetInfo)
 {
 	for (auto i = 0; i < MaxTrackerCount; ++i)
 	{
@@ -316,100 +324,13 @@ inline void Monitor::AddTracker(const TargetPosition& targetPos)
 			TrackerList[i].BlockX = BC;
 			TrackerList[i].BlockY = BR;
 
-			TrackerList[i].InitLifeTime();
+			Point centerPos((targetPos.topLeftX + targetPos.bottomRightX) / 2, (targetPos.topLeftY + targetPos.bottomRightY) / 2);
+
+			TrackerList[i].Info = targetInfo;
+
+			TrackerList[i].InitLifeTime(centerPos);
 			TrackerList[i].ValidFlag = true;
 			break;
-		}
-	}
-}
-
-inline void Monitor::UpdateTrackerOrAddTrackerForBlockUnit(const int blockX, const int blockY)
-{
-	// flag if has deteted target without tracked
-	auto hasTargetNotTracked = false;
-
-	// Go through detect result and check if there are target in current block without tracked now
-	for (auto targetIdx = 0; targetIdx < detectResultWithStatus.detectResultPointers->targetCount; ++targetIdx)
-	{
-		if (detectResultWithStatus.hasTracker[targetIdx] == true)
-			continue;
-
-		auto BR = 0;
-		auto BC = 0;
-		GetBlockPos(detectResultWithStatus.detectResultPointers->targets[targetIdx], BR, BC);
-		if (blockX == BC && blockY == BR)
-		{
-			hasTargetNotTracked = true;
-			break;
-		}
-	}
-
-	if (hasTargetNotTracked == true) // if target in this block without tracked is exist
-	{
-		auto hasTrackerForThisBlock = false;
-
-		for (auto trackerIdx = 0; trackerIdx < MaxTrackerCount; ++trackerIdx)
-		{
-			if (TrackerList[trackerIdx].ValidFlag == false)
-				continue;
-			if (TrackerList[trackerIdx].BlockX != blockX || TrackerList[trackerIdx].BlockY != blockY)
-				continue;
-
-			// tracker for this block exist
-			hasTrackerForThisBlock = true;
-			for (auto targetIdx = 0; targetIdx < detectResultWithStatus.detectResultPointers->targetCount; ++targetIdx)
-			{
-				if (detectResultWithStatus.hasTracker[targetIdx] == true)
-					continue;
-
-				auto BR = 0;
-				auto BC = 0;
-				// To-Do need check
-				GetBlockPos(detectResultWithStatus.detectResultPointers->targets[targetIdx], BR, BC);
-				if ((TrackerList[trackerIdx].BlockX == BC && TrackerList[trackerIdx].BlockY == BR)
-					|| (BC - 1 >= 0 && TrackerList[trackerIdx].BlockX == BC - 1 && TrackerList[trackerIdx].BlockY == BR)
-					|| (BR - 1 >= 0 && TrackerList[trackerIdx].BlockX == BC && TrackerList[trackerIdx].BlockY == BR - 1)
-					|| (BC + 1 < BlockCols && TrackerList[trackerIdx].BlockX == BC + 1 && TrackerList[trackerIdx].BlockY == BR)
-					|| (BR + 1 < BlockRows && TrackerList[trackerIdx].BlockX == BC && TrackerList[trackerIdx].BlockY == BR + 1)
-					|| (BC - 1 >= 0 && BR - 1 >= 0 && TrackerList[trackerIdx].BlockX == BC - 1 && TrackerList[trackerIdx].BlockY == BR - 1)
-					|| (BC + 1 < BlockCols && BR - 1 >= 0 && TrackerList[trackerIdx].BlockX == BC + 1 && TrackerList[trackerIdx].BlockY == BR - 1)
-					|| (BC + 1 < BlockCols && BR + 1 < BlockRows && TrackerList[trackerIdx].BlockX == BC + 1 && TrackerList[trackerIdx].BlockY == BR + 1)
-					|| (BC - 1 >= 0 && BR + 1 < BlockRows && TrackerList[trackerIdx].BlockX == BC - 1 && TrackerList[trackerIdx].BlockY == BR + 1)
-				)
-				{
-					// Use Manhattan Distance to check if this is the same target with tracker
-					if (CheckDistance(detectResultWithStatus.detectResultPointers->targets[targetIdx], TrackerList[trackerIdx].Postion) < 10)
-						UpdateTracker(TrackerList[trackerIdx], detectResultWithStatus.detectResultPointers->targets[targetIdx]);
-
-					else
-						AddTracker(detectResultWithStatus.detectResultPointers->targets[targetIdx]);
-
-					detectResultWithStatus.hasTracker[targetIdx] = true;
-				}
-			}
-		}
-
-		// if there are no tracker
-		if (hasTrackerForThisBlock == false)
-		{
-			for (auto i = 0; i < detectResultWithStatus.detectResultPointers->targetCount; ++i)
-			{
-				AddTracker(detectResultWithStatus.detectResultPointers->targets[i]);
-			}
-		}
-	}
-	else
-	{
-		for (auto trackerIdx = 0; trackerIdx < MaxTrackerCount; ++trackerIdx)
-		{
-			if (TrackerList[trackerIdx].ValidFlag == false)
-				continue;
-			if (TrackerList[trackerIdx].BlockX != blockX || TrackerList[trackerIdx].BlockY != blockY)
-				continue;
-			// To-Do
-			// Re-search
-			// Sample way : cannot find target again, to shrink lifetime 
-			TrackerList[trackerIdx].ShrinkLifeTime();
 		}
 	}
 }
@@ -423,8 +344,8 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 	// Step 3. if there no tracker, or there are no target has been tracked, then add tracker for them
 
 	// This is step 1;
-	bool hasTracker = false;
-	for (int i = 0; i < MaxTrackerCount; ++i)
+	auto hasTracker = false;
+	for (auto i = 0; i < MaxTrackerCount; ++i)
 	{
 		if (TrackerList[i].ValidFlag == true)
 		{
@@ -436,8 +357,9 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 	// This is step 2
 	if (hasTracker == true)
 	{
-		for (int i = 0; i < MaxTrackerCount; ++i)
+		for (auto i = 0; i < MaxTrackerCount; ++i)
 		{
+			// 只更新有效的跟踪器
 			if (TrackerList[i].ValidFlag == true)
 			{
 				// Step first: find search region base this tracker
@@ -453,43 +375,57 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 				auto searchRegionBottom = centerY + BlockSize;
 				searchRegionBottom = searchRegionBottom < Height ? searchRegionBottom : Height;
 
-				bool updateTrackerInfoSuccess = false;
-				for (int j = 0; j < detectResultWithStatus.detectResultPointers->targetCount; ++j)
+				auto updateTrackerInfoSuccess = false;
+				auto maxAreaDiff = 65535;
+				auto mostLikelyTargetIndex = 0;
+				for (auto j = 0; j < detectResultWithStatus.detectResultPointers->targetCount; ++j)
 				{
 					if (detectResultWithStatus.hasTracker[j] == true)
 						continue;
 					auto targetCenterX = (detectResultWithStatus.detectResultPointers->targets[j].bottomRightX + detectResultWithStatus.detectResultPointers->targets[j].topLeftX) / 2;
 					auto targetCenterY = (detectResultWithStatus.detectResultPointers->targets[j].bottomRightY + detectResultWithStatus.detectResultPointers->targets[j].topLeftY) / 2;
 					// if find one target in this search region, then update this tracker info, actually need find all target int this region, then the nearest target should be last result
-					// this is simple way, need to-do
+					// update: we use area nearly equal method
 					if (targetCenterX > searchRegionLeft && targetCenterX < searchRegionRight && targetCenterY > searchRegionTop && targetCenterY < searchRegionBottom)
 					{
+						if (maxAreaDiff > std::abs(detectResultWithStatus.detectResultPointers->targetInfo[j].area - TrackerList[i].Info.area))
+						{
+							maxAreaDiff = std::abs(detectResultWithStatus.detectResultPointers->targetInfo[j].area - TrackerList[i].Info.area);
+							mostLikelyTargetIndex = j;
+						}
 						updateTrackerInfoSuccess = true;
-						UpdateTracker(TrackerList[i], detectResultWithStatus.detectResultPointers->targets[j]);
-						detectResultWithStatus.hasTracker[j] = true;
 					}
 				}
+				if (updateTrackerInfoSuccess == true)
+				{
+					UpdateTracker(TrackerList[i],
+						detectResultWithStatus.detectResultPointers->targets[mostLikelyTargetIndex],
+						detectResultWithStatus.detectResultPointers->targetInfo[mostLikelyTargetIndex]);
+					detectResultWithStatus.hasTracker[mostLikelyTargetIndex] = true;
+				}
 				// if tracker cannot find one target in it's search region, then shrink it's lifetime
-				// this is simple way, if there no target detect in this region, need tracker research target
-				// need to-do
+				// update: if there no target detect in this region, need tracker research target
 				if (updateTrackerInfoSuccess == false)
 				{
 					auto targetWidth = TrackerList[i].Postion.bottomRightX - TrackerList[i].Postion.topLeftX + 1;
 					auto targetHeight = TrackerList[i].Postion.bottomRightY - TrackerList[i].Postion.topLeftY + 1;
 
-					double maxContrast = 0.0;
+					auto maxContrast = 0.0;
 					double maxR = searchRegionTop;
 					double maxC = searchRegionLeft;
-					for (int r = searchRegionTop; r <= searchRegionBottom - targetHeight; ++r)
+					TargetInfo info;
+					for (auto r = searchRegionTop; r <= searchRegionBottom - targetHeight; ++r)
 					{
-						for (int c = searchRegionLeft; c <= searchRegionRight - targetWidth; ++c)
+						for (auto c = searchRegionLeft; c <= searchRegionRight - targetWidth; ++c)
 						{
-							double currentContrast = GetContrastRate(frame, c, r, targetWidth, targetHeight);
+							auto currentContrast = GetContrastRate(frame, c, r, targetWidth, targetHeight);
+							auto Area = GetArea(frame, c, r, targetWidth, targetHeight);
 							if (currentContrast > maxContrast)
 							{
 								maxContrast = currentContrast;
 								maxR = r;
 								maxC = c;
+								info.area = Area;
 							}
 						}
 					}
@@ -504,22 +440,22 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 						TargetPosition pos;
 						pos.topLeftX = maxC;
 						pos.topLeftY = maxR;
-						pos.bottomRightX = maxC + targetWidth;
-						pos.bottomRightY = maxR + targetHeight;
-						UpdateTracker(TrackerList[i], pos, false);
+						pos.bottomRightX = maxC + targetWidth - 1;
+						pos.bottomRightY = maxR + targetHeight - 1;
+						UpdateTracker(TrackerList[i], pos, info, false);
 					}
 				}
 			}
 		}
 	}
 	// This is step 3 : Check all detect targets
-	for (int i = 0; i < detectResultWithStatus.detectResultPointers->targetCount; ++i)
+	for (auto i = 0; i < detectResultWithStatus.detectResultPointers->targetCount; ++i)
 	{
 		// if this detected target already has tracker for it, do nothing
 		if (detectResultWithStatus.hasTracker[i] == true)
 			continue;
 
-		// if no tracker for this target, calculate it's block postion
+		// if have no tracker for this target, calculate it's block postion
 		int br = 0;
 		int bc = 0;
 		GetBlockPos(detectResultWithStatus.detectResultPointers->targets[i], br, bc);
@@ -527,7 +463,7 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 		auto TotalConfValue = this->ConfidenceValueMap[br * BlockCols + bc] + CalculateQueueSum(bc, br);
 		if (TotalConfValue >= TrackConfirmThreshold)
 		{
-			AddTracker(detectResultWithStatus.detectResultPointers->targets[i]);
+			AddTracker(detectResultWithStatus.detectResultPointers->targets[i], detectResultWithStatus.detectResultPointers->targetInfo[i]);
 			detectResultWithStatus.hasTracker[i] = true;
 		}
 	}
@@ -535,17 +471,16 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 
 inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top, int width, int height)
 {
-	int widthPadding = width;
-	int heightPadding = height;
+	auto widthPadding = width;
+	auto heightPadding = height;
 
-	double avgTarget = 0.0;
-	double avgSurrouding = 0.0;
-	double maxTarget = 0.0;
+	auto avgSurrouding = 0.0;
+	auto maxTarget = 0.0;
 
 	// target max value
-	for (int r = top; r < top + height; ++r)
+	for (auto r = top; r < top + height; ++r)
 	{
-		for (int c = left; c < left + width; ++c)
+		for (auto c = left; c < left + width; ++c)
 		{
 			if (maxTarget < static_cast<double>(frame[r * Width + c]))
 				maxTarget = static_cast<double>(frame[r * Width + c]);
@@ -553,11 +488,76 @@ inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top,
 	}
 
 	// target average gray value
-	double sum = 0.0;
-	for (int r = top; r < top + height; ++r)
+	auto sum = 0.0;
+	for (auto r = top; r < top + height; ++r)
 	{
-		double sumRow = 0.0;
-		for (int c = left; c < left + width; ++c)
+		auto sumRow = 0.0;
+		for (auto c = left; c < left + width; ++c)
+		{
+			sumRow += static_cast<double>(frame[r * Width + c]);
+		}
+		sum += (sumRow / width);
+	}
+	auto avgTarget = sum / height;
+
+	// target surrounding average gray value
+	sum = 0.0;
+	auto surroundingTop = top - heightPadding;
+	surroundingTop = surroundingTop < 0 ? 0 : surroundingTop;
+	auto surroundingLeft = left - widthPadding;
+	surroundingLeft = surroundingLeft < 0 ? 0 : surroundingLeft;
+	auto surroundingRight = left + width + widthPadding;
+	surroundingRight = surroundingRight > Width ? Width : surroundingRight;
+	auto surroundingBottom = top + height + heightPadding;
+	surroundingBottom = surroundingBottom > Height ? Height : surroundingBottom;
+	for (auto r = surroundingTop; r < top; ++r)
+	{
+		auto sumRow = 0.0;
+		for (auto c = surroundingLeft; c < surroundingRight; ++c)
+		{
+			sumRow += static_cast<double>(frame[r * Width + c]);
+		}
+		sum += sumRow / (surroundingRight - surroundingLeft);
+	}
+	for (auto r = top + height; r < surroundingBottom; ++r)
+	{
+		auto sumRow = 0.0;
+		for (auto c = surroundingLeft; c < surroundingRight; ++c)
+		{
+			sumRow += static_cast<double>(frame[r * Width + c]);
+		}
+		sum += sumRow / (surroundingRight - surroundingLeft);
+	}
+	for (auto r = top; r < top + height; ++r)
+	{
+		auto sumRow = 0.0;
+		for (auto c = surroundingLeft; c < left; ++c)
+		{
+			sumRow += static_cast<double>(frame[r * Width + c]);
+		}
+		for (auto c = left + width; c < surroundingRight; ++c)
+		{
+			sumRow += static_cast<double>(frame[r * Width + c]);
+		}
+		sum += sumRow / ((left - surroundingLeft) + (surroundingRight - (left + width)));
+	}
+	avgSurrouding = sum / (surroundingBottom - surroundingTop);
+
+	auto result = maxTarget - avgSurrouding;
+	return result;
+}
+
+inline int Monitor::GetArea(unsigned short* frame, int left, int top, int width, int height)
+{
+	auto avgTarget = 0.0;
+	auto area = 0;
+
+	// target average gray value
+	auto sum = 0.0;
+	for (auto r = top; r < top + height; ++r)
+	{
+		auto sumRow = 0.0;
+		for (auto c = left; c < left + width; ++c)
 		{
 			sumRow += static_cast<double>(frame[r * Width + c]);
 		}
@@ -565,74 +565,26 @@ inline double Monitor::GetContrastRate(unsigned short* frame, int left, int top,
 	}
 	avgTarget = sum / height;
 
-	// target surrounding average gray value
-	sum = 0.0;
-	int surroundingTop = top - heightPadding;
-	surroundingTop = surroundingTop < 0 ? 0 : surroundingTop;
-	int surroundingLeft = left - widthPadding;
-	surroundingLeft = surroundingLeft < 0 ? 0 : surroundingLeft;
-	int surroundingRight = left + width + widthPadding;
-	surroundingRight = surroundingRight > Width ? Width : surroundingRight;
-	int surroundingBottom = top + height + heightPadding;
-	surroundingBottom = surroundingBottom > Height ? Height : surroundingBottom;
-	for (int r = surroundingTop; r < top; ++r)
+	for (auto r = top; r < top + height; ++r)
 	{
-		double sumRow = 0.0;
-		for (int c = surroundingLeft; c < surroundingRight; ++c)
+		for (auto c = left; c < left + width; ++c)
 		{
-			sumRow += (double)frame[r * Width + c];
+			if (static_cast<double>(frame[r * Width + c]) > avgTarget)
+				area++;
 		}
-		sum += sumRow / (surroundingRight - surroundingLeft);
-	}
-	for (int r = top + height; r < surroundingBottom; ++r)
-	{
-		double sumRow = 0.0;
-		for (int c = surroundingLeft; c < surroundingRight; ++c)
-		{
-			sumRow += (double)frame[r * Width + c];
-		}
-		sum += sumRow / (surroundingRight - surroundingLeft);
-	}
-	for (int r = top; r < top + height; ++r)
-	{
-		double sumRow = 0.0;
-		for (int c = surroundingLeft; c < left; ++c)
-		{
-			sumRow += (double)frame[r * Width + c];
-		}
-		for (int c = left + width; c < surroundingRight; ++c)
-		{
-			sumRow += (double)frame[r * Width + c];
-		}
-		sum += sumRow / ((left - surroundingLeft) + (surroundingRight - (left + width)));
 	}
 
-	// for (int r = surroundingTop; r < surroundingBottom; ++r)
-	// {
-	// 	double sumRow = 0.0;
-	// 	for (int c = surroundingLeft; c < surroundingRight; ++c)
-	// 	{
-	// 		sumRow += (double)frame[r * Width + c];
-	// 	}
-	// 	sum += (sumRow / (surroundingRight - surroundingLeft));
-	// }
-	avgSurrouding = sum / (surroundingBottom - surroundingTop);
-
-	// result = maxTarget / avgSurrouding;
-	double result = maxTarget - avgSurrouding;
-	return result;
+	return area;
 }
 
 /******************************************************************************
-/*
 /*  Main Process Method
-/*
 ******************************************************************************/
 inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 {
 	// detect target in single frame
-	//detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
-	lazyDetector->DetectTargets(frame, &detectResult);
+	detector->DetectTargets(frame, &detectResult, &this->allCandidateTargets, &this->allCandidateTargetsCount);
+	// lazyDetector->DetectTargets(frame, &detectResult);
 
 	// copy detect result and set default tracking status
 	detectResultWithStatus.detectResultPointers = &detectResult;
@@ -650,30 +602,34 @@ inline bool Monitor::Process(unsigned short* frame, DetectResultSegment* result)
 	// copy tracking result back
 	memcpy(result->header, detectResult.header, FRAME_HEADER_LENGTH);
 	result->targetCount = detectResult.targetCount;
-	if (IsTracking == false)
+
+	std::sort(TrackerList, TrackerList + MaxTrackerCount, CompareTracker);
+
+	auto trackingTargetCount = 0;
+	for (auto i = 0; i < MaxTrackerCount; ++i)
 	{
-		memcpy(result->targets, detectResult.targets, sizeof(TargetPosition) * 5);
-	}
-	else
-	{
-		int trackingTargetCount = 0;
-		for (auto i = 0; i < MaxTrackerCount; ++i)
+		if (TrackerList[i].ValidFlag == true && TrackerList[i].LifeTime > 2)
 		{
-			if (TrackerList[i].ValidFlag == true && TrackerList[i].LifeTime > 2)
+			// if (TrackerList[i].IsNotMove())
+			// 	continue;
+			if (TrackerList[i].IsComming() == false)
 			{
 				result->targets[trackingTargetCount] = TrackerList[i].Postion;
 				trackingTargetCount++;
-				if (trackingTargetCount >= 5)
+				if (trackingTargetCount >= MAX_DETECTED_TARGET_COUNT)
+				{
 					break;
+				}
 			}
 		}
-		result->targetCount = trackingTargetCount;
 	}
+	result->targetCount = trackingTargetCount;
 	return true;
 }
 
 inline void Monitor::InitMonitor()
 {
+	// 计算块的行数和列数
 	BlockCols = (Width + (BlockSize - 1)) / BlockSize;
 	BlockRows = (Height + (BlockSize - 1)) / BlockSize;
 

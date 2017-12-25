@@ -81,14 +81,14 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 {
 	this->detector->DetectTargets(frame, result);
 
-	for (int detectTargetIdx = 0; detectTargetIdx < result->targetCount; ++detectTargetIdx)
+	for (auto detectTargetIdx = 0; detectTargetIdx < result->targetCount; ++detectTargetIdx)
 	{
-		// if (result->targets[detectTargetIdx].bottomRightX - result->targets[detectTargetIdx].topLeftX > 3 &&
-		// 	result->targets[detectTargetIdx].bottomRightY - result->targets[detectTargetIdx].topLeftY > 3)
-		// 	continue;
+		if (result->targets[detectTargetIdx].bottomRightX - result->targets[detectTargetIdx].topLeftX > 3 &&
+		result->targets[detectTargetIdx].bottomRightY - result->targets[detectTargetIdx].topLeftY > 3)
+			continue;
 
-		bool existFlag = false;
-		for (int countorIdx = 0; countorIdx < LazyCountorCount; ++countorIdx)
+		auto existFlag = false;
+		for (auto countorIdx = 0; countorIdx < LazyCountorCount; ++countorIdx)
 		{
 			if (lazyChecker[countorIdx].lifeTime == 0)
 				continue;
@@ -102,7 +102,7 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 		}
 		if (existFlag == false)
 		{
-			for (int countorIdx = 0; countorIdx < LazyCountorCount; ++countorIdx)
+			for (auto countorIdx = 0; countorIdx < LazyCountorCount; ++countorIdx)
 			{
 				if (lazyChecker[countorIdx].lifeTime != 0)
 					continue;
@@ -110,12 +110,13 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 				lazyChecker[countorIdx].position = result->targets[detectTargetIdx];
 				lazyChecker[countorIdx].lifeTime = 1;
 				lazyChecker[countorIdx].count = 1;
+				break;
 			}
 		}
 	}
 
-	//生命增长
-	for (int i = 0; i < LazyCountorCount; ++i)
+	// 累积
+	for (auto i = 0; i < LazyCountorCount; ++i)
 	{
 		if (lazyChecker[i].count >= 3)
 		{
@@ -134,5 +135,4 @@ inline void LazyDetector::DetectTargets(unsigned short* frame, DetectResultSegme
 			lazyChecker[i].position = FourLimits();
 		}
 	}
-
 }
