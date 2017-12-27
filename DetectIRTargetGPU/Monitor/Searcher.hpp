@@ -227,7 +227,7 @@ inline void Searcher::GetLastResultAfterOneRound()
 		}
 		std::cout << "index is " << std::setw(4) << flag[i] << std::endl;
 
-		sprintf(windowsName, windowsNameFormat.c_str(), i);
+		sprintf_s(windowsName, 100, windowsNameFormat.c_str(), i);
 		imshow(windowsName, imgs[i]);
 
 		cv::waitKey(1000);

@@ -411,8 +411,8 @@ inline void Monitor::UpdateTrackerForAllBlocks(unsigned short* frame)
 					auto targetHeight = TrackerList[i].Postion.bottomRightY - TrackerList[i].Postion.topLeftY + 1;
 
 					auto maxContrast = 0.0;
-					double maxR = searchRegionTop;
-					double maxC = searchRegionLeft;
+					int maxR = searchRegionTop;
+					int maxC = searchRegionLeft;
 					TargetInfo info;
 					for (auto r = searchRegionTop; r <= searchRegionBottom - targetHeight; ++r)
 					{

@@ -95,7 +95,6 @@ inline void LazyDetectorValidation::VailidationAll()
 	this->lazyDetector->InitDetector();
 
 	logPrinter.PrintLogs("Test the tracking effect of detect result ... ", Info);
-	char iterationText[200];
 
 	DetectResultSegment result;
 	auto delay = 1;
