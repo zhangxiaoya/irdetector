@@ -1,3 +1,8 @@
+
+#ifndef MERGE_OP
+#define MERGE_OP true
+#endif
+
 #ifndef __DETECTOR_H__
 #define __DETECTOR_H__
 #include <cuda_runtime_api.h>
@@ -17,10 +22,6 @@
 #include "../Models/FourLimitsWithScore.hpp"
 #include "../Models/DetectedTarget.hpp"
 #include "../Checkers/CheckPerf.h"
-
-#ifndef MERGE_OP
-#define MERGE_OP true
-#endif
 
 /********************************************************************************************************/
 /* ºÏ≤‚∆˜¿‡∂®“Â                                                                                         */
