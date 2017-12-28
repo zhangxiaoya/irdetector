@@ -25,6 +25,8 @@ public:
 	static double CalculateAverage(const unsigned short* frame, FourLimits& target, const int width);
 
 	static double CalculateStandardDeviation(const unsigned short* frame, FourLimits& target, const int width);
+
+	static double CalculateFillRatio(FourLimits& target);
 };
 
 inline void Util::GetMaxAndMinValue(unsigned short* frame, const FourLimits& object, unsigned short& maxValue, unsigned short& minValue, const int width)
@@ -127,5 +129,10 @@ inline double Util::CalculateStandardDeviation(const unsigned short* frame, Four
 		}
 	}
 	return std::sqrt(static_cast<double>(sum / ((target.bottom - target.top + 1) * (target.right - target.left + 1))));
+}
+
+inline double Util::CalculateFillRatio(FourLimits& target)
+{
+	return static_cast<double>(target.area) / ((target.bottom - target.top + 1) * (target.right - target.left + 1));
 }
 #endif
