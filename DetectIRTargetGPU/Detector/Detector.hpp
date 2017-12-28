@@ -1,3 +1,8 @@
+
+#ifndef MERGE_OP
+#define MERGE_OP true
+#endif
+
 #ifndef __DETECTOR_H__
 #define __DETECTOR_H__
 #include <cuda_runtime_api.h>
@@ -16,6 +21,7 @@
 #include "../Models/DetectResultSegment.hpp"
 #include "../Models/FourLimitsWithScore.hpp"
 #include "../Models/DetectedTarget.hpp"
+#include "../Checkers/CheckPerf.h"
 
 /********************************************************************************************************/
 /* ºÏ≤‚∆˜¿‡∂®“Â                                                                                         */
@@ -63,6 +69,8 @@ private:
 	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
 	bool CheckCross(const DetectedTarget& objectFirst, const DetectedTarget& objectSecond) const;
+
+	void NewMergeObjects();
 
 	void MergeObjects();
 
@@ -474,20 +482,26 @@ inline void Detector::GetAllObjects(int* labelsOnHost, FourLimits* allObjects, i
 
 inline void Detector::CalculateArea()
 {
-	for (int i = 0; i < Width * Height; ++i)
+	for (auto i = 0; i < Width * Height; ++i)
 	{
 		if (allObjects[i].top == -1)
 			continue;
 		if (allObjects[i].bottom - allObjects[i].top + 1 > TargetHeightMaxLimit || allObjects[i].right - allObjects[i].left + 1 > TargetWidthMaxLimit)
+		{
+			allObjects[i].top = -1;
 			continue;
+		}
 		if (allObjects[i].bottom - allObjects[i].top + 1 < 1 || allObjects[i].right - allObjects[i].left + 1 < 1)
+		{
+			allObjects[i].top = -1;
 			continue;
+		}
 
 		allObjects[i].label = i;
 		allObjects[i].area++;
-		for (int r = allObjects[i].top; r <= allObjects[i].bottom; ++r)
+		for (auto r = allObjects[i].top; r <= allObjects[i].bottom; ++r)
 		{
-			for (int c = allObjects[i].left; c <= allObjects[i].right; ++c)
+			for (auto c = allObjects[i].left; c <= allObjects[i].right; ++c)
 			{
 				if (labelsOnHost[r * Width + c] == allObjects[i].label)
 					allObjects[i].area++;
@@ -549,6 +563,66 @@ inline bool Detector::CheckCross(const DetectedTarget& objectFirst, const Detect
 	return false;
 }
 
+inline void Detector::NewMergeObjects()
+{
+	int dis = 7;
+	for(auto i = 0; i< Width * Height; ++i)
+	{
+		if(allObjects[i].top == -1)
+			continue;
+
+		auto label = allObjects[i].label;
+		int maskRTop = label / Width - dis;
+		int maskRBottom = label / Width + dis;
+		int maskCLeft = label % Width - dis;
+		int maskCRight = label % Width + dis;
+
+		maskRTop = maskRTop < 0 ? 0 : maskRTop;
+		maskCLeft = maskCLeft < 0 ? 0 : maskCLeft;
+		maskCRight = maskCRight >= Width ? Width - 1 : maskCRight;
+		maskRBottom = maskRBottom >= Height ? Height - 1 : maskRBottom;
+
+		for(auto r = maskRTop; r <= maskRBottom; ++ r)
+		{
+			if(allObjects[i].top == -1)
+				break;
+			for(auto c = maskCLeft; c <= maskCRight; ++ c)
+			{
+				int objectIndex = r * Width + c;
+				if (objectIndex == i || allObjects[objectIndex].top == -1)
+					continue;
+				if(CheckCross(allObjects[i], allObjects[objectIndex]))
+				{
+					if (allObjects[i].top > allObjects[objectIndex].top)
+						allObjects[i].top = allObjects[objectIndex].top;
+
+					if (allObjects[i].left > allObjects[objectIndex].left)
+						allObjects[i].left = allObjects[objectIndex].left;
+
+					if (allObjects[i].right < allObjects[objectIndex].right)
+						allObjects[i].right = allObjects[objectIndex].right;
+
+					if (allObjects[i].bottom < allObjects[objectIndex].bottom)
+						allObjects[i].bottom = allObjects[objectIndex].bottom;
+
+					allObjects[objectIndex].top = -1;
+
+					allObjects[i].area += allObjects[objectIndex].area;
+				}
+				if ((allObjects[i].bottom - allObjects[i].top + 1) > TargetHeightMaxLimit ||
+					(allObjects[i].right - allObjects[i].left + 1) > TargetWidthMaxLimit)
+				{
+					allObjects[i].top = -1;
+					break;
+				}
+			}
+		}
+
+		// ConvertFourLimitsToRect(allObjects, allObjectRects, Width, Height, ValidObjectsCount);
+		// ShowFrame::DrawRectangles(originalFrameOnHost, allObjectRects, Width, Height);
+	}
+}
+
 inline void Detector::MergeObjects()
 {
 #pragma omp parallel
@@ -594,7 +668,8 @@ inline void Detector::MergeObjects()
 
 inline void Detector::RemoveObjectWithLowContrast()
 {
-	for (auto i = 0; i < ValidObjectsCount; ++i)
+
+	for (auto i = 0; i < Width * Height; ++i)
 	{
 		if (allObjects[i].top == -1)
 			continue;
@@ -650,7 +725,7 @@ inline void Detector::RemoveObjectWithLowContrast()
 
 inline void Detector::RemoveInValidObjects()
 {
-	int oldValidObjectCount = ValidObjectsCount;
+	int oldValidObjectCount = Width * Height;
 	ValidObjectsCount = 0;
 	for (auto i = 0; i < oldValidObjectCount; ++i)
 	{
@@ -660,7 +735,6 @@ inline void Detector::RemoveInValidObjects()
 			continue;
 		if(allObjects[i].bottom - allObjects[i].top + 1 < 1 || allObjects[i].right - allObjects[i].left + 1 < 1)
 			continue;
-
 		allObjects[ValidObjectsCount] = allObjects[i];
 		ValidObjectsCount++;
 	}
@@ -669,18 +743,18 @@ inline void Detector::RemoveInValidObjects()
 inline void Detector::RemoveInvalidObjectAfterMerge()
 {
 	auto newValidaObjectCount = 0;
-	for (auto i = 0; i < ValidObjectsCount;)
+	for (auto i = 0; i < Width * Height;)
 	{
 		if (allObjects[i].top == -1)
 		{
 			i++;
 			continue;
 		}
-		if(ForbiddenZoneCount > 0 && IsInForbiddenZone(allObjects[i]) == true)
-		{
-			i++;
-			continue;
-		}
+		// if(ForbiddenZoneCount > 0 && IsInForbiddenZone(allObjects[i]) == true)
+		// {
+		// 	i++;
+		// 	continue;
+		// }
 		if(IsAtBorderZone(allObjects[i]) == true)
 		{
 			i++;
@@ -829,17 +903,24 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		// calculate area
 		CalculateArea();
 
-		// remove invalid objects
-		RemoveInValidObjects();
+		if(MERGE_OP == true)
+		{
+			CheckPerf(NewMergeObjects(), "New Merge");
+		}
+		else
+		{
+			// remove invalid objects
+			RemoveInValidObjects();
 
-		// Remove objects with low contrast
-		RemoveObjectWithLowContrast();
+			// Remove objects with low contrast
+			RemoveObjectWithLowContrast();
 
-		// remove invalid objects
-		RemoveInValidObjects();
+			// remove invalid objects
+			RemoveInValidObjects();
 
-		// Merge all objects
-		MergeObjects();
+			// Merge all objects
+			MergeObjects();
+		}
 
 		// Remove objects after merge
 		RemoveInvalidObjectAfterMerge();

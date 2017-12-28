@@ -61,16 +61,17 @@ inline void LogPrinter::printCurrentTime()
 	const auto bufferSize = 20;
 
 	auto timer = time(nullptr);
-	auto currentTime = localtime(&timer);
+	tm currentTime;
+	localtime_s(&currentTime, &timer);
 
 	char timeStr[bufferSize];
 	sprintf_s(timeStr, bufferSize, "%d-%02d-%02d %02d:%02d:%02d",
-	          currentTime->tm_year + 1900,
-	          currentTime->tm_mon + 1,
-	          currentTime->tm_mday,
-	          currentTime->tm_hour,
-	          currentTime->tm_min,
-	          currentTime->tm_sec);
+	          currentTime.tm_year + 1900,
+	          currentTime.tm_mon + 1,
+	          currentTime.tm_mday,
+	          currentTime.tm_hour,
+	          currentTime.tm_min,
+	          currentTime.tm_sec);
 	std::cout << timeStr << " ";
 }
 
