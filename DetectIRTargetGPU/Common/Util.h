@@ -47,6 +47,12 @@ inline void Util::GetMaxAndMinValue(unsigned short* frame, const FourLimits& obj
 
 inline void Util::CalculateAverage(unsigned short* frame, const FourLimits& object, unsigned short& averageValue, const int width)
 {
+	if (object.right <= object.left || object.bottom <= object.top)
+	{
+		averageValue = 0;
+		return;
+	}
+
 	auto sum = 0;
 	for (auto r = object.top; r <= object.bottom; ++r)
 	{

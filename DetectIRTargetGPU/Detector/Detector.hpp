@@ -74,6 +74,8 @@ private:
 
 	void MergeObjects();
 
+	void ShrinkTarget();
+
 	void RemoveObjectWithLowContrast();
 
 	void RemoveInValidObjects();
@@ -86,6 +88,8 @@ protected:
 	bool ReleaseSpace();
 
 	void InitForbiddenZones();
+
+	bool IsInvalidObject(const FourLimits& object);
 
 	bool IsInForbiddenZone(const FourLimits& candidateTargetRegion) const;
 
@@ -381,6 +385,13 @@ inline void Detector::InitForbiddenZones()
 
 }
 
+inline bool Detector::IsInvalidObject(const FourLimits& object)
+{
+	if (object.right <= object.left || object.bottom <= object.top)
+		return true;
+	return false;
+}
+
 inline bool Detector::IsInForbiddenZone(const FourLimits& candidateTargetRegion) const
 {
 	double centerX = (candidateTargetRegion.left + candidateTargetRegion.right) / 2.0;
@@ -565,7 +576,7 @@ inline bool Detector::CheckCross(const DetectedTarget& objectFirst, const Detect
 
 inline void Detector::NewMergeObjects()
 {
-	int dis = 7;
+	int dis = 5;
 	for(auto i = 0; i< Width * Height; ++i)
 	{
 		if(allObjects[i].top == -1)
@@ -666,6 +677,79 @@ inline void Detector::MergeObjects()
 	}
 }
 
+inline void Detector::ShrinkTarget()
+{
+	for(auto i = 0; i < ValidObjectsCount; ++i)
+	{
+		auto average = Util::CalculateAverage(this->originalFrameOnHost, allObjects[i], Width);
+
+		// shrink from top to bottom
+		for(auto r = allObjects[i].top; r < allObjects[i].bottom; ++ r)
+		{
+			auto overFlag = false;
+			for(auto c = allObjects[i].left; c <= allObjects[i].right; ++c)
+			{
+				if(static_cast<double>(originalFrameOnHost[r * Width + c]) > average)
+				{
+					overFlag = true;
+					break;
+				}
+			}
+			if(overFlag == true)
+				break;
+			allObjects[i].top++;
+		}
+		// shrink from bottom to top
+		for (auto r = allObjects[i].bottom; r > allObjects[i].top; --r)
+		{
+			auto overFlag = false;
+			for (auto c = allObjects[i].left; c <= allObjects[i].right; ++c)
+			{
+				if (static_cast<double>(originalFrameOnHost[r * Width + c]) > average)
+				{
+					overFlag = true;
+					break;
+				}
+			}
+			if (overFlag == true)
+				break;
+			allObjects[i].bottom--;
+		}
+		// shrink from left to right
+		for(auto c = allObjects[i].left; c <= allObjects[i].right;++c)
+		{
+			auto overFlag = false;
+			for(auto r = allObjects[i].top;r <= allObjects[i].bottom; ++r)
+			{
+				if(static_cast<double>(originalFrameOnHost[r * Width + c]) > average)
+				{
+					overFlag = true;
+					break;
+				}
+			}
+			if (overFlag == true)
+				break;
+			allObjects[i].left++;
+		}
+		// shrink from right to left
+		for (auto c = allObjects[i].right; c > allObjects[i].left; --c)
+		{
+			auto overFlag = false;
+			for (auto r = allObjects[i].top; r <= allObjects[i].bottom; ++r)
+			{
+				if (static_cast<double>(originalFrameOnHost[r * Width + c]) > average)
+				{
+					overFlag = true;
+					break;
+				}
+			}
+			if (overFlag == true)
+				break;
+			allObjects[i].right--;
+		}
+	}
+}
+
 inline void Detector::RemoveObjectWithLowContrast()
 {
 
@@ -750,11 +834,11 @@ inline void Detector::RemoveInvalidObjectAfterMerge()
 			i++;
 			continue;
 		}
-		// if(ForbiddenZoneCount > 0 && IsInForbiddenZone(allObjects[i]) == true)
-		// {
-		// 	i++;
-		// 	continue;
-		// }
+		if(ForbiddenZoneCount > 0 && IsInForbiddenZone(allObjects[i]) == true)
+		{
+			i++;
+			continue;
+		}
 		if(IsAtBorderZone(allObjects[i]) == true)
 		{
 			i++;
@@ -924,6 +1008,8 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 
 		// Remove objects after merge
 		RemoveInvalidObjectAfterMerge();
+
+		ShrinkTarget();
 
 		// Copy frame header
 		memcpy(result->header, frame, FRAME_HEADER_LENGTH);
