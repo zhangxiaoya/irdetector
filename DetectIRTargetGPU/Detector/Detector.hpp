@@ -565,7 +565,7 @@ inline bool Detector::CheckCross(const DetectedTarget& objectFirst, const Detect
 
 inline void Detector::NewMergeObjects()
 {
-	int dis = 5;
+	int dis = 7;
 	for(auto i = 0; i< Width * Height; ++i)
 	{
 		if(allObjects[i].top == -1)

@@ -144,7 +144,7 @@ inline void ShowFrame::DrawRectangles(cv::Mat& frame, DetectResultSegment* allRe
 		rectangle(frame,
 				  cv::Point(allRects->targets[i].topLeftX-1, allRects->targets[i].topLeftY-1),
 				  cv::Point(allRects->targets[i].bottomRightX + 1, allRects->targets[i].bottomRightY + 1),
-				  cv::Scalar(0, 255, 255));
+				  cv::Scalar(255, 0, 255));
 	}
 }
 
