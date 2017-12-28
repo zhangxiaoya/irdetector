@@ -27,6 +27,8 @@ public:
 	static double CalculateStandardDeviation(const unsigned short* frame, FourLimits& target, const int width);
 
 	static double CalculateFillRatio(FourLimits& target);
+
+	static double CalcudalteSizeRatio(FourLimits& target);
 };
 
 inline void Util::GetMaxAndMinValue(unsigned short* frame, const FourLimits& object, unsigned short& maxValue, unsigned short& minValue, const int width)
@@ -134,5 +136,10 @@ inline double Util::CalculateStandardDeviation(const unsigned short* frame, Four
 inline double Util::CalculateFillRatio(FourLimits& target)
 {
 	return static_cast<double>(target.area) / ((target.bottom - target.top + 1) * (target.right - target.left + 1));
+}
+
+inline double Util::CalcudalteSizeRatio(FourLimits& target)
+{
+	return static_cast<double>(target.bottom - target.top + 1) / (target.right - target.left + 1);
 }
 #endif
