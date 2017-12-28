@@ -2,6 +2,8 @@
 #define __UTIL__
 #include "../Models/FourLimits.h"
 #include "../Models/FourLimitsWithScore.hpp"
+#include <valarray>
+#include <cmath>
 
 class Util
 {
@@ -19,6 +21,10 @@ public:
 	static bool CheckEqualDoubleValue(double a, double b);
 
 	static bool IsSameTarget(FourLimits& a, FourLimits& b);
+
+	static double CalculateAverage(const unsigned short* frame, FourLimits& target, const int width);
+
+	static double CalculateStandardDeviation(const unsigned short* frame, FourLimits& target, const int width);
 };
 
 inline void Util::GetMaxAndMinValue(unsigned short* frame, const FourLimits& object, unsigned short& maxValue, unsigned short& minValue, const int width)
@@ -94,5 +100,32 @@ inline bool Util::CheckEqualDoubleValue(double a, double b)
 inline bool Util::IsSameTarget(FourLimits& a, FourLimits& b)
 {
 	return !(a.bottom ^ b.bottom) && !(a.left ^ b.left) && !(a.right ^ b.right) && !(a.top ^ b.top);
+}
+
+inline double Util::CalculateAverage(const unsigned short* frame, FourLimits& target, const int width)
+{
+	auto sum = 0.0;
+	for (auto r = target.top; r <= target.bottom; ++r)
+	{
+		for (auto c = target.left; c <= target.right; ++c)
+		{
+			sum += static_cast<double>(frame[r * width + c]);
+		}
+	}
+	return static_cast<double>(sum / ((target.bottom - target.top + 1) * (target.right - target.left + 1)));
+}
+
+inline double Util::CalculateStandardDeviation(const unsigned short* frame, FourLimits& target, const int width)
+{
+	auto sum = 0.0;
+	auto avg = CalculateAverage(frame, target, width);
+	for(auto r = target.top; r <= target.bottom; ++ r)
+	{
+		for(auto c = target.left; c <= target.right; ++c)
+		{
+			sum += std::pow((static_cast<double>(frame[r * width + c]) - avg), 2.0);
+		}
+	}
+	return std::sqrt(static_cast<double>(sum / ((target.bottom - target.top + 1) * (target.right - target.left + 1))));
 }
 #endif
