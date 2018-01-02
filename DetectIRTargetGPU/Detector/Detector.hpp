@@ -3,6 +3,16 @@
 #define MERGE_OP true
 #endif
 
+#ifndef SAMPLE_FLAG
+#define SAMPLE_FLAG
+enum SampleFlag
+{
+	Positive,
+	Negative
+};
+
+#endif
+
 #ifndef __DETECTOR_H__
 #define __DETECTOR_H__
 #include <cuda_runtime_api.h>
@@ -22,6 +32,7 @@
 #include "../Models/FourLimitsWithScore.hpp"
 #include "../Models/DetectedTarget.hpp"
 #include "../Checkers/CheckPerf.h"
+#include "../Assistants/SampleHelper.h"
 
 /********************************************************************************************************/
 /* ¼ì²âÆ÷Àà¶¨Òå                                                                                         */
@@ -1026,6 +1037,7 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		// put all valid result to resultSegment
 		result->targetCount = static_cast<unsigned short>(lastResultCount >= MAX_DETECTED_TARGET_COUNT ? MAX_DETECTED_TARGET_COUNT : lastResultCount);
 
+		
 		for (auto i = 0; i < result->targetCount; ++i)
 		{
 			TargetPosition pos;
@@ -1045,6 +1057,58 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 			info.contrast = maxValue - minValue;
 			info.area = insideObjects[i].object.area;
 			result->targetInfo[i] = info;
+		}
+
+		// Sample block
+
+		static int positiveSampleCount = 0;
+		static int negetiveSampleCount = 0;
+		cv::Mat sampleImg(Height, Width, CV_16UC1, originalFrameOnHost);
+		for(auto i = 0; i < result->targetCount; ++ i)
+		{
+		Retry:
+			cv::Mat imageOfOriginalFrame(Height, Width, CV_8UC3);
+			ShowFrame::ToMat<unsigned short>(originalFrameOnHost, Width, Height, imageOfOriginalFrame);
+			TargetPosition pos;
+			pos.topLeftX = static_cast<unsigned short>(insideObjects[i].object.left);
+			pos.topLeftY = static_cast<unsigned short>(insideObjects[i].object.top);
+			pos.bottomRightX = static_cast<unsigned short>(insideObjects[i].object.right);
+			pos.bottomRightY = static_cast<unsigned short>(insideObjects[i].object.bottom);
+			result->targets[i] = pos;
+			cv::Rect targetRegion(pos.topLeftX, pos.topLeftY, pos.bottomRightX - pos.topLeftX + 1, pos.bottomRightY - pos.topLeftY + 1);
+
+			auto targetImg = sampleImg(targetRegion);
+			cv::Mat sampleTarget(16, 16, CV_16UC1);
+			cv::resize(targetImg, sampleTarget, sampleTarget.size());
+			cv::rectangle(imageOfOriginalFrame, targetRegion,cv::Scalar(255,0,255));
+			cv::imshow("sample result", imageOfOriginalFrame);
+
+			SampleFlag sampleFlag = {};
+			char key = cv::waitKey(0);
+			if (key == '\r')
+			{
+				std::cout << "enter" << std::endl;
+				positiveSampleCount++;
+				SampleHelper::SavePositiveSample(sampleTarget);
+				sampleFlag = Positive;
+			}
+			else if (key == ' ')
+			{
+				std::cout << "space" << std::endl;
+				negetiveSampleCount++;
+				SampleHelper::SaveNegativeSample(sampleTarget);
+				sampleFlag = Negative;
+			}
+			else
+			{
+				std::cout << "retry" << std::endl;
+				i--;
+				if (sampleFlag == Positive)
+					SampleHelper::RetryPositiveSampleFileOut();
+				else
+					SampleHelper::RetryNegativeSampleFileOut();
+				goto Retry;
+			}
 		}
 	}
 }

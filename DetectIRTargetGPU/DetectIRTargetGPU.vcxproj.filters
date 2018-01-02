@@ -195,6 +195,9 @@
     <ClInclude Include="Validation\LazyDetectorValidation.hpp">
       <Filter>Validation</Filter>
     </ClInclude>
+    <ClInclude Include="Assistants\SampleHelper.h">
+      <Filter>Assistants</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -215,6 +218,9 @@
     </ClCompile>
     <ClCompile Include="Network\NetworkHelper.cpp">
       <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Assistants\SampleHelper.cpp">
+      <Filter>Assistants</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

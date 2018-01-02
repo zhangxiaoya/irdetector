@@ -156,6 +156,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Assistants\SampleHelper.cpp" />
     <ClCompile Include="Common\SplitBinaryFile.hpp" />
     <ClCompile Include="Detector\Detector.hpp" />
     <ClCompile Include="main.cpp" />
@@ -165,6 +166,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClCompile Include="Validation\Validation.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Assistants\SampleHelper.h" />
     <ClInclude Include="Assistants\ShowFrame.hpp" />
     <ClInclude Include="CCL\MeshCCLKernelD.cuh" />
     <ClInclude Include="CCL\MeshCCLOnCPU.hpp" />
