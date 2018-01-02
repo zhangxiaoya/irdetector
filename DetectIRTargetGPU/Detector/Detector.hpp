@@ -1066,7 +1066,6 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 		cv::Mat sampleImg(Height, Width, CV_16UC1, originalFrameOnHost);
 		for(auto i = 0; i < result->targetCount; ++ i)
 		{
-		Retry:
 			cv::Mat imageOfOriginalFrame(Height, Width, CV_8UC3);
 			ShowFrame::ToMat<unsigned short>(originalFrameOnHost, Width, Height, imageOfOriginalFrame);
 			TargetPosition pos;
@@ -1083,32 +1082,32 @@ inline void Detector::DetectTargets(unsigned short* frame, DetectResultSegment* 
 			cv::rectangle(imageOfOriginalFrame, targetRegion,cv::Scalar(255,0,255));
 			cv::imshow("sample result", imageOfOriginalFrame);
 
+		Retry:
 			SampleFlag sampleFlag = {};
 			char key = cv::waitKey(0);
-			if (key == '\r')
+			if (key == '1')
 			{
-				std::cout << "enter" << std::endl;
+				std::cout << "positive" << std::endl;
 				positiveSampleCount++;
-				SampleHelper::SavePositiveSample(sampleTarget);
 				sampleFlag = Positive;
 			}
-			else if (key == ' ')
+			else if (key == '2')
 			{
-				std::cout << "space" << std::endl;
+				std::cout << "negative" << std::endl;
 				negetiveSampleCount++;
-				SampleHelper::SaveNegativeSample(sampleTarget);
 				sampleFlag = Negative;
 			}
-			else
+			key = cv::waitKey(0);
+			if(key == '\r')
 			{
-				std::cout << "retry" << std::endl;
-				i--;
+				std::cout << "confirm" << std::endl;
 				if (sampleFlag == Positive)
-					SampleHelper::RetryPositiveSampleFileOut();
+					SampleHelper::SavePositiveSample(sampleTarget);
 				else
-					SampleHelper::RetryNegativeSampleFileOut();
-				goto Retry;
+					SampleHelper::SaveNegativeSample(sampleTarget);
 			}
+			else
+				goto Retry;
 		}
 	}
 }
